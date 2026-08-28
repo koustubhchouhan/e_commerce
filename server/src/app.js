@@ -4,6 +4,11 @@ import morgan from 'morgan';
 import { env } from './config/env.js';
 import healthRoutes from './routes/health.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import catalogRoutes from './routes/catalog.routes.js';
+import sellerRoutes from './routes/seller.routes.js';
+import sellerApplicationsRoutes from './routes/sellerApplications.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+import orderRoutes from './routes/order.routes.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 export function createApp() {
@@ -16,6 +21,11 @@ export function createApp() {
   // Routes
   app.use('/health', healthRoutes);
   app.use('/auth', authRoutes);
+  app.use(catalogRoutes);
+  app.use(sellerRoutes);
+  app.use(sellerApplicationsRoutes);
+  app.use(adminRoutes);
+  app.use(orderRoutes);
 
   // Fallbacks (order matters: 404 first, then the error handler)
   app.use(notFound);

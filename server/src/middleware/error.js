@@ -17,8 +17,16 @@ export function notFound(req, res, next) {
 // Central error handler. Must keep all four args so Express recognizes it.
 // eslint-disable-next-line no-unused-vars
 export function errorHandler(err, req, res, next) {
-  const status = err.status || 500;
-  const payload = { error: err.message || 'Internal Server Error' };
+  let status = err.status || 500;
+  let message = err.message || 'Internal Server Error';
+
+  // Multer errors (oversized upload, too many files) are client faults.
+  if (err.name === 'MulterError') {
+    status = 400;
+    message = `Upload error: ${err.message}`;
+  }
+
+  const payload = { error: message };
   if (err.details) payload.details = err.details;
 
   // Log the full stack for genuine server faults; client errors stay quiet.

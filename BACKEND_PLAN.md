@@ -1,7 +1,7 @@
 # NovaMarket — Backend Build Plan
 
 **Architecture:** React SPA → **Node/Express REST API** → **Supabase** (Postgres + Auth + Storage)
-**Status:** Plan for review. No application code has been changed yet.
+**Status:** Milestones 1–6 implemented (auth, catalog, seller onboarding, product writes, orders). Frontend wiring is the remaining work.
 **Date:** 2026-08-26
 
 ---

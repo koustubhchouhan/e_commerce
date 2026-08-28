@@ -4,8 +4,14 @@ Express REST API in front of Supabase (Postgres + Auth + Storage). React talks
 only to this server; the server holds the Supabase **service_role** key and is
 the single authorization layer. See `../BACKEND_PLAN.md` for the full design.
 
-Currently implemented: **Milestone 1 (scaffold + health)** and **Milestone 2
-(auth: register / login / refresh / me + role middleware)**.
+Implemented milestones:
+
+1. **Scaffold** — Express app, `db`/`authClient`, env loading, CORS, `GET /health`.
+2. **Auth** — register / login / refresh / me + `requireAuth` / `requireRole`.
+3. **Catalog reads** — `GET /categories`, `GET /products`, `GET /products/:id`.
+4. **Seller onboarding** — seller applications + admin approve / reject / revoke.
+5. **Product writes** — create / update / delete / image upload (seller-owned).
+6. **Orders** — `POST /orders` (atomic `create_order` RPC), `GET /orders`, `GET /orders/:id`.
 
 ## Prerequisites
 
@@ -109,14 +115,40 @@ restores the session on refresh, and `userRole` comes from the server.
 
 ```
 server/
-  db/                schema.sql, create_order.sql, seed.sql
+  db/                schema.sql, create_order.sql, seed.sql, setup_all.sql
   scripts/           seed-users.js (dev role accounts)
   src/
     config/          env.js (fail-fast), supabase.js (db + authClient)
-    middleware/      auth.js, validate.js, error.js, asyncHandler.js
-    controllers/     auth.controller.js
-    routes/          auth.routes.js, health.routes.js
-    validators/      auth.validators.js
+    middleware/      auth.js, validate.js (+ query/params), error.js, asyncHandler.js
+    services/        catalog, product, seller, admin, order, storage, product-data
+    controllers/     auth, catalog, product, seller, admin, order
+    routes/          health, auth, catalog, seller, sellerApplications, admin, order
+    validators/      auth, catalog, product, seller, order
     app.js           express app (cors, json, routes, error handling)
     index.js         listen()
 ```
+
+## API endpoints
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| GET | `/categories` | — | `[{ id, name, slug }]` |
+| GET | `/products` | — | Query: `search`, `category` (slug), `page`, `limit`. Returns `{ items, page, limit, total }`; each item has `coverImage` + `salePrice`. |
+| GET | `/products/:id` | — | Full product with `images[]` and `storeName`. |
+| GET | `/seller/products` | seller/admin | The caller's own products. |
+| POST | `/products` | seller/admin | `{ name, description, price, discount_percent, stock, status, category_id }` → `201`. |
+| PATCH | `/products/:id` | seller/admin (owner) | Partial update. `403` if not the owner. |
+| DELETE | `/products/:id` | seller/admin (owner) | → `204`. Also removes stored images. |
+| POST | `/products/:id/images` | seller/admin (owner) | `multipart/form-data` field `images` → uploads to Storage, inserts `product_images`. |
+| POST | `/seller-applications` | customer | `{ store_name, contact_email }` → `201`. One pending/approved per user. |
+| GET | `/seller-applications/me` | ✓ | The caller's applications, newest first. |
+| GET | `/admin/seller-applications` | admin | Query `status` (pending/approved/rejected). |
+| PATCH | `/admin/seller-applications/:id` | admin | `{ action: "approve" \| "reject" }`. Approve flips role + creates store. |
+| GET | `/admin/sellers` | admin | Approved sellers + their store. |
+| DELETE | `/admin/sellers/:id` | admin | Revoke: demote to customer + draft products. |
+| POST | `/orders` | ✓ | `{ items: [{ product_id, quantity }], shipping_address? }` → `201 { order_id, total }`. Prices computed server-side via `create_order`. |
+| GET | `/orders` | ✓ | The caller's orders + line items. |
+| GET | `/orders/:id` | ✓ (owner/admin) | One order + items. |
+
+Auth uses `Authorization: Bearer <accessToken>` (see the auth endpoints in §4 below).
+
