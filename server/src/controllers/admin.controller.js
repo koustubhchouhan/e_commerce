@@ -1,8 +1,17 @@
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import * as adminService from '../services/admin.service.js';
+import * as orderService from '../services/order.service.js';
 
 export const listApplications = asyncHandler(async (req, res) => {
   res.json({ items: await adminService.listApplications(req.query) });
+});
+
+export const listAllOrders = asyncHandler(async (req, res) => {
+  res.json(await orderService.listAllOrders());
+});
+
+export const listCategories = asyncHandler(async (req, res) => {
+  res.json({ items: await adminService.listCategories() });
 });
 
 export const reviewApplication = asyncHandler(async (req, res) => {

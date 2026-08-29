@@ -1,9 +1,40 @@
 import { Package, TrendingUp, DollarSign, Eye, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, HelpCircle, Clock, PackageX, Check } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import GlassCard from '../components/GlassCard';
+import { api } from '../lib/api';
+
+const shortId = (id) => (id ? String(id).slice(0, 8).toUpperCase() : '');
+
+const ORDER_STATUS_STYLES = {
+  delivered: 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30',
+  shipped: 'bg-[#ff9933]/20 text-[#ff9933] border-[#ff9933]/30',
+  paid: 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30',
+  pending: 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30',
+  cancelled: 'bg-[#ffb4ab]/20 text-[#ffb4ab] border-[#ffb4ab]/30',
+};
 
 export default function SellerHub() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [ordersError, setOrdersError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await api.sellerOrders();
+        if (active) setOrders(res.items ?? []);
+      } catch (err) {
+        if (active) setOrdersError(err.message || 'Failed to load orders.');
+      } finally {
+        if (active) setLoadingOrders(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const inventory = [
     { id: 1, name: "Nova Pro X-15 Gaming Laptop", price: "$2,499.00", status: "Approved", sales: 12 },
@@ -29,11 +60,6 @@ export default function SellerHub() {
       status: "Resolved",
       message: "When will the Midnight Black version be back in stock?"
     }
-  ];
-
-  const storeOrders = [
-    { id: "ORD-501", customer: "Liam Smith", product: "Nova Pro X-15 Gaming Laptop", date: "Today", status: "Processing", amount: "$2,499.00" },
-    { id: "ORD-502", customer: "Emma Johnson", product: "Nova Pro X-15 Gaming Laptop", date: "Yesterday", status: "Shipped", amount: "$2,499.00" },
   ];
 
   const getRequestIcon = (type) => {
@@ -181,36 +207,47 @@ export default function SellerHub() {
             </header>
             
             <GlassCard className="p-6 lg:p-8">
+              {loadingOrders && (
+                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading orders...</div>
+              )}
+              {!loadingOrders && ordersError && (
+                <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{ordersError}</div>
+              )}
+              {!loadingOrders && !ordersError && (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
                       <th className="py-4 px-4 font-semibold">Order ID</th>
                       <th className="py-4 px-4 font-semibold">Customer</th>
-                      <th className="py-4 px-4 font-semibold">Product</th>
+                      <th className="py-4 px-4 font-semibold">Items</th>
                       <th className="py-4 px-4 font-semibold text-right">Amount</th>
                       <th className="py-4 px-4 font-semibold text-right">Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {storeOrders.map(order => (
+                    {orders.map(order => (
                       <tr key={order.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{order.id}</td>
-                        <td className="py-4 px-4 text-[#f1e7d7] font-semibold">{order.customer}</td>
-                        <td className="py-4 px-4 text-[#fff4e6]">{order.product}</td>
-                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">{order.amount}</td>
+                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{shortId(order.id)}</td>
+                        <td className="py-4 px-4 text-[#f1e7d7] font-semibold">{order.customerName || 'Customer'}</td>
+                        <td className="py-4 px-4 text-[#fff4e6]">{order.items?.map((i) => i.productName).join(', ') || '—'}</td>
+                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">${Number(order.total).toLocaleString()}</td>
                         <td className="py-4 px-4 text-right">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
-                            order.status === 'Shipped' ? 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30' : 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30'
-                          }`}>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${ORDER_STATUS_STYLES[order.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
                             {order.status}
                           </span>
                         </td>
                       </tr>
                     ))}
+                    {orders.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-16 text-center text-[#9e8c73] text-sm">No orders for your store yet.</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
+              )}
             </GlassCard>
           </div>
         )}

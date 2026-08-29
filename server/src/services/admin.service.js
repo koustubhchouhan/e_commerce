@@ -99,6 +99,22 @@ export async function listSellers() {
   }));
 }
 
+// GET /admin/categories — every category with its product count.
+export async function listCategories() {
+  const { data, error } = await db
+    .from('categories')
+    .select('id, name, slug, products(count)');
+
+  if (error) throw new AppError(500, `Could not load categories: ${error.message}`);
+
+  return (data ?? []).map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    productCount: c.products?.[0]?.count ?? 0,
+  }));
+}
+
 // DELETE /admin/sellers/:id — revoke: demote back to customer and draft their
 // products so nothing is immediately delisted from the storefront.
 export async function revokeSeller(sellerId) {

@@ -4,6 +4,8 @@ import {
   reviewApplication,
   listSellers,
   revokeSeller,
+  listAllOrders,
+  listCategories,
 } from '../controllers/admin.controller.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate, validateQuery, validateParams } from '../middleware/validate.js';
@@ -38,5 +40,7 @@ router.delete(
   validateParams(uuidParamSchema),
   revokeSeller
 );
+router.get('/admin/orders', requireAuth, requireRole('admin'), listAllOrders);
+router.get('/admin/categories', requireAuth, requireRole('admin'), listCategories);
 
 export default router;

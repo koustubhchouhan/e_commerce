@@ -18,14 +18,33 @@ const timeAgo = (iso) => {
   return `${days} day${days > 1 ? 's' : ''} ago`;
 };
 
+const formatDate = (iso) => {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const shortId = (id) => (id ? String(id).slice(0, 8).toUpperCase() : '');
+
+const ORDER_STATUS_STYLES = {
+  delivered: 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30',
+  shipped: 'bg-[#ff9933]/20 text-[#ff9933] border-[#ff9933]/30',
+  paid: 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30',
+  pending: 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30',
+  cancelled: 'bg-[#ffb4ab]/20 text-[#ffb4ab] border-[#ffb4ab]/30',
+};
+
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('products');
 
   const [approvedProducts, setApprovedProducts] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [sellerRequests, setSellerRequests] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingRequests, setLoadingRequests] = useState(true);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [busy, setBusy] = useState(false);
   const addToast = useToastStore((s) => s.addToast);
 
@@ -71,6 +90,34 @@ export default function AdminPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.adminOrders();
+        setOrders(res.items ?? []);
+      } catch {
+        addToast('Failed to load orders.', 'error');
+      } finally {
+        setLoadingOrders(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.adminCategories();
+        setCategories(res.items ?? []);
+      } catch {
+        addToast('Failed to load categories.', 'error');
+      } finally {
+        setLoadingCategories(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleReview = async (id, action) => {
     const req = sellerRequests.find((r) => r.id === id);
     setBusy(true);
@@ -91,28 +138,6 @@ export default function AdminPanel() {
   };
 
   const allApprovedProducts = approvedProducts;
-
-  const adminCategories = [
-    { id: 1, name: "Gaming & VR", count: 145 },
-    { id: 2, name: "Smart Home", count: 82 },
-    { id: 3, name: "Audio & Sound", count: 210 },
-    { id: 4, name: "PC Components", count: 340 },
-    { id: 5, name: "Wearables", count: 56 },
-  ];
-
-  const payments = [
-    { id: "TXN-9021", date: "Today, 10:45 AM", type: "Customer Payment", amount: "+$499.00", status: "Completed" },
-    { id: "TXN-9020", date: "Today, 09:12 AM", type: "Seller Payout (NeonTech)", amount: "-$1,250.00", status: "Processing" },
-    { id: "TXN-9019", date: "Yesterday, 04:30 PM", type: "Platform Fee", amount: "+$45.00", status: "Completed" },
-    { id: "TXN-9018", date: "Yesterday, 02:15 PM", type: "Customer Refund", amount: "-$129.00", status: "Completed" },
-  ];
-
-  const platformOrders = [
-    { id: "ORD-9901", customer: "Liam Smith", seller: "NeonTech Store", product: "Nova Pro X-15 Gaming Laptop", date: "Today, 10:30 AM", status: "Processing", amount: "$2,499.00" },
-    { id: "ORD-9902", customer: "Emma Johnson", seller: "Chang Electronics", product: "Quantum Core Q-7 GPU", date: "Yesterday, 02:15 PM", status: "Shipped", amount: "$1,299.00" },
-    { id: "ORD-9903", customer: "Noah Williams", seller: "NeonTech Store", product: "Aura Sound V2 Headphones", date: "Yesterday, 09:45 AM", status: "Delivered", amount: "$349.99" },
-    { id: "ORD-9904", customer: "Olivia Brown", seller: "ElectroWorld", product: "ChronoSync Ultra Smartwatch", date: "Oct 22, 11:20 AM", status: "Pending", amount: "$299.00" },
-  ];
 
   return (
     <div className="flex min-h-[calc(100vh-80px)] animate-fade-in-up">
@@ -172,42 +197,46 @@ export default function AdminPanel() {
             </div>
             
             <GlassCard className="p-6 lg:p-8">
+              {loadingOrders && (
+                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading orders...</div>
+              )}
+              {!loadingOrders && (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
                       <th className="py-4 px-4 font-semibold">Order ID</th>
                       <th className="py-4 px-4 font-semibold">Customer</th>
-                      <th className="py-4 px-4 font-semibold">Seller / Store</th>
-                      <th className="py-4 px-4 font-semibold">Product</th>
+                      <th className="py-4 px-4 font-semibold">Items</th>
                       <th className="py-4 px-4 font-semibold">Date</th>
                       <th className="py-4 px-4 font-semibold text-right">Amount</th>
                       <th className="py-4 px-4 font-semibold text-right">Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {platformOrders.map(order => (
+                    {orders.map(order => (
                       <tr key={order.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{order.id}</td>
-                        <td className="py-4 px-4 text-[#f1e7d7] font-semibold">{order.customer}</td>
-                        <td className="py-4 px-4 text-[#ff9933] font-semibold">{order.seller}</td>
-                        <td className="py-4 px-4 text-[#fff4e6]">{order.product}</td>
-                        <td className="py-4 px-4 text-[#cbb89d] text-sm">{order.date}</td>
-                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">{order.amount}</td>
+                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{shortId(order.id)}</td>
+                        <td className="py-4 px-4 text-[#f1e7d7] font-semibold">{order.customerName || 'Customer'}</td>
+                        <td className="py-4 px-4 text-[#fff4e6]">{order.items?.map((i) => i.productName).join(', ') || '—'}</td>
+                        <td className="py-4 px-4 text-[#cbb89d] text-sm">{formatDate(order.createdAt)}</td>
+                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">${Number(order.total).toLocaleString()}</td>
                         <td className="py-4 px-4 text-right">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
-                            order.status === 'Delivered' ? 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30' :
-                            order.status === 'Shipped' ? 'bg-[#ff9933]/20 text-[#ff9933] border-[#ff9933]/30' : 
-                            'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30'
-                          }`}>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${ORDER_STATUS_STYLES[order.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
                             {order.status}
                           </span>
                         </td>
                       </tr>
                     ))}
+                    {orders.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="py-16 text-center text-[#9e8c73] text-sm">No orders have been placed yet.</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
+              )}
             </GlassCard>
           </div>
         )}
@@ -271,22 +300,28 @@ export default function AdminPanel() {
             </div>
             
             <GlassCard className="p-6 lg:p-8">
+              {loadingCategories && (
+                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading categories...</div>
+              )}
+              {!loadingCategories && (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
                       <th className="py-4 px-4 font-semibold">Category ID</th>
                       <th className="py-4 px-4 font-semibold">Name</th>
+                      <th className="py-4 px-4 font-semibold">Slug</th>
                       <th className="py-4 px-4 font-semibold text-center">Total Products</th>
                       <th className="py-4 px-4 font-semibold text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {adminCategories.map(cat => (
+                    {categories.map(cat => (
                       <tr key={cat.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">CAT-{cat.id.toString().padStart(3, '0')}</td>
+                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{shortId(cat.id)}</td>
                         <td className="py-4 px-4 text-[#fff4e6] font-semibold text-lg">{cat.name}</td>
-                        <td className="py-4 px-4 text-center text-[#f1e7d7] font-semibold">{cat.count}</td>
+                        <td className="py-4 px-4 text-[#9e8c73] text-sm">{cat.slug}</td>
+                        <td className="py-4 px-4 text-center text-[#f1e7d7] font-semibold">{cat.productCount}</td>
                         <td className="py-4 px-4 flex justify-end gap-2">
                           <button className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ff9933] hover:bg-[#ff9933]/20 transition-colors" title="Edit">
                             <Edit size={16} />
@@ -297,9 +332,15 @@ export default function AdminPanel() {
                         </td>
                       </tr>
                     ))}
+                    {categories.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-16 text-center text-[#9e8c73] text-sm">No categories yet.</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
+              )}
             </GlassCard>
           </div>
         )}
@@ -315,37 +356,12 @@ export default function AdminPanel() {
             </div>
             
             <GlassCard className="p-6 lg:p-8">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
-                      <th className="py-4 px-4 font-semibold">Transaction ID</th>
-                      <th className="py-4 px-4 font-semibold">Date & Time</th>
-                      <th className="py-4 px-4 font-semibold">Type</th>
-                      <th className="py-4 px-4 font-semibold text-right">Amount</th>
-                      <th className="py-4 px-4 font-semibold text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payments.map(txn => (
-                      <tr key={txn.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{txn.id}</td>
-                        <td className="py-4 px-4 text-[#f1e7d7] text-sm">{txn.date}</td>
-                        <td className="py-4 px-4 text-[#fff4e6] font-semibold">{txn.type}</td>
-                        <td className={`py-4 px-4 text-right font-bold ${txn.amount.startsWith('+') ? 'text-[#ff9933]' : 'text-[#ffb4ab]'}`}>
-                          {txn.amount}
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
-                            txn.status === 'Completed' ? 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30' : 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30'
-                          }`}>
-                            {txn.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                <CreditCard size={40} className="text-[#34250f]" />
+                <p className="text-[#f1e7d7] font-[Outfit] text-lg font-semibold">Payments & Ledger</p>
+                <p className="text-[#cbb89d] text-sm max-w-md">
+                  Payment processing is not wired up yet. Once a payment provider is integrated, transaction history will appear here.
+                </p>
               </div>
             </GlassCard>
           </div>
