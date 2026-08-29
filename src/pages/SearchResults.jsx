@@ -1,19 +1,37 @@
+import { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
-import { products } from './Home';
 import { ProductGrid } from './Home';
+import { api } from '../lib/api';
+import { toProductCardList } from '../lib/productShape';
 
 export default function SearchResults() {
   const { search } = useLocation();
   const query = new URLSearchParams(search).get('q') || '';
-  
-  const results = query
-    ? products.filter(p =>
-        p.title.toLowerCase().includes(query.toLowerCase()) ||
-        p.category.toLowerCase().includes(query.toLowerCase()) ||
-        p.desc.toLowerCase().includes(query.toLowerCase())
-      )
-    : [];
+
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!query) return;
+    let cancelled = false;
+    setLoading(true);
+    setError('');
+    (async () => {
+      try {
+        const res = await api.products({ search: query, limit: 100 });
+        if (!cancelled) setResults(toProductCardList(res.items));
+      } catch (err) {
+        if (!cancelled) setError(err.message || 'Search failed.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [query]);
 
   return (
     <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-12 animate-fade-in-up">
@@ -26,12 +44,19 @@ export default function SearchResults() {
             Search Results for <span className="text-[#ff9933]">"{query}"</span>
           </h1>
           <p className="text-[#cbb89d] text-sm mt-1">
-            {results.length === 0 ? 'No products found.' : `${results.length} product${results.length > 1 ? 's' : ''} found.`}
+            {loading ? 'Searching...' : error || (results.length === 0 ? 'No products found.' : `${results.length} product${results.length > 1 ? 's' : ''} found.`)}
           </p>
         </div>
       </div>
 
-      {results.length > 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-24 text-[#cbb89d]">Loading...</div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-24 gap-4">
+          <Search size={60} className="text-[#34250f]" />
+          <p className="text-[#ffb4ab] text-xl">{error}</p>
+        </div>
+      ) : results.length > 0 ? (
         <ProductGrid items={results} adminMode={false} />
       ) : (
         <div className="flex flex-col items-center justify-center py-24 gap-4">

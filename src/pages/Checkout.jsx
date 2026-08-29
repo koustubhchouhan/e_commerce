@@ -4,6 +4,7 @@ import { ShieldCheck, CreditCard, ArrowRight, Check } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
+import { api } from '../lib/api';
 
 const STEPS = ['Shipping', 'Payment'];
 
@@ -18,13 +19,37 @@ export default function Checkout() {
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 
+  const [placing, setPlacing] = useState(false);
   const [shipping_form, setShipping] = useState({ firstName: '', lastName: '', address: '', city: '', pin: '', phone: '' });
   const [payment_form, setPayment] = useState({ cardNumber: '', expiry: '', cvv: '', method: 'card' });
 
-  const handlePlaceOrder = () => {
-    clearCart();
-    addToast('Order placed successfully! 🎉', 'success');
-    navigate('/order-confirmation');
+  const handlePlaceOrder = async () => {
+    if (items.length === 0) {
+      addToast('Your cart is empty.', 'error');
+      return;
+    }
+    setPlacing(true);
+    try {
+      const payload = {
+        items: items.map(({ product, quantity }) => ({ product_id: product.id, quantity })),
+        shipping_address: {
+          firstName: shipping_form.firstName,
+          lastName: shipping_form.lastName,
+          address: shipping_form.address,
+          city: shipping_form.city,
+          pin: shipping_form.pin,
+          phone: shipping_form.phone,
+        },
+      };
+      const { order_id, total: serverTotal } = await api.createOrder(payload.items, payload.shipping_address);
+      clearCart();
+      addToast('Order placed successfully!', 'success');
+      navigate('/order-confirmation', { state: { orderId: order_id, total: serverTotal } });
+    } catch (err) {
+      addToast(err.message || 'Failed to place order.', 'error');
+    } finally {
+      setPlacing(false);
+    }
   };
 
   return (
@@ -97,8 +122,8 @@ export default function Checkout() {
               )}
               <div className="flex gap-3 mt-4">
                 <button onClick={() => setStep(0)} className="py-3.5 px-6 rounded-xl border border-white/10 text-[#f1e7d7] font-[Outfit] font-bold hover:bg-white/5 transition-all">← Back</button>
-                <button onClick={handlePlaceOrder} className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-[#c98a12] to-[#ffb52e] text-white font-[Outfit] text-lg font-bold hover:shadow-[0_0_11px_rgba(201,138,18,0.22)] transition-all flex items-center justify-center gap-2">
-                  Place Order <ArrowRight size={20} />
+                <button onClick={handlePlaceOrder} disabled={placing} className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-[#c98a12] to-[#ffb52e] text-white font-[Outfit] text-lg font-bold hover:shadow-[0_0_11px_rgba(201,138,18,0.22)] transition-all flex items-center justify-center gap-2 disabled:opacity-60">
+                  {placing ? 'Placing...' : 'Place Order'} {!placing && <ArrowRight size={20} />}
                 </button>
               </div>
             </GlassCard>

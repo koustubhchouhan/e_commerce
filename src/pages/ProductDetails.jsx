@@ -1,23 +1,57 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ShoppingCart, ChevronLeft, ChevronRight, CheckCircle, Star, StarHalf, PackageX } from 'lucide-react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import GlassCard from '../components/GlassCard';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
-import { products } from './Home';
+import { api } from '../lib/api';
+import { toProductCard } from '../lib/productShape';
 
 export default function ProductDetails() {
   const { id } = useParams();
   const [activeImage, setActiveImage] = useState(0);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const addItem = useCartStore(s => s.addItem);
   const addToast = useToastStore(s => s.addToast);
   const navigate = useNavigate();
 
-  const product = products.find(p => String(p.id) === String(id));
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setNotFound(false);
+      try {
+        const p = await api.product(id);
+        if (!cancelled) {
+          setProduct({
+            ...toProductCard(p),
+            images: (p.images && p.images.length ? p.images : [{ url: p.coverImage }]).map((i) => i.url),
+          });
+        }
+      } catch (err) {
+        if (!cancelled && err.status === 404) setNotFound(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
-  if (!product) {
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center px-6 animate-fade-in-up">
+        <div className="text-[#cbb89d]">Loading product...</div>
+      </div>
+    );
+  }
+
+  if (notFound || !product) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-6 animate-fade-in-up">
         <GlassCard className="p-12 max-w-md w-full text-center flex flex-col items-center gap-5" hover={false}>
@@ -32,7 +66,7 @@ export default function ProductDetails() {
     );
   }
 
-  const images = [product.img];
+  const images = product.images && product.images.length ? product.images : [product.img];
   const hasGallery = images.length > 1;
   const savePct = product.oldPrice
     ? Math.round((1 - product.price / product.oldPrice) * 100)

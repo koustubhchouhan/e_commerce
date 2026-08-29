@@ -1,51 +1,47 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import GlassCard from '../components/GlassCard';
+import { api } from '../lib/api';
+
+const THEME_FALLBACKS = [
+  "https://images.unsplash.com/photo-1605330310243-d8b375d045d6?auto=format&fit=crop&q=80&w=800",
+  "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&q=80&w=800",
+  "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&q=80&w=800",
+  "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=800",
+  "https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&q=80&w=800",
+  "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&q=80&w=800",
+];
 
 export default function Categories() {
-  const categories = [
-    {
-      title: "Indian Festive Season",
-      desc: "Exclusive deals for Diwali, Navratri, and more.",
-      img: "https://images.unsplash.com/photo-1605330310243-d8b375d045d6?auto=format&fit=crop&q=80&w=800",
-      theme: "festive",
-      filter: "All",
-    },
-    {
-      title: "Gaming & VR",
-      desc: "Next-gen consoles, VR headsets, and accessories.",
-      img: "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&q=80&w=800",
-      theme: "neon",
-      filter: "Gaming",
-    },
-    {
-      title: "Smart Home",
-      desc: "Automate your life with futuristic smart devices.",
-      img: "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&q=80&w=800",
-      theme: "blue",
-      filter: "All",
-    },
-    {
-      title: "Audio & Sound",
-      desc: "Studio-quality headphones, soundbars, and mics.",
-      img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=800",
-      theme: "purple",
-      filter: "Audio",
-    },
-    {
-      title: "PC Components",
-      desc: "Processors, GPUs, and liquid cooling systems.",
-      img: "https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&q=80&w=800",
-      theme: "cyan",
-      filter: "Components",
-    },
-    {
-      title: "Wearables",
-      desc: "Smartwatches, fitness trackers, and AR glasses.",
-      img: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&q=80&w=800",
-      theme: "blue",
-      filter: "Wearables",
-    }
-  ];
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const cats = await api.categories();
+        if (!cancelled) {
+          setCategories(cats.map((c, idx) => ({
+            id: c.id,
+            title: c.name,
+            desc: c.description || `Explore products in ${c.name}.`,
+            img: c.imageUrl || THEME_FALLBACKS[idx % THEME_FALLBACKS.length],
+            theme: idx % 4 === 0 ? 'festive' : idx % 4 === 1 ? 'neon' : idx % 4 === 2 ? 'purple' : 'blue',
+            filter: c.slug,
+          })));
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.message || 'Failed to load categories.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const getThemeClasses = (theme) => {
     switch (theme) {
@@ -70,8 +66,14 @@ export default function Categories() {
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {categories.map((cat, idx) => (
-          <Link key={idx} to={`/home?category=${encodeURIComponent(cat.filter)}`} className="block">
+        {loading && (
+          <div className="col-span-full flex items-center justify-center h-40 text-[#cbb89d]">Loading categories...</div>
+        )}
+        {error && !loading && (
+          <div className="col-span-full flex items-center justify-center h-40 text-[#ffb4ab]">{error}</div>
+        )}
+        {!loading && !error && categories.map((cat) => (
+          <Link key={cat.id} to={`/home?category=${encodeURIComponent(cat.title)}`} className="block">
             <GlassCard hover={false} className={`relative overflow-hidden group cursor-pointer transition-all duration-500 border ${getThemeClasses(cat.theme)}`}>
               <div className="absolute inset-0 z-0">
                 <img src={cat.img} alt={cat.title} className="w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700" />

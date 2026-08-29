@@ -2,38 +2,99 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, Filter, Edit, Trash2, PlusCircle, CheckCircle, Clock, XCircle, X, UploadCloud, ChevronDown, Package, ImagePlus } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
 import { useToastStore } from '../store/toastStore';
+import { api } from '../lib/api';
 
-const CATEGORIES = ['Gaming', 'Audio', 'Wearables', 'Accessories', 'Components'];
 const STATUSES = ['Active', 'Out of Stock', 'Pending Approval'];
 
-const INITIAL_INVENTORY = [
-  { id: 1, name: 'Nova Pro X-15 Gaming Laptop', category: 'Gaming', price: 2499, discount: 0, stock: 45, status: 'Active', description: '', images: [] },
-  { id: 2, name: 'Aura Sound V2 Headphones', category: 'Audio', price: 349.99, discount: 0, stock: 0, status: 'Out of Stock', description: '', images: [] },
-  { id: 3, name: 'ChronoSync Ultra Smartwatch', category: 'Wearables', price: 299, discount: 0, stock: 120, status: 'Active', description: '', images: [] },
-  { id: 4, name: 'Quantum Core Q-7 GPU', category: 'Components', price: 1299, discount: 0, stock: 12, status: 'Pending Approval', description: '', images: [] },
-  { id: 5, name: 'MechKeys K-900 Keyboard', category: 'Accessories', price: 159, discount: 0, stock: 85, status: 'Active', description: '', images: [] },
-];
+const STATUS_TO_API = { 'Active': 'active', 'Out of Stock': 'out_of_stock', 'Pending Approval': 'draft' };
+const API_TO_STATUS = { 'active': 'Active', 'out_of_stock': 'Out of Stock', 'draft': 'Pending Approval' };
 
 const formatPrice = (n) =>
   '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default function SellerInventory() {
-  const [inventory, setInventory] = useState(INITIAL_INVENTORY);
+  const [inventory, setInventory] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
   const addToast = useToastStore((s) => s.addToast);
 
-  const handleAddProduct = (product) => {
-    const nextId = inventory.length ? Math.max(...inventory.map((i) => i.id)) + 1 : 1;
-    setInventory((prev) => [{ id: nextId, ...product }, ...prev]);
-    setModalOpen(false);
-    addToast(`"${product.name}" added to your inventory!`, 'success');
+  const loadInventory = async () => {
+    try {
+      const res = await api.sellerProducts();
+      setInventory(res.items.map((p) => ({
+        id: p.id,
+        name: p.name,
+        category: p.category?.name ?? 'Uncategorized',
+        price: Number(p.price ?? 0),
+        discount: Number(p.discount_percent ?? 0),
+        stock: Number(p.stock ?? 0),
+        status: API_TO_STATUS[p.status] ?? 'Pending Approval',
+        description: p.description || '',
+        images: p.images?.map((i) => i.url) ?? [],
+      })));
+    } catch (err) {
+      setError(err.message || 'Failed to load inventory.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = (id) => {
+  useEffect(() => {
+    (async () => {
+      try {
+        const cats = await api.categories();
+        setCategories(cats.map((c) => ({ id: c.id, name: c.name })));
+      } catch {
+        // categories are a nicety for the add form; non-fatal
+      }
+    })();
+    loadInventory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleAddProduct = async ({ name, category, price, discount, stock, status, description, images }) => {
+    setBusy(true);
+    try {
+      const categoryId = categories.find((c) => c.name === category)?.id ?? null;
+      const created = await api.createProduct({
+        name,
+        description,
+        price,
+        discount_percent: discount,
+        stock,
+        status: STATUS_TO_API[status] ?? 'active',
+        category_id: categoryId,
+      });
+      const files = images.filter((i) => i.file).map((i) => i.file);
+      if (files.length) {
+        await api.uploadProductImages(created.id, files);
+      }
+      setModalOpen(false);
+      addToast(`"${name}" added to your inventory!`, 'success');
+      await loadInventory();
+    } catch (err) {
+      addToast(err.message || 'Failed to add product.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
     const item = inventory.find((i) => i.id === id);
-    setInventory((prev) => prev.filter((i) => i.id !== id));
-    addToast(`"${item ? item.name : 'Product'}" removed from inventory.`, 'error');
+    setBusy(true);
+    try {
+      await api.deleteProduct(id);
+      setInventory((prev) => prev.filter((i) => i.id !== id));
+      addToast(`"${item ? item.name : 'Product'}" removed from inventory.`, 'error');
+    } catch (err) {
+      addToast(err.message || 'Failed to delete product.', 'error');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const q = query.trim().toLowerCase();
@@ -95,7 +156,12 @@ export default function SellerInventory() {
           </div>
         </div>
 
-        {/* Inventory Table */}
+        {loading ? (
+          <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading inventory...</div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{error}</div>
+        ) : (
+        /* Inventory Table */
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[820px]">
             <thead>
@@ -165,23 +231,24 @@ export default function SellerInventory() {
             </tbody>
           </table>
         </div>
+        )}
 
       </GlassCard>
 
-      {modalOpen && <AddProductModal onClose={() => setModalOpen(false)} onAdd={handleAddProduct} />}
+      {modalOpen && <AddProductModal categories={categories} busy={busy} onClose={() => setModalOpen(false)} onAdd={handleAddProduct} />}
     </div>
   );
 }
 
-function AddProductModal({ onClose, onAdd }) {
+function AddProductModal({ categories = [], busy = false, onClose, onAdd }) {
   const [name, setName] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [category, setCategory] = useState(categories[0]?.name ?? '');
   const [price, setPrice] = useState('');
   const [discount, setDiscount] = useState('');
   const [stock, setStock] = useState('');
   const [status, setStatus] = useState('Active');
   const [description, setDescription] = useState('');
-  const [images, setImages] = useState([]); // [{ url, name }]
+  const [images, setImages] = useState([]); // [{ url, name, file }]
   const [dragging, setDragging] = useState(false);
   const [touched, setTouched] = useState(false);
   const fileInputRef = useRef(null);
@@ -201,7 +268,7 @@ function AddProductModal({ onClose, onAdd }) {
   const addFiles = (fileList) => {
     const mapped = Array.from(fileList)
       .filter((f) => f.type.startsWith('image/'))
-      .map((f) => ({ url: URL.createObjectURL(f), name: f.name }));
+      .map((f) => ({ url: URL.createObjectURL(f), name: f.name, file: f }));
     if (mapped.length) setImages((prev) => [...prev, ...mapped]);
   };
 
@@ -232,7 +299,7 @@ function AddProductModal({ onClose, onAdd }) {
       stock: parseInt(stock, 10) || 0,
       status,
       description: description.trim(),
-      images: images.map((i) => i.url),
+      images,
     });
   };
 
@@ -334,7 +401,8 @@ function AddProductModal({ onClose, onAdd }) {
                 <label className={labelClass}>Category</label>
                 <div className="relative">
                   <select className={`${inputClass} appearance-none pr-10 cursor-pointer`} value={category} onChange={(e) => setCategory(e.target.value)}>
-                    {CATEGORIES.map((c) => <option key={c} value={c} className="bg-[#1c1206]">{c}</option>)}
+                    {categories.length === 0 && <option value="">No categories</option>}
+                    {categories.map((c) => <option key={c.id} value={c.name} className="bg-[#1c1206]">{c.name}</option>)}
                   </select>
                   <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#cbb89d] pointer-events-none" />
                 </div>
@@ -411,10 +479,10 @@ function AddProductModal({ onClose, onAdd }) {
             </button>
             <button
               type="submit"
-              disabled={!canSubmit}
-              className={`px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all ${canSubmit ? 'bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)]' : 'bg-[#34250f]/50 text-[#6f6048] cursor-not-allowed'}`}
+              disabled={!canSubmit || busy}
+              className={`px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all ${canSubmit && !busy ? 'bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)]' : 'bg-[#34250f]/50 text-[#6f6048] cursor-not-allowed'}`}
             >
-              <PlusCircle size={18} /> Add Product
+              <PlusCircle size={18} /> {busy ? 'Adding...' : 'Add Product'}
             </button>
           </div>
         </form>

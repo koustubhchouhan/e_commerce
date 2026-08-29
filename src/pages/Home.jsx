@@ -4,16 +4,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import GlassCard from '../components/GlassCard';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
-
-export const products = [
-  { id: 1, title: "Nexus VR Headset Pro", price: 499, desc: "Immersive next-gen virtual reality with crystal clear 8K resolution per eye.", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuD7QjgUiH2X2Nl5GbUpyOAB-G15qLHjtgK5o2UGEujI09voh9Owk8qeEkhwKZIPrR5wjTu54QR2r7ja11K__ILU7uFr-Xzf1VWzor6CsmHr1fGvTrJ6lzsk9R4mlsFR3W3CWrB1BeFIPMd2vZNMHYqLUTDE5P-lvMgz_LHqnnQX4utFlp7iedNnQzll3-SnlVh3iLwMf4VEBsolvFL2yPZ9HQiIfGef8TZonXDDJh6e99SgWz5OSV1G", badge: "NEW", badgeColor: "secondary", category: "Gaming" },
-  { id: 2, title: "AeroBuds Quantum", price: 129, oldPrice: 150, desc: "Active noise cancellation with quantum audio processing for studio-quality sound.", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBj9VZiL_pSiwp-oF28r9E7HwdAehUhFVhbs2DS8TaTp1D7bnzwwCeLtFSFcxoNLXBJ9tDpU6ipY8LN_9uTeti7b7gwSCLyfAd2nwn_XxeEdyUmbmIyz4VoXHIjk_eyxyuaCfiaGjXGTieRkW-cdlzRHie10fBUxpJvUonE-TjCzDyqw4FGAGlsiXQFEz-1ssuJJK2ieOCa7Grbv1cypCMJbBhtmxyZBfOp2F2ltZzTJ7Uwppi-GE6f", badge: "-15% OFF", badgeColor: "error", category: "Audio" },
-  { id: 3, title: "ChronoSync Ultra", price: 299, desc: "Titanium body smartwatch with advanced biometric sensors and 30-day battery life.", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDb4ZPINC5pjIYCY3G7UREExJuGFCqNceKgqe7K2_x5uqIJKtAzrVCcLk9TrF7eq7aH6Fannr3oJrneNzcYwQhoVaEDM_eLTKo9gZ-Qi9rBQ9PEDNM4FJ6IXWZP7V7C_3pcmRgh68yPFs_A3PVuBDLpeilRFPcXrm1KCvGV7HHLgzgnaR8VdUFcVbovlkhzs6CYH5vZHAJ83Q_jR45Ki7XR8Q10R0GmZXTWgR9wSL-OYG2y6nyhqi4D", category: "Wearables" },
-  { id: 4, title: "MechKeys K-900", price: 159, desc: "Tactile mechanical switches with per-key RGB lighting and aerospace-grade aluminum frame.", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAuHZ2rsQC1W59LmJKzXT30EIgwnX4gKNNurCgniuGnz6yXkpSuNSo5WOmlZ1UrqnkeH702g85_WfwpidzIfmoRhz9nsQgfsAcC8CVAUDhfv0x_6ngTeu9-bGfdTYuIPxLgJz57NsPQHuu6qERawADaaOByJ_QsvoTv8q9S9D13B9aLO-1kYgzHgs_cneFKOjP-tf5n1yHTvZ6yiejTOsrxvT1o4xGgO9ycVatsPkMwZS_9pwZuNjZT", category: "Accessories" },
-  { id: 5, title: "Quantum Core Q-7", price: 1299, desc: "Monolithic obsidian chassis with sub-zero liquid cooling architecture.", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAUZ1mtXhm-phI7GUylKqznDVbR02gvK0mX1HYreTeYzgfJRi-XUk9T2IZA34HO6BBlqHoEwIYgGQZwyDR5gppehxKRHKAQwvb3NxyHKNI2d5_U1lwK05KtdBUWJvfBgZ6z2xnrp2JIoecHHQF18aEXMNvElxZM5zTPQaAcrJ68L5KeVxaokpx97Lxc1rIVhkSPFE8HrpNrSSf-EGvs1Aajh9HG1Zf71arasK80Bc8rUYSGN0NeS0Ga", badge: "PRO", badgeColor: "secondary", category: "Components" }
-];
-
-const CATEGORIES = ['All', 'Gaming', 'Audio', 'Wearables', 'Accessories', 'Components'];
+import { api } from '../lib/api';
+import { toProductCardList } from '../lib/productShape';
 
 export function ProductGrid({ items, adminMode = false }) {
   return (
@@ -89,15 +81,42 @@ export default function Home() {
   const sliderRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState(['All']);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [productRes, categoryRes] = await Promise.all([
+          api.products({ limit: 100 }),
+          api.categories(),
+        ]);
+        if (cancelled) return;
+        setProducts(toProductCardList(productRes.items));
+        setCategories(['All', ...categoryRes.map((c) => c.name)]);
+      } catch (err) {
+        if (!cancelled) setError(err.message || 'Failed to load products.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // The URL's ?category= param is the single source of truth for the active filter
   const paramCategory = searchParams.get('category');
-  const activeCategory = paramCategory && CATEGORIES.includes(paramCategory) ? paramCategory : 'All';
+  const activeCategory = paramCategory && categories.includes(paramCategory) ? paramCategory : 'All';
 
   const setActiveCategory = (cat) => {
     setSearchParams(cat === 'All' ? {} : { category: cat }, { replace: true });
   };
 
-  const filtered = activeCategory === 'All' ? products : products.filter(p => p.category === activeCategory);
+  const filtered = activeCategory === 'All' ? products : products.filter((p) => p.category === activeCategory);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -152,7 +171,7 @@ export default function Home() {
           </div>
           {/* Category Filter Tabs */}
           <div className="flex gap-2 flex-wrap">
-            {CATEGORIES.map(cat => (
+            {categories.map(cat => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
@@ -168,9 +187,16 @@ export default function Home() {
           </div>
         </div>
 
-        {filtered.length > 0 ? (
+        {loading && (
+          <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading products...</div>
+        )}
+        {error && !loading && (
+          <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{error}</div>
+        )}
+        {!loading && !error && filtered.length > 0 && (
           <ProductGrid items={filtered} adminMode={false} />
-        ) : (
+        )}
+        {!loading && !error && filtered.length === 0 && (
           <div className="flex items-center justify-center h-40 text-[#cbb89d]">No products in this category.</div>
         )}
       </section>

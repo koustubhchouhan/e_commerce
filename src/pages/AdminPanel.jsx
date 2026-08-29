@@ -1,36 +1,96 @@
 import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Edit } from 'lucide-react';
-import { useState } from 'react';
-import { ProductGrid, products as homeProducts } from './Home';
+import { useEffect, useState } from 'react';
+import { ProductGrid } from './Home';
 import GlassCard from '../components/GlassCard';
+import { useToastStore } from '../store/toastStore';
+import { api } from '../lib/api';
+import { toProductCardList } from '../lib/productShape';
+
+const timeAgo = (iso) => {
+  if (!iso) return 'recently';
+  const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days > 1 ? 's' : ''} ago`;
+};
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('products');
 
-  const sellerRequests = [
-    { id: "SR-101", user: "Michael Chang", email: "mike@changelectronics.com", storeName: "Chang Electronics", date: "2 hours ago", status: "Pending" },
-    { id: "SR-102", user: "Sarah Jenkins", email: "sarah@neontech.com", storeName: "NeonTech Store", date: "1 day ago", status: "Pending" },
-  ];
+  const [approvedProducts, setApprovedProducts] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [sellerRequests, setSellerRequests] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const addToast = useToastStore((s) => s.addToast);
 
-  // Simulated extended catalog combining homescreen products and other sellers' approved products
-  const allApprovedProducts = [
-    ...homeProducts,
-    {
-      id: 101,
-      name: "ChronoSync Ultra Smartwatch",
-      price: 299.00,
-      image: "https://images.unsplash.com/photo-1544117519-31a4b719223d?auto=format&fit=crop&q=80&w=600",
-      category: "Wearables",
-      seller: "NeonTech Store"
-    },
-    {
-      id: 102,
-      name: "Quantum Core Q-7 GPU",
-      price: 1299.00,
-      image: "https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&q=80&w=600",
-      category: "Components",
-      seller: "Chang Electronics"
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.products({ limit: 100 });
+        const cards = toProductCardList(res.items);
+        setApprovedProducts(cards);
+        setFeaturedProducts(cards);
+      } catch {
+        addToast('Failed to load products.', 'error');
+      } finally {
+        setLoadingProducts(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadRequests = async () => {
+    setLoadingRequests(true);
+    try {
+      const reqs = await api.adminApplications('pending');
+      setSellerRequests(
+        (reqs ?? []).map((r) => ({
+          id: r.id,
+          user: r.applicant ?? '—',
+          email: r.contactEmail,
+          storeName: r.storeName,
+          date: timeAgo(r.createdAt),
+          status: 'Pending',
+        })),
+      );
+    } catch {
+      addToast('Failed to load seller requests.', 'error');
+    } finally {
+      setLoadingRequests(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    loadRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleReview = async (id, action) => {
+    const req = sellerRequests.find((r) => r.id === id);
+    setBusy(true);
+    try {
+      await api.reviewApplication(id, action);
+      addToast(
+        action === 'approve'
+          ? `"${req?.storeName ?? 'Store'}" approved as a verified seller!`
+          : `"${req?.storeName ?? 'Request'}" application rejected.`,
+        action === 'approve' ? 'success' : 'error',
+      );
+      await loadRequests();
+    } catch (err) {
+      addToast(err.message || 'Failed to update application.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const allApprovedProducts = approvedProducts;
 
   const adminCategories = [
     { id: 1, name: "Gaming & VR", count: 145 },
@@ -83,6 +143,7 @@ export default function AdminPanel() {
               </div>
             </div>
             <ProductGrid items={allApprovedProducts} adminMode={true} />
+            {loadingProducts && <div className="text-center py-16 text-[#cbb89d]">Loading products...</div>}
           </div>
         )}
 
@@ -95,7 +156,8 @@ export default function AdminPanel() {
                 <p className="text-[#cbb89d]">These products are currently being showcased on the customer homescreen.</p>
               </div>
             </div>
-            <ProductGrid items={homeProducts} adminMode={true} />
+            <ProductGrid items={featuredProducts} adminMode={true} />
+            {loadingProducts && <div className="text-center py-16 text-[#cbb89d]">Loading products...</div>}
           </div>
         )}
 
@@ -161,6 +223,14 @@ export default function AdminPanel() {
             </div>
 
             <div className="flex flex-col gap-6">
+              {loadingRequests && (
+                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading seller requests...</div>
+              )}
+              {!loadingRequests && sellerRequests.length === 0 && (
+                <div className="bg-[#34250f]/30 p-8 rounded-lg border border-dashed border-white/10 text-center text-[#9e8c73] text-sm">
+                  No pending seller requests — you're all caught up.
+                </div>
+              )}
               {sellerRequests.map((req) => (
                 <GlassCard key={req.id} className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                   <div className="flex items-start gap-4">
@@ -174,10 +244,10 @@ export default function AdminPanel() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 w-full md:w-auto">
-                    <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#9c5214]/50 hover:bg-[#ff9933]/20 border border-[#ff9933]/30 text-[#fff4e6] text-sm font-semibold transition-all">
+                    <button onClick={() => handleReview(req.id, 'approve')} disabled={busy} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#9c5214]/50 hover:bg-[#ff9933]/20 border border-[#ff9933]/30 text-[#fff4e6] text-sm font-semibold transition-all disabled:opacity-50">
                       <Check size={16} /> Approve
                     </button>
-                    <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#690005]/50 hover:bg-[#ffb4ab]/20 border border-[#ffb4ab]/30 text-[#ffdad6] text-sm font-semibold transition-all">
+                    <button onClick={() => handleReview(req.id, 'reject')} disabled={busy} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#690005]/50 hover:bg-[#ffb4ab]/20 border border-[#ffb4ab]/30 text-[#ffdad6] text-sm font-semibold transition-all disabled:opacity-50">
                       <X size={16} /> Reject
                     </button>
                   </div>

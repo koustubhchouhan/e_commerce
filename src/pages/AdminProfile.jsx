@@ -1,45 +1,111 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Shield, Users, UserCheck, Store, Check, X, Clock, CheckCircle, Trash2, Lock, AlertTriangle } from 'lucide-react';
 import { useToastStore } from '../store/toastStore';
+import { api } from '../lib/api';
 
-const INITIAL_REQUESTS = [
-  { id: 'SR-101', name: 'Michael Chang', email: 'mike@changelectronics.com', store: 'Chang Electronics', date: '2 hours ago' },
-  { id: 'SR-102', name: 'Priya Nair', email: 'priya@auralabs.io', store: 'Aura Labs', date: '5 hours ago' },
-  { id: 'SR-103', name: 'Diego Fernández', email: 'diego@voltgear.com', store: 'VoltGear Peripherals', date: '1 day ago' },
-];
+const timeAgo = (iso) => {
+  if (!iso) return 'recently';
+  const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days > 1 ? 's' : ''} ago`;
+};
 
-const INITIAL_APPROVED = [
-  { id: 'SL-01', name: 'Sarah Jenkins', email: 'sarah@neontech.com', store: 'NeonTech Store', since: 'Jan 2026' },
-  { id: 'SL-02', name: 'Marcus Reed', email: 'marcus@electroworld.com', store: 'ElectroWorld', since: 'Mar 2026' },
-  { id: 'SL-03', name: 'Lena Petrova', email: 'lena@cybersonic.com', store: 'CyberSonic Audio', since: 'May 2026' },
-];
+const formatSince = (iso) => {
+  if (!iso) return 'recently';
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+};
 
 export default function AdminProfile() {
-  const [requests, setRequests] = useState(INITIAL_REQUESTS);
-  const [approved, setApproved] = useState(INITIAL_APPROVED);
+  const [requests, setRequests] = useState([]);
+  const [approved, setApproved] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
   const addToast = useToastStore((s) => s.addToast);
 
-  const approveSeller = (id) => {
-    const req = requests.find((r) => r.id === id);
-    if (!req) return;
-    setRequests((prev) => prev.filter((r) => r.id !== id));
-    setApproved((prev) => [
-      { id: `SL-${Date.now()}`, name: req.name, email: req.email, store: req.store, since: 'Just now' },
-      ...prev,
-    ]);
-    addToast(`"${req.store}" approved as a verified seller!`, 'success');
+  const loadAll = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [reqs, sellers] = await Promise.all([
+        api.adminApplications('pending'),
+        api.adminSellers(),
+      ]);
+      setRequests(
+        (reqs ?? []).map((r) => ({
+          id: r.id,
+          store: r.storeName,
+          name: r.applicant ?? '—',
+          email: r.contactEmail,
+          date: timeAgo(r.createdAt),
+        })),
+      );
+      setApproved(
+        (sellers ?? []).map((s) => ({
+          id: s.id,
+          store: s.store?.name ?? 'Store',
+          name: s.fullName ?? '—',
+          email: s.store?.id ? '' : '',
+          since: formatSince(s.joinedAt),
+        })),
+      );
+    } catch (err) {
+      setError(err.message || 'Failed to load admin data.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const rejectSeller = (id) => {
+  useEffect(() => {
+    loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const approveSeller = async (id) => {
     const req = requests.find((r) => r.id === id);
-    setRequests((prev) => prev.filter((r) => r.id !== id));
-    addToast(`"${req ? req.store : 'Request'}" application rejected.`, 'error');
+    setBusy(true);
+    try {
+      await api.reviewApplication(id, 'approve');
+      addToast(`"${req?.store ?? 'Store'}" approved as a verified seller!`, 'success');
+      await loadAll();
+    } catch (err) {
+      addToast(err.message || 'Failed to approve seller.', 'error');
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const revokeSeller = (id) => {
+  const rejectSeller = async (id) => {
+    const req = requests.find((r) => r.id === id);
+    setBusy(true);
+    try {
+      await api.reviewApplication(id, 'reject');
+      addToast(`"${req?.store ?? 'Request'}" application rejected.`, 'error');
+      await loadAll();
+    } catch (err) {
+      addToast(err.message || 'Failed to reject application.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const revokeSeller = async (id) => {
     const s = approved.find((a) => a.id === id);
-    setApproved((prev) => prev.filter((a) => a.id !== id));
-    addToast(`"${s ? s.store : 'Seller'}" access revoked.`, 'error');
+    setBusy(true);
+    try {
+      await api.revokeSeller(id);
+      addToast(`"${s?.store ?? 'Seller'}" access revoked.`, 'error');
+      await loadAll();
+    } catch (err) {
+      addToast(err.message || 'Failed to revoke seller.', 'error');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -70,6 +136,14 @@ export default function AdminProfile() {
             <span className="text-xs text-[#9e8c73] font-[Inter]">{requests.length} pending · {approved.length} active</span>
           </div>
 
+          {loading && (
+            <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading seller data...</div>
+          )}
+          {error && !loading && (
+            <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{error}</div>
+          )}
+          {!loading && !error && (
+          <>
           {/* Seller Requests */}
           <div className="mb-7">
             <div className="flex items-center gap-2 mb-3">
@@ -97,10 +171,10 @@ export default function AdminProfile() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <button onClick={() => approveSeller(req.id)} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#9c5214]/50 hover:bg-[#ff9933]/20 border border-[#ff9933]/30 text-[#fff4e6] text-xs font-semibold transition-all">
+                    <button onClick={() => approveSeller(req.id)} disabled={busy} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#9c5214]/50 hover:bg-[#ff9933]/20 border border-[#ff9933]/30 text-[#fff4e6] text-xs font-semibold transition-all disabled:opacity-50">
                       <Check size={14} /> Approve
                     </button>
-                    <button onClick={() => rejectSeller(req.id)} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#690005]/40 hover:bg-[#ffb4ab]/20 border border-[#ffb4ab]/30 text-[#ffdad6] text-xs font-semibold transition-all">
+                    <button onClick={() => rejectSeller(req.id)} disabled={busy} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#690005]/40 hover:bg-[#ffb4ab]/20 border border-[#ffb4ab]/30 text-[#ffdad6] text-xs font-semibold transition-all disabled:opacity-50">
                       <X size={14} /> Reject
                     </button>
                   </div>
@@ -133,17 +207,19 @@ export default function AdminProfile() {
                       <p className="font-[Outfit] font-semibold text-[#fff4e6] truncate flex items-center gap-1.5">
                         {s.store} <CheckCircle size={13} className="text-[#ff9933] shrink-0" />
                       </p>
-                      <p className="text-[#cbb89d] text-xs truncate">{s.name} • {s.email}</p>
+                      <p className="text-[#cbb89d] text-xs truncate">{s.name}{s.email ? ` • ${s.email}` : ''}</p>
                       <p className="text-[#9e8c73] text-[11px] mt-0.5">Seller since {s.since}</p>
                     </div>
                   </div>
-                  <button onClick={() => revokeSeller(s.id)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-[#ffb4ab]/20 border border-white/10 hover:border-[#ffb4ab]/30 text-[#cbb89d] hover:text-[#ffdad6] text-xs font-semibold transition-all shrink-0" title="Revoke seller access">
-                    <Trash2 size={14} /> <span className="hidden sm:inline">Revoke</span>
+                  <button onClick={() => revokeSeller(s.id)} disabled={busy} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-[#ffb4ab]/20 border border-white/10 hover:border-[#ffb4ab]/30 text-[#cbb89d] hover:text-[#ffdad6] text-xs font-semibold transition-all shrink-0 disabled:opacity-50" title="Revoke seller access">
+                    <Trash2 size={14} /> <span className="hidden sm:inline">{busy ? 'Working...' : 'Revoke'}</span>
                   </button>
                 </div>
               ))}
             </div>
           </div>
+          </>
+          )}
         </div>
 
         {/* ═══ Security ═══ */}

@@ -1,14 +1,12 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { CheckCircle, Package, ArrowRight } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
 
-function generateOrderId() {
-  return 'NV-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-}
-
-const orderId = generateOrderId();
-
 export default function OrderConfirmation() {
+  const location = useLocation();
+  const orderId = location.state?.orderId || 'NV-XXXXXX';
+  const total = location.state?.total;
+
   return (
     <div className="max-w-[700px] mx-auto px-6 py-20 animate-fade-in-up flex flex-col items-center gap-8 text-center">
       
@@ -30,8 +28,14 @@ export default function OrderConfirmation() {
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center py-3 border-b border-white/10">
             <span className="text-[#cbb89d] text-sm">Order ID</span>
-            <span className="font-[Outfit] text-lg font-bold text-[#ff9933]">{orderId}</span>
+            <span className="font-[Outfit] text-lg font-bold text-[#ff9933] uppercase">{orderId}</span>
           </div>
+          {total != null && (
+            <div className="flex justify-between items-center py-3 border-b border-white/10">
+              <span className="text-[#cbb89d] text-sm">Total Paid</span>
+              <span className="font-[Outfit] text-lg font-semibold text-[#fff4e6]">${Number(total).toFixed(2)}</span>
+            </div>
+          )}
           <div className="flex justify-between items-center py-3 border-b border-white/10">
             <span className="text-[#cbb89d] text-sm">Estimated Delivery</span>
             <span className="font-[Outfit] text-lg font-semibold text-[#fff4e6]">5–7 Business Days</span>

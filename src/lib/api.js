@@ -5,7 +5,7 @@
 // The backend base URL comes from Vite env (set VITE_API_URL in a root .env),
 // falling back to the local dev server.
 
-const BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:4000';
+const BASE_URL = import.meta.env?.VITE_API_URL || '/api';
 
 const ACCESS_KEY = 'novamarket-access-token';
 const REFRESH_KEY = 'novamarket-refresh-token';
@@ -37,21 +37,28 @@ export class ApiError extends Error {
   }
 }
 
-async function request(path, { method = 'GET', body, auth = false, _retry = false } = {}) {
+async function request(path, { method = 'GET', body, auth = false, formData = false, _retry = false } = {}) {
   const headers = {};
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (auth && tokenStore.access) headers.Authorization = `Bearer ${tokenStore.access}`;
+
+  let payload;
+  if (formData) {
+    payload = body; // FormData sets its own multipart Content-Type + boundary
+  } else {
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    payload = body !== undefined ? JSON.stringify(body) : undefined;
+  }
 
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: payload,
   });
 
   // Access token likely expired — try one silent refresh, then replay.
   if (res.status === 401 && auth && !_retry && tokenStore.refresh) {
     const ok = await tryRefresh();
-    if (ok) return request(path, { method, body, auth, _retry: true });
+    if (ok) return request(path, { method, body, auth, formData, _retry: true });
   }
 
   const text = await res.text();
@@ -108,4 +115,55 @@ export const api = {
   post: (path, body, opts) => request(path, { ...opts, method: 'POST', body }),
   patch: (path, body, opts) => request(path, { ...opts, method: 'PATCH', body }),
   del: (path, opts) => request(path, { ...opts, method: 'DELETE' }),
+
+  // ---- Catalog ----
+  categories: () => request('/categories'),
+  products: ({ search, category, page = 1, limit = 100 } = {}) => {
+    const qs = new URLSearchParams({ page, limit });
+    if (search) qs.set('search', search);
+    if (category) qs.set('category', category);
+    return request(`/products?${qs}`);
+  },
+  product: (id) => request(`/products/${id}`),
+
+  // ---- Seller products ----
+  sellerProducts: () => request('/seller/products', { auth: true }),
+  createProduct: (data) => request('/products', { method: 'POST', body: data, auth: true }),
+  updateProduct: (id, data) => request(`/products/${id}`, { method: 'PATCH', body: data, auth: true }),
+  deleteProduct: (id) => request(`/products/${id}`, { method: 'DELETE', auth: true }),
+  uploadProductImages: (id, files) => {
+    const form = new FormData();
+    files.forEach((file) => form.append('images', file));
+    return request(`/products/${id}/images`, {
+      method: 'POST',
+      body: form,
+      auth: true,
+      formData: true,
+    });
+  },
+
+  // ---- Seller applications ----
+  createSellerApplication: (data) =>
+    request('/seller-applications', { method: 'POST', body: data, auth: true }),
+  mySellerApplications: () => request('/seller-applications/me', { auth: true }),
+
+  // ---- Admin ----
+  adminApplications: (status) => {
+    const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+    return request(`/admin/seller-applications${qs}`, { auth: true });
+  },
+  reviewApplication: (id, action) =>
+    request(`/admin/seller-applications/${id}`, { method: 'PATCH', body: { action }, auth: true }),
+  adminSellers: () => request('/admin/sellers', { auth: true }),
+  revokeSeller: (id) => request(`/admin/sellers/${id}`, { method: 'DELETE', auth: true }),
+
+  // ---- Orders ----
+  createOrder: (items, shippingAddress) =>
+    request('/orders', {
+      method: 'POST',
+      body: { items, shipping_address: shippingAddress },
+      auth: true,
+    }),
+  myOrders: () => request('/orders', { auth: true }),
+  order: (id) => request(`/orders/${id}`, { auth: true }),
 };
