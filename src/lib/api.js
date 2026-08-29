@@ -156,6 +156,11 @@ export const api = {
     request(`/admin/seller-applications/${id}`, { method: 'PATCH', body: { action }, auth: true }),
   adminSellers: () => request('/admin/sellers', { auth: true }),
   revokeSeller: (id) => request(`/admin/sellers/${id}`, { method: 'DELETE', auth: true }),
+  adminOrders: () => request('/admin/orders', { auth: true }),
+  adminCategories: () => request('/admin/categories', { auth: true }),
+
+  // ---- Seller orders ----
+  sellerOrders: () => request('/seller/orders', { auth: true }),
 
   // ---- Orders ----
   createOrder: (items, shippingAddress) =>
