@@ -1,7 +1,8 @@
-import { Package, TrendingUp, DollarSign, Eye, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, HelpCircle, Clock, PackageX, Check } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Package, TrendingUp, DollarSign, Eye, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, HelpCircle, Clock, PackageX, Check, UploadCloud } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
 import GlassCard from '../components/GlassCard';
 import { api } from '../lib/api';
+import { useToastStore } from '../store/toastStore';
 
 const shortId = (id) => (id ? String(id).slice(0, 8).toUpperCase() : '');
 
@@ -18,17 +19,32 @@ export default function SellerHub() {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [ordersError, setOrdersError] = useState('');
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const addToast = useToastStore((s) => s.addToast);
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const res = await api.sellerOrders();
-        if (active) setOrders(res.items ?? []);
+        const [orderRes, productRes] = await Promise.all([api.sellerOrders(), api.sellerProducts()]);
+        if (!active) return;
+        setOrders(orderRes.items ?? []);
+        setProducts(productRes.items ?? []);
+        try {
+          const cats = await api.categories();
+          if (active) setCategories(cats.map((c) => ({ id: c.id, name: c.name })));
+        } catch {
+          // categories are a nicety for the add form; non-fatal
+        }
       } catch (err) {
-        if (active) setOrdersError(err.message || 'Failed to load orders.');
+        if (active) setOrdersError(err.message || 'Failed to load store data.');
       } finally {
-        if (active) setLoadingOrders(false);
+        if (active) {
+          setLoadingOrders(false);
+          setLoadingProducts(false);
+        }
       }
     })();
     return () => {
@@ -36,10 +52,25 @@ export default function SellerHub() {
     };
   }, []);
 
-  const inventory = [
-    { id: 1, name: "Nova Pro X-15 Gaming Laptop", price: "$2,499.00", status: "Approved", sales: 12 },
-    { id: 2, name: "Aura Sound V2 Headphones", price: "$349.99", status: "Pending", sales: 0 }
-  ];
+  const salesByProduct = {};
+  let revenue = 0;
+  let unitsSold = 0;
+  for (const order of orders) {
+    for (const item of order.items ?? []) {
+      revenue += Number(item.lineTotal || 0);
+      unitsSold += Number(item.quantity || 0);
+      salesByProduct[item.productId] = (salesByProduct[item.productId] || 0) + Number(item.quantity || 0);
+    }
+  }
+
+  const productStatusLabel = (status) => {
+    switch (status) {
+      case 'active': return 'Approved';
+      case 'out_of_stock': return 'Out of Stock';
+      case 'draft': return 'Pending';
+      default: return 'Pending';
+    }
+  };
 
   const requests = [
     {
@@ -114,50 +145,16 @@ export default function SellerHub() {
 
             {/* Analytics Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              <StatCard icon={<DollarSign size={24} />} title="Total Revenue" value="$45,230" trend="+12.5%" />
-              <StatCard icon={<Package size={24} />} title="Products Sold" value="124" trend="+8.2%" />
-              <StatCard icon={<Eye size={24} />} title="Store Views" value="12.4K" trend="+22.1%" />
-              <StatCard icon={<TrendingUp size={24} />} title="Conversion Rate" value="3.2%" trend="-0.4%" negative />
+              <StatCard icon={<DollarSign size={24} />} title="Total Revenue" value={`$${revenue.toLocaleString('en-US', { maximumFractionDigits: 2 })}`} trend={`${orders.length} order${orders.length === 1 ? '' : 's'}`} />
+              <StatCard icon={<Package size={24} />} title="Products Sold" value={String(unitsSold)} trend={`${products.length} in stock`} />
+              <StatCard icon={<ShoppingBag size={24} />} title="Store Orders" value={String(orders.length)} trend={`${salesByProduct ? Object.keys(salesByProduct).length : 0} products sold`} />
+              <StatCard icon={<TrendingUp size={24} />} title="Inventory Items" value={String(products.length)} trend={loadingProducts ? 'loading...' : 'live'} />
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
               {/* Add Product Form */}
               <div className="xl:col-span-1">
-                <GlassCard className="p-6 lg:p-8">
-                  <h2 className="font-[Outfit] text-2xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
-                    <PlusCircle className="text-[#ff9933]" /> Add Product
-                  </h2>
-                  <form className="flex flex-col gap-4">
-                    <div>
-                      <label className="text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block">Product Name</label>
-                      <input type="text" className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors" placeholder="Enter name..." />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block">Price ($)</label>
-                        <input type="number" className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors" placeholder="0.00" />
-                      </div>
-                      <div>
-                        <label className="text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block">Category</label>
-                        <select className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors">
-                          <option>Gaming</option>
-                          <option>Audio</option>
-                          <option>Components</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block">Description</label>
-                      <textarea rows="3" className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors resize-none" placeholder="Details..."></textarea>
-                    </div>
-
-                    <button type="button" className="w-full py-3 rounded-lg bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] font-[Outfit] text-lg font-semibold mt-2 hover:shadow-[0_0_7px_rgba(255,153,51,0.22)] transition-all">
-                      Submit for Approval
-                    </button>
-                  </form>
-                </GlassCard>
+                <AddProductForm categories={categories} onAdded={() => api.sellerProducts().then((r) => setProducts(r.items ?? []))} />
               </div>
 
               {/* Inventory List */}
@@ -165,6 +162,9 @@ export default function SellerHub() {
                 <GlassCard className="p-6 lg:p-8 min-h-[500px]">
                   <h2 className="font-[Outfit] text-2xl font-semibold text-[#fff4e6] mb-6">Your Inventory</h2>
                   
+                  {loadingProducts ? (
+                    <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading inventory...</div>
+                  ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
@@ -176,23 +176,32 @@ export default function SellerHub() {
                         </tr>
                       </thead>
                       <tbody>
-                        {inventory.map(item => (
+                        {products.map((item) => {
+                          const status = productStatusLabel(item.status);
+                          return (
                           <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                             <td className="py-4 px-4 font-[Outfit] text-lg font-semibold text-[#f1e7d7]">{item.name}</td>
-                            <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">{item.price}</td>
-                            <td className="py-4 px-4 text-center text-[#fff4e6]">{item.sales}</td>
+                            <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">${Number(item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td className="py-4 px-4 text-center text-[#fff4e6]">{salesByProduct[item.id] ?? 0}</td>
                             <td className="py-4 px-4 text-right">
                               <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
-                                item.status === 'Approved' ? 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30' : 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30'
+                                status === 'Approved' ? 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30' : 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30'
                               }`}>
-                                {item.status}
+                                {status}
                               </span>
                             </td>
                           </tr>
-                        ))}
+                          );
+                        })}
+                        {products.length === 0 && (
+                          <tr>
+                            <td colSpan={4} className="py-16 text-center text-[#9e8c73] text-sm">No products yet. Add your first one on the left.</td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
+                  )}
                 </GlassCard>
               </div>
             </div>
@@ -368,6 +377,105 @@ function StatCard({ icon, title, value, trend, negative }) {
         <h3 className="text-[#cbb89d] text-sm font-semibold uppercase tracking-wider mb-1">{title}</h3>
         <p className="font-[Outfit] text-3xl font-bold text-[#fff4e6]">{value}</p>
       </div>
+    </GlassCard>
+  );
+}
+
+function AddProductForm({ categories = [], onAdded }) {
+  const [name, setName] = useState('');
+  const [price, setPrice] = useState('');
+  const [category, setCategory] = useState(categories[0]?.name ?? '');
+  const [description, setDescription] = useState('');
+  const [files, setFiles] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const fileInputRef = useRef(null);
+  const addToast = useToastStore((s) => s.addToast);
+
+  const priceNum = parseFloat(price) || 0;
+  const canSubmit = name.trim().length > 0 && priceNum > 0 && !busy;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    setBusy(true);
+    try {
+      const categoryId = categories.find((c) => c.name === category)?.id ?? null;
+      const created = await api.createProduct({
+        name: name.trim(),
+        description: description.trim(),
+        price: priceNum,
+        discount_percent: 0,
+        stock: 0,
+        status: 'draft',
+        category_id: categoryId,
+      });
+      if (files.length) await api.uploadProductImages(created.id, files);
+      setName('');
+      setPrice('');
+      setDescription('');
+      setFiles([]);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      addToast(`"${name.trim()}" submitted for approval!`, 'success');
+      onAdded?.();
+    } catch (err) {
+      addToast(err.message || 'Failed to add product.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const inputClass = 'w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors';
+  const labelClass = 'text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block';
+
+  return (
+    <GlassCard className="p-6 lg:p-8">
+      <h2 className="font-[Outfit] text-2xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
+        <PlusCircle className="text-[#ff9933]" /> Add Product
+      </h2>
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        <div>
+          <label className={labelClass}>Product Name</label>
+          <input type="text" className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter name..." />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>Price ($)</label>
+            <input type="number" min="0" step="0.01" className={inputClass} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" />
+          </div>
+          <div>
+            <label className={labelClass}>Category</label>
+            <select className={inputClass} value={category} onChange={(e) => setCategory(e.target.value)}>
+              {categories.length === 0 && <option value="">No categories</option>}
+              {categories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className={labelClass}>Description</label>
+          <textarea rows="3" className={`${inputClass} resize-none`} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Details..."></textarea>
+        </div>
+
+        <div>
+          <label className={labelClass}>Images</label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+            className="text-xs text-[#9e8c73] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#ff9933]/10 file:text-[#ff9933] file:font-semibold file:cursor-pointer hover:file:bg-[#ff9933]/20 transition-colors"
+          />
+          {files.length > 0 && (
+            <p className="text-[11px] text-[#cbb89d] mt-1.5 flex items-center gap-1"><UploadCloud size={13} /> {files.length} image{files.length === 1 ? '' : 's'} selected</p>
+          )}
+        </div>
+
+        <button type="submit" disabled={!canSubmit} className={`w-full py-3 rounded-lg font-[Outfit] text-lg font-semibold mt-2 transition-all flex items-center justify-center gap-2 ${canSubmit ? 'bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_7px_rgba(255,153,51,0.22)]' : 'bg-[#34250f]/50 text-[#6f6048] cursor-not-allowed'}`}>
+          <PlusCircle size={20} /> {busy ? 'Submitting...' : 'Submit for Approval'}
+        </button>
+      </form>
     </GlassCard>
   );
 }
