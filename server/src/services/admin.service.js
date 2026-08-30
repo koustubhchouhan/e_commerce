@@ -1,5 +1,6 @@
 import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
+import { removeProductImage } from './storage.service.js';
 
 const APPLICATION_SELECT =
   'id, store_name, contact_email, status, created_at, reviewed_at, profiles(full_name)';
@@ -97,6 +98,85 @@ export async function listSellers() {
       ? { id: s.stores.id, name: s.stores.name, description: s.stores.description }
       : null,
   }));
+}
+
+// GET /admin/categories — every category with its product count.
+export async function listCategories() {
+  const { data, error } = await db
+    .from('categories')
+    .select('id, name, slug, products(count)');
+
+  if (error) throw new AppError(500, `Could not load categories: ${error.message}`);
+
+  return (data ?? []).map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    productCount: c.products?.[0]?.count ?? 0,
+  }));
+}
+
+// POST /admin/categories — create a category. The slug is auto-derived from
+// the name so it stays unique and URL-safe.
+export async function createCategory({ name }) {
+  const slug = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+  if (!slug) throw new AppError(400, 'Category name must contain letters or numbers');
+
+  const { data, error } = await db
+    .from('categories')
+    .insert({ name: name.trim(), slug })
+    .select('id, name, slug')
+    .single();
+
+  if (error) {
+    if (error.code === '23505') throw new AppError(409, 'A category with this name already exists');
+    throw new AppError(400, `Could not create category: ${error.message}`);
+  }
+
+  return { ...data, productCount: 0 };
+}
+
+// DELETE /admin/categories/:id — products keep existing with category null
+// (schema: category_id on delete set null).
+export async function deleteCategory(categoryId) {
+  const { data: existing, error: existErr } = await db
+    .from('categories')
+    .select('id')
+    .eq('id', categoryId)
+    .maybeSingle();
+  if (existErr) throw new AppError(500, `Could not load category: ${existErr.message}`);
+  if (!existing) throw new AppError(404, 'Category not found');
+
+  const { error } = await db.from('categories').delete().eq('id', categoryId);
+  if (error) throw new AppError(400, `Could not delete category: ${error.message}`);
+}
+
+// DELETE /admin/products/:id — admins may remove any product on the platform,
+// including its stored images.
+export async function deleteAnyProduct(productId) {
+  const { data: product, error: prodErr } = await db
+    .from('products')
+    .select('id')
+    .eq('id', productId)
+    .maybeSingle();
+  if (prodErr) throw new AppError(500, `Could not load product: ${prodErr.message}`);
+  if (!product) throw new AppError(404, 'Product not found');
+
+  const { data: images, error: imgErr } = await db
+    .from('product_images')
+    .select('url')
+    .eq('product_id', productId);
+  if (imgErr) throw new AppError(500, `Could not load product images: ${imgErr.message}`);
+
+  const { error } = await db.from('products').delete().eq('id', productId);
+  if (error) throw new AppError(400, `Could not delete product: ${error.message}`);
+
+  await Promise.all((images ?? []).map((i) => removeProductImage(i.url)));
 }
 
 // DELETE /admin/sellers/:id — revoke: demote back to customer and draft their

@@ -9,6 +9,10 @@ export const listOrders = asyncHandler(async (req, res) => {
   res.json(await orderService.listOrders(req.user.id));
 });
 
+export const listSellerOrders = asyncHandler(async (req, res) => {
+  res.json(await orderService.listSellerOrders(req.user.id));
+});
+
 export const getOrder = asyncHandler(async (req, res) => {
   res.json(await orderService.getOrder(req.user.id, req.user.role, req.params.id));
 });

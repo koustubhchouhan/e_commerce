@@ -4,11 +4,18 @@ import {
   reviewApplication,
   listSellers,
   revokeSeller,
-  adminOrders,
+  listAllOrders,
+  listCategories,
+  createCategory,
+  deleteCategory,
+  deleteProduct,
 } from '../controllers/admin.controller.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate, validateQuery, validateParams } from '../middleware/validate.js';
-import { uuidParamSchema } from '../validators/catalog.validators.js';
+import {
+  uuidParamSchema,
+  createCategorySchema,
+} from '../validators/catalog.validators.js';
 import {
   listApplicationsQuerySchema,
   reviewApplicationSchema,
@@ -39,6 +46,28 @@ router.delete(
   validateParams(uuidParamSchema),
   revokeSeller
 );
-router.get('/admin/orders', requireAuth, requireRole('admin'), adminOrders);
+router.get('/admin/orders', requireAuth, requireRole('admin'), listAllOrders);
+router.get('/admin/categories', requireAuth, requireRole('admin'), listCategories);
+router.post(
+  '/admin/categories',
+  requireAuth,
+  requireRole('admin'),
+  validate(createCategorySchema),
+  createCategory
+);
+router.delete(
+  '/admin/categories/:id',
+  requireAuth,
+  requireRole('admin'),
+  validateParams(uuidParamSchema),
+  deleteCategory
+);
+router.delete(
+  '/admin/products/:id',
+  requireAuth,
+  requireRole('admin'),
+  validateParams(uuidParamSchema),
+  deleteProduct
+);
 
 export default router;

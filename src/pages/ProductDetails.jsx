@@ -4,7 +4,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import GlassCard from '../components/GlassCard';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
-import { api } from '../lib/api';
+import { api, tokenStore } from '../lib/api';
 import { toProductCard } from '../lib/productShape';
 
 export default function ProductDetails() {
@@ -15,9 +15,33 @@ export default function ProductDetails() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [reviewLoading, setReviewLoading] = useState(true);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const addItem = useCartStore(s => s.addItem);
   const addToast = useToastStore(s => s.addToast);
   const navigate = useNavigate();
+  const isLoggedIn = Boolean(tokenStore.access);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setReviewLoading(true);
+      try {
+        const res = await api.productReviews(id);
+        if (!cancelled) setReviews(res.items ?? []);
+      } catch {
+        // reviews are optional; non-fatal
+      } finally {
+        if (!cancelled) setReviewLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -71,6 +95,35 @@ export default function ProductDetails() {
   const savePct = product.oldPrice
     ? Math.round((1 - product.price / product.oldPrice) * 100)
     : null;
+  const avgRating = reviews.length
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    : 0;
+  const reviewSummary = avgRating > 0
+    ? `${avgRating.toFixed(1)} (${reviews.length} ${reviews.length === 1 ? 'Review' : 'Reviews'})`
+    : 'No reviews yet';
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (rating < 1 || submitting) return;
+    setSubmitting(true);
+    try {
+      const created = await api.createProductReview(id, { rating, comment: comment.trim() });
+      setReviews((prev) => {
+        const idx = prev.findIndex((r) => r.userId === created.userId);
+        const next = [...prev];
+        if (idx >= 0) next[idx] = created;
+        else next.unshift(created);
+        return next;
+      });
+      setRating(0);
+      setComment('');
+      addToast('Thanks! Your review was posted.', 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to post review.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleAddToCart = () => {
     for (let i = 0; i < qty; i++) addItem(product);
@@ -122,8 +175,8 @@ export default function ProductDetails() {
         {/* Right: Details */}
         <GlassCard className="p-10 flex flex-col" hover={false}>
           <div className="flex items-center gap-2 mb-4 text-[#ff7418]">
-            <Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><Star size={16} fill="currentColor" /><StarHalf size={16} fill="currentColor" />
-            <span className="text-[#cbb89d] text-xs font-semibold tracking-wider ml-2">4.8 (124 Reviews)</span>
+            <StarRating value={avgRating} />
+            <span className="text-[#cbb89d] text-xs font-semibold tracking-wider ml-2">{reviewSummary}</span>
           </div>
           <span className="text-[#ff9933] text-xs font-bold uppercase tracking-widest mb-2">{product.category}</span>
           <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-4 leading-tight">{product.title}</h1>
@@ -162,13 +215,91 @@ export default function ProductDetails() {
       {/* Reviews */}
       <div>
         <h2 className="font-[Outfit] text-3xl font-bold text-[#fff4e6] mb-8">Customer Reviews</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ReviewCard initials="JD" name="J. Doe" role="Verified Buyer" text="Incredible piece of hardware. The aesthetic perfectly matches my dark-mode setup, and the performance for data rendering is unmatched." stars={5} />
-          <ReviewCard initials="SA" name="Sarah A." role="Tech Enthusiast" text="Runs slightly warmer than expected under full load, but the cooling system handles it gracefully. The build quality is phenomenally solid." stars={4.5} />
-          <ReviewCard initials="MR" name="Mark R." role="Developer" text="Worth every penny. It integrated seamlessly into my existing architecture. The glass interface panels are a brilliant touch." stars={5} />
-        </div>
+
+        {/* Write a review */}
+        {isLoggedIn ? (
+          <GlassCard className="p-6 mb-8" hover={false}>
+            <h3 className="font-[Outfit] text-xl font-semibold text-[#f1e7d7] mb-4">Write a Review</h3>
+            <form onSubmit={handleSubmitReview} className="flex flex-col gap-4">
+              <div>
+                <span className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Your Rating</span>
+                <div className="flex gap-1 text-[#ff7418]">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setRating(n)}
+                      aria-label={`${n} star${n === 1 ? '' : 's'}`}
+                      className="transition-transform hover:scale-110"
+                    >
+                      <Star size={28} fill={n <= rating ? 'currentColor' : 'none'} className={n <= rating ? '' : 'text-[#4b3d2a]'} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Your Review</label>
+                <textarea
+                  rows={3}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="What did you think of this product?"
+                  className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all resize-none placeholder:text-[#6f6048]"
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={rating < 1 || submitting}
+                  className={`px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold transition-all ${rating >= 1 && !submitting ? 'bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)]' : 'bg-[#34250f]/50 text-[#6f6048] cursor-not-allowed'}`}
+                >
+                  {submitting ? 'Posting...' : 'Post Review'}
+                </button>
+              </div>
+            </form>
+          </GlassCard>
+        ) : (
+          <p className="text-[#cbb89d] text-sm mb-8">
+            <Link to="/login" className="text-[#ff9933] font-semibold hover:underline">Sign in</Link> to leave a review.
+          </p>
+        )}
+
+        {reviewLoading ? (
+          <div className="flex items-center justify-center h-32 text-[#cbb89d]">Loading reviews...</div>
+        ) : reviews.length === 0 ? (
+          <div className="bg-[#34250f]/30 p-8 rounded-lg border border-dashed border-white/10 text-center text-[#9e8c73] text-sm">
+            No reviews yet — be the first to review this product.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {reviews.map((r) => (
+              <ReviewCard
+                key={r.id}
+                initials={(r.author || 'A').slice(0, 1).toUpperCase()}
+                name={r.author}
+                role={r.createdAt ? `Reviewed ${new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : 'Verified Buyer'}
+                text={r.comment || 'This customer did not leave a written comment.'}
+                stars={r.rating}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+function StarRating({ value }) {
+  const full = Math.floor(value);
+  const half = value - full >= 0.5;
+  return (
+    <>
+      {[...Array(5)].map((_, i) => {
+        if (i < full) return <Star key={i} size={16} fill="currentColor" />;
+        if (i === full && half) return <StarHalf key={i} size={16} fill="currentColor" />;
+        return <Star key={i} size={16} className="text-[#4b3d2a]" />;
+      })}
+    </>
   );
 }
 

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Edit } from 'lucide-react';
+import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ProductGrid } from './Home';
 import GlassCard from '../components/GlassCard';
@@ -18,19 +18,36 @@ const timeAgo = (iso) => {
   return `${days} day${days > 1 ? 's' : ''} ago`;
 };
 
+const formatDate = (iso) => {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const shortId = (id) => (id ? String(id).slice(0, 8).toUpperCase() : '');
+
+const ORDER_STATUS_STYLES = {
+  delivered: 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30',
+  shipped: 'bg-[#ff9933]/20 text-[#ff9933] border-[#ff9933]/30',
+  paid: 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30',
+  pending: 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30',
+  cancelled: 'bg-[#ffb4ab]/20 text-[#ffb4ab] border-[#ffb4ab]/30',
+};
+
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('products');
 
   const [approvedProducts, setApprovedProducts] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [sellerRequests, setSellerRequests] = useState([]);
-  const [platformOrders, setPlatformOrders] = useState([]);
-  const [realCategories, setRealCategories] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(true);
-  const [ordersError, setOrdersError] = useState('');
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [categoryModal, setCategoryModal] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
   const addToast = useToastStore((s) => s.addToast);
 
   useEffect(() => {
@@ -79,40 +96,31 @@ export default function AdminPanel() {
     (async () => {
       try {
         const res = await api.adminOrders();
-        setPlatformOrders(res.items ?? []);
-      } catch (err) {
-        setOrdersError(err.message || 'Failed to load orders.');
+        setOrders(res.items ?? []);
+      } catch {
+        addToast('Failed to load orders.', 'error');
       } finally {
         setLoadingOrders(false);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const loadCategories = async () => {
+    setLoadingCategories(true);
+    try {
+      const res = await api.adminCategories();
+      setCategories(res.items ?? []);
+    } catch {
+      addToast('Failed to load categories.', 'error');
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      try {
-        const cats = await api.categories();
-        const counts = new Map();
-        try {
-          const res = await api.products({ limit: 100 });
-          for (const p of res.items ?? []) {
-            const name = p.category?.name ?? 'Uncategorized';
-            counts.set(name, (counts.get(name) ?? 0) + 1);
-          }
-        } catch {
-          // counts are a nice-to-have; fall through with 0s
-        }
-        setRealCategories(
-          (cats ?? []).map((c, i) => ({
-            id: c.id,
-            name: c.name,
-            count: counts.get(c.name) ?? 0,
-          })),
-        );
-      } catch {
-        // categories tab stays empty if unavailable
-      }
-    })();
+    loadCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleReview = async (id, action) => {
@@ -136,14 +144,52 @@ export default function AdminPanel() {
 
   const allApprovedProducts = approvedProducts;
 
-  const adminCategories = realCategories;
+  const handleRemoveProduct = async (id) => {
+    const product = approvedProducts.find((p) => p.id === id);
+    setBusy(true);
+    try {
+      await api.adminDeleteProduct(id);
+      setApprovedProducts((prev) => prev.filter((p) => p.id !== id));
+      setFeaturedProducts((prev) => prev.filter((p) => p.id !== id));
+      addToast(`"${product?.title ?? 'Product'}" removed from the platform.`, 'error');
+    } catch (err) {
+      addToast(err.message || 'Failed to remove product.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
 
-  const payments = [
-    { id: "TXN-9021", date: "Today, 10:45 AM", type: "Customer Payment", amount: "+$499.00", status: "Completed" },
-    { id: "TXN-9020", date: "Today, 09:12 AM", type: "Seller Payout (NeonTech)", amount: "-$1,250.00", status: "Processing" },
-    { id: "TXN-9019", date: "Yesterday, 04:30 PM", type: "Platform Fee", amount: "+$45.00", status: "Completed" },
-    { id: "TXN-9018", date: "Yesterday, 02:15 PM", type: "Customer Refund", amount: "-$129.00", status: "Completed" },
-  ];
+  const handleCreateCategory = async (e) => {
+    e.preventDefault();
+    const name = newCategory.trim();
+    if (!name || busy) return;
+    setBusy(true);
+    try {
+      await api.createCategory(name);
+      setNewCategory('');
+      setCategoryModal(false);
+      addToast(`"${name}" category created!`, 'success');
+      await loadCategories();
+    } catch (err) {
+      addToast(err.message || 'Failed to create category.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDeleteCategory = async (id) => {
+    const cat = categories.find((c) => c.id === id);
+    setBusy(true);
+    try {
+      await api.deleteCategory(id);
+      addToast(`"${cat?.name ?? 'Category'}" deleted.`, 'error');
+      await loadCategories();
+    } catch (err) {
+      addToast(err.message || 'Failed to delete category.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <div className="flex min-h-[calc(100vh-80px)] animate-fade-in-up">
@@ -173,7 +219,7 @@ export default function AdminPanel() {
                 <p className="text-[#cbb89d]">Complete catalog of all approved products listed by sellers across the platform.</p>
               </div>
             </div>
-            <ProductGrid items={allApprovedProducts} adminMode={true} />
+            <ProductGrid items={allApprovedProducts} adminMode={true} adminOnDelete={handleRemoveProduct} />
             {loadingProducts && <div className="text-center py-16 text-[#cbb89d]">Loading products...</div>}
           </div>
         )}
@@ -187,7 +233,7 @@ export default function AdminPanel() {
                 <p className="text-[#cbb89d]">These products are currently being showcased on the customer homescreen.</p>
               </div>
             </div>
-            <ProductGrid items={featuredProducts} adminMode={true} />
+            <ProductGrid items={featuredProducts} adminMode={true} adminOnDelete={handleRemoveProduct} />
             {loadingProducts && <div className="text-center py-16 text-[#cbb89d]">Loading products...</div>}
           </div>
         )}
@@ -203,55 +249,46 @@ export default function AdminPanel() {
             </div>
             
             <GlassCard className="p-6 lg:p-8">
+              {loadingOrders && (
+                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading orders...</div>
+              )}
+              {!loadingOrders && (
               <div className="overflow-x-auto">
-                {loadingOrders ? (
-                  <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading orders...</div>
-                ) : ordersError ? (
-                  <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{ordersError}</div>
-                ) : platformOrders.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-40 gap-3 text-[#9e8c73]">
-                    <ShoppingBag size={36} className="text-[#4b3d2a]" />
-                    <p className="text-sm">No orders placed yet.</p>
-                  </div>
-                ) : (
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
                       <th className="py-4 px-4 font-semibold">Order ID</th>
                       <th className="py-4 px-4 font-semibold">Customer</th>
-                      <th className="py-4 px-4 font-semibold">Product</th>
+                      <th className="py-4 px-4 font-semibold">Items</th>
                       <th className="py-4 px-4 font-semibold">Date</th>
                       <th className="py-4 px-4 font-semibold text-right">Amount</th>
                       <th className="py-4 px-4 font-semibold text-right">Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {platformOrders.map(order => (
+                    {orders.map(order => (
                       <tr key={order.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{order.id.slice(0, 8)}</td>
-                        <td className="py-4 px-4 text-[#f1e7d7] font-semibold">{order.customerName ?? '—'}</td>
-                        <td className="py-4 px-4 text-[#fff4e6]">
-                          {order.items?.map(i => i.productName).join(', ') || '—'}
-                        </td>
-                        <td className="py-4 px-4 text-[#cbb89d] text-sm">
-                          {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </td>
-                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">${Number(order.total).toFixed(2)}</td>
+                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{shortId(order.id)}</td>
+                        <td className="py-4 px-4 text-[#f1e7d7] font-semibold">{order.customerName || 'Customer'}</td>
+                        <td className="py-4 px-4 text-[#fff4e6]">{order.items?.map((i) => i.productName).join(', ') || '—'}</td>
+                        <td className="py-4 px-4 text-[#cbb89d] text-sm">{formatDate(order.createdAt)}</td>
+                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">${Number(order.total).toLocaleString()}</td>
                         <td className="py-4 px-4 text-right">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
-                            order.status === 'delivered' ? 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30' :
-                            order.status === 'shipped' ? 'bg-[#ff9933]/20 text-[#ff9933] border-[#ff9933]/30' : 
-                            'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30'
-                          }`}>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${ORDER_STATUS_STYLES[order.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
                             {order.status}
                           </span>
                         </td>
                       </tr>
                     ))}
+                    {orders.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="py-16 text-center text-[#9e8c73] text-sm">No orders have been placed yet.</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
-                )}
               </div>
+              )}
             </GlassCard>
           </div>
         )}
@@ -309,41 +346,50 @@ export default function AdminPanel() {
                 <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Platform Categories</h1>
                 <p className="text-[#cbb89d]">Manage the main product categories available across the platform.</p>
               </div>
-              <button className="py-3 px-6 rounded-lg bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] font-[Outfit] text-base font-semibold hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] transition-all flex items-center gap-2">
+              <button onClick={() => setCategoryModal(true)} className="py-3 px-6 rounded-lg bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] font-[Outfit] text-base font-semibold hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] transition-all flex items-center gap-2">
                 <PlusCircle size={20} /> Add Category
               </button>
             </div>
             
             <GlassCard className="p-6 lg:p-8">
+              {loadingCategories && (
+                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading categories...</div>
+              )}
+              {!loadingCategories && (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
                       <th className="py-4 px-4 font-semibold">Category ID</th>
                       <th className="py-4 px-4 font-semibold">Name</th>
+                      <th className="py-4 px-4 font-semibold">Slug</th>
                       <th className="py-4 px-4 font-semibold text-center">Total Products</th>
                       <th className="py-4 px-4 font-semibold text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {adminCategories.map(cat => (
+                    {categories.map(cat => (
                       <tr key={cat.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">CAT-{cat.id.toString().padStart(3, '0')}</td>
+                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{shortId(cat.id)}</td>
                         <td className="py-4 px-4 text-[#fff4e6] font-semibold text-lg">{cat.name}</td>
-                        <td className="py-4 px-4 text-center text-[#f1e7d7] font-semibold">{cat.count}</td>
+                        <td className="py-4 px-4 text-[#9e8c73] text-sm">{cat.slug}</td>
+                        <td className="py-4 px-4 text-center text-[#f1e7d7] font-semibold">{cat.productCount}</td>
                         <td className="py-4 px-4 flex justify-end gap-2">
-                          <button className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ff9933] hover:bg-[#ff9933]/20 transition-colors" title="Edit">
-                            <Edit size={16} />
-                          </button>
-                          <button className="p-2 rounded-lg bg-[#ffb4ab]/10 text-[#ffb4ab] hover:bg-[#ffb4ab]/20 transition-colors" title="Delete">
+                          <button onClick={() => handleDeleteCategory(cat.id)} disabled={busy} className="p-2 rounded-lg bg-[#ffb4ab]/10 text-[#ffb4ab] hover:bg-[#ffb4ab]/20 transition-colors disabled:opacity-50" title="Delete">
                             <Trash2 size={16} />
                           </button>
                         </td>
                       </tr>
                     ))}
+                    {categories.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-16 text-center text-[#9e8c73] text-sm">No categories yet.</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
+              )}
             </GlassCard>
           </div>
         )}
@@ -359,37 +405,12 @@ export default function AdminPanel() {
             </div>
             
             <GlassCard className="p-6 lg:p-8">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
-                      <th className="py-4 px-4 font-semibold">Transaction ID</th>
-                      <th className="py-4 px-4 font-semibold">Date & Time</th>
-                      <th className="py-4 px-4 font-semibold">Type</th>
-                      <th className="py-4 px-4 font-semibold text-right">Amount</th>
-                      <th className="py-4 px-4 font-semibold text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payments.map(txn => (
-                      <tr key={txn.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{txn.id}</td>
-                        <td className="py-4 px-4 text-[#f1e7d7] text-sm">{txn.date}</td>
-                        <td className="py-4 px-4 text-[#fff4e6] font-semibold">{txn.type}</td>
-                        <td className={`py-4 px-4 text-right font-bold ${txn.amount.startsWith('+') ? 'text-[#ff9933]' : 'text-[#ffb4ab]'}`}>
-                          {txn.amount}
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
-                            txn.status === 'Completed' ? 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30' : 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30'
-                          }`}>
-                            {txn.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                <CreditCard size={40} className="text-[#34250f]" />
+                <p className="text-[#f1e7d7] font-[Outfit] text-lg font-semibold">Payments & Ledger</p>
+                <p className="text-[#cbb89d] text-sm max-w-md">
+                  Payment processing is not wired up yet. Once a payment provider is integrated, transaction history will appear here.
+                </p>
               </div>
             </GlassCard>
           </div>
@@ -404,6 +425,45 @@ export default function AdminPanel() {
         )}
 
       </main>
+
+      {categoryModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in" onMouseDown={() => setCategoryModal(false)} role="dialog" aria-modal="true" aria-label="Add category">
+          <GlassCard hover={false} className="relative w-full max-w-md animate-scale-in">
+            <form onSubmit={handleCreateCategory} onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8 flex flex-col gap-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="font-[Outfit] text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
+                    <PlusCircle className="text-[#ff9933]" size={24} /> Add Category
+                  </h2>
+                  <p className="text-[#cbb89d] text-xs mt-1">Create a new product category for the platform.</p>
+                </div>
+                <button type="button" onClick={() => setCategoryModal(false)} className="p-2 -mr-2 rounded-lg text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/5 transition-colors" aria-label="Close">
+                  <X size={22} />
+                </button>
+              </div>
+              <div>
+                <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Category Name</label>
+                <input
+                  type="text"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  placeholder="e.g. Wearables"
+                  autoFocus
+                  className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                />
+              </div>
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-white/10">
+                <button type="button" onClick={() => setCategoryModal(false)} className="px-6 py-2.5 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" disabled={!newCategory.trim() || busy} className="px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] disabled:bg-[#34250f]/50 disabled:text-[#6f6048] disabled:cursor-not-allowed">
+                  <PlusCircle size={18} /> {busy ? 'Creating...' : 'Create Category'}
+                </button>
+              </div>
+            </form>
+          </GlassCard>
+        </div>
+      )}
     </div>
   );
 }

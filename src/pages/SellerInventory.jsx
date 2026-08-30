@@ -16,6 +16,7 @@ export default function SellerInventory() {
   const [inventory, setInventory] = useState([]);
   const [categories, setCategories] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -83,6 +84,44 @@ export default function SellerInventory() {
     }
   };
 
+  const handleEditProduct = async (id, { name, category, price, discount, stock, status, description, images }) => {
+    setBusy(true);
+    try {
+      const categoryId = categories.find((c) => c.name === category)?.id ?? null;
+      await api.updateProduct(id, {
+        name,
+        description,
+        price,
+        discount_percent: discount,
+        stock,
+        status: STATUS_TO_API[status] ?? 'active',
+        category_id: categoryId,
+      });
+      const files = images.filter((i) => i.file).map((i) => i.file);
+      if (files.length) {
+        await api.uploadProductImages(id, files);
+      }
+      setModalOpen(false);
+      setEditing(null);
+      addToast(`"${name}" updated!`, 'success');
+      await loadInventory();
+    } catch (err) {
+      addToast(err.message || 'Failed to update product.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const openModal = (item = null) => {
+    setEditing(item);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setEditing(null);
+    setModalOpen(false);
+  };
+
   const handleDelete = async (id) => {
     const item = inventory.find((i) => i.id === id);
     setBusy(true);
@@ -124,10 +163,10 @@ export default function SellerInventory() {
           <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Inventory Management</h1>
           <p className="text-[#cbb89d]">Manage your product listings, update stock levels, and add new items.</p>
         </div>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="py-3 px-6 rounded-lg bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] font-[Outfit] text-base font-semibold hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] transition-all flex items-center justify-center gap-2 w-full md:w-auto"
-        >
+      <button
+        onClick={() => openModal()}
+        className="py-3 px-6 rounded-lg bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] font-[Outfit] text-base font-semibold hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] transition-all flex items-center justify-center gap-2 w-full md:w-auto"
+      >
           <PlusCircle size={20} /> Add New Product
         </button>
       </header>
@@ -207,7 +246,7 @@ export default function SellerInventory() {
                     <td className="py-4 px-4">{getStatusBadge(item.status)}</td>
                     <td className="py-4 px-4">
                       <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ff9933] hover:bg-[#ff9933]/20 transition-colors" title="Edit Product">
+                        <button onClick={() => openModal(item)} className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ff9933] hover:bg-[#ff9933]/20 transition-colors" title="Edit Product">
                           <Edit size={16} />
                         </button>
                         <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg bg-[#ffb4ab]/10 text-[#ffb4ab] hover:bg-[#ffb4ab]/20 transition-colors" title="Delete Product">
@@ -235,20 +274,35 @@ export default function SellerInventory() {
 
       </GlassCard>
 
-      {modalOpen && <AddProductModal categories={categories} busy={busy} onClose={() => setModalOpen(false)} onAdd={handleAddProduct} />}
+      {modalOpen && (
+        <ProductFormModal
+          categories={categories}
+          busy={busy}
+          product={editing}
+          onClose={closeModal}
+          onSubmit={editing ? (payload) => handleEditProduct(editing.id, payload) : handleAddProduct}
+        />
+      )}
     </div>
   );
 }
 
-function AddProductModal({ categories = [], busy = false, onClose, onAdd }) {
-  const [name, setName] = useState('');
-  const [category, setCategory] = useState(categories[0]?.name ?? '');
-  const [price, setPrice] = useState('');
-  const [discount, setDiscount] = useState('');
-  const [stock, setStock] = useState('');
-  const [status, setStatus] = useState('Active');
-  const [description, setDescription] = useState('');
-  const [images, setImages] = useState([]); // [{ url, name, file }]
+function ProductFormModal({ categories = [], busy = false, product = null, onClose, onSubmit }) {
+  const isEdit = Boolean(product);
+  const [name, setName] = useState(product?.name ?? '');
+  const [category, setCategory] = useState(() => {
+    const catName = product?.category;
+    if (catName && categories.some((c) => c.name === catName)) return catName;
+    return categories[0]?.name ?? '';
+  });
+  const [price, setPrice] = useState(product ? String(product.price ?? '') : '');
+  const [discount, setDiscount] = useState(product ? String(product.discount ?? '') : '');
+  const [stock, setStock] = useState(product ? String(product.stock ?? '') : '');
+  const [status, setStatus] = useState(product?.status ?? 'Active');
+  const [description, setDescription] = useState(product?.description ?? '');
+  const [images, setImages] = useState(() =>
+    (product?.images ?? []).map((url, idx) => ({ url, name: `image-${idx + 1}`, file: null }))
+  );
   const [dragging, setDragging] = useState(false);
   const [touched, setTouched] = useState(false);
   const fileInputRef = useRef(null);
@@ -291,7 +345,7 @@ function AddProductModal({ categories = [], busy = false, onClose, onAdd }) {
     e.preventDefault();
     setTouched(true);
     if (!canSubmit) return;
-    onAdd({
+    onSubmit({
       name: name.trim(),
       category,
       price: priceNum,
@@ -325,9 +379,11 @@ function AddProductModal({ categories = [], busy = false, onClose, onAdd }) {
           <div className="shrink-0 flex items-start justify-between px-6 md:px-8 py-5 border-b border-white/10">
             <div>
               <h2 className="font-[Outfit] text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
-                <PlusCircle className="text-[#ff9933]" size={24} /> Add New Product
+                <PlusCircle className="text-[#ff9933]" size={24} /> {isEdit ? 'Edit Product' : 'Add New Product'}
               </h2>
-              <p className="text-[#cbb89d] text-xs mt-1">Fill in the details to list a new item in your store.</p>
+              <p className="text-[#cbb89d] text-xs mt-1">
+                {isEdit ? 'Update the details of your listed item.' : 'Fill in the details to list a new item in your store.'}
+              </p>
             </div>
             <button type="button" onClick={onClose} className="p-2 -mr-2 rounded-lg text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/5 transition-colors" aria-label="Close">
               <X size={22} />
@@ -482,7 +538,7 @@ function AddProductModal({ categories = [], busy = false, onClose, onAdd }) {
               disabled={!canSubmit || busy}
               className={`px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all ${canSubmit && !busy ? 'bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)]' : 'bg-[#34250f]/50 text-[#6f6048] cursor-not-allowed'}`}
             >
-              <PlusCircle size={18} /> {busy ? 'Adding...' : 'Add Product'}
+              <PlusCircle size={18} /> {busy ? 'Saving...' : isEdit ? 'Save Changes' : 'Add Product'}
             </button>
           </div>
         </form>
