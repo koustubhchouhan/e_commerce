@@ -14,6 +14,20 @@ export const listCategories = asyncHandler(async (req, res) => {
   res.json({ items: await adminService.listCategories() });
 });
 
+export const createCategory = asyncHandler(async (req, res) => {
+  res.status(201).json(await adminService.createCategory(req.body));
+});
+
+export const deleteCategory = asyncHandler(async (req, res) => {
+  await adminService.deleteCategory(req.params.id);
+  res.status(204).end();
+});
+
+export const deleteProduct = asyncHandler(async (req, res) => {
+  await adminService.deleteAnyProduct(req.params.id);
+  res.status(204).end();
+});
+
 export const reviewApplication = asyncHandler(async (req, res) => {
   const result = await adminService.reviewApplication(
     req.user.id,

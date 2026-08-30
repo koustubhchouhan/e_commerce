@@ -7,17 +7,17 @@ import { useToastStore } from '../store/toastStore';
 import { api } from '../lib/api';
 import { toProductCardList } from '../lib/productShape';
 
-export function ProductGrid({ items, adminMode = false }) {
+export function ProductGrid({ items, adminMode = false, adminOnDelete }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {items.map(product => (
-        <ProductCard key={product.id} {...product} adminMode={adminMode} />
+        <ProductCard key={product.id} {...product} adminMode={adminMode} adminOnDelete={adminOnDelete} />
       ))}
     </div>
   );
 }
 
-function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor, adminMode }) {
+function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor, adminMode, adminOnDelete }) {
   const addItem = useCartStore(s => s.addItem);
   const addToast = useToastStore(s => s.addToast);
   const [added, setAdded] = useState(false);
@@ -61,7 +61,10 @@ function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor,
         </p>
         
         {adminMode ? (
-          <button className="w-full py-2.5 rounded-lg bg-[#93000a]/20 border border-[#ffb4ab]/30 text-[#ffb4ab] text-xs font-semibold tracking-wider hover:bg-[#93000a]/40 transition-colors mt-auto">
+          <button
+            onClick={() => adminOnDelete?.(id)}
+            className="w-full py-2.5 rounded-lg bg-[#93000a]/20 border border-[#ffb4ab]/30 text-[#ffb4ab] text-xs font-semibold tracking-wider hover:bg-[#93000a]/40 transition-colors mt-auto"
+          >
             Remove Product
           </button>
         ) : (
@@ -84,18 +87,24 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(['All']);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const PAGE_SIZE = 20;
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const [productRes, categoryRes] = await Promise.all([
-          api.products({ limit: 100 }),
+          api.products({ page: 1, limit: PAGE_SIZE }),
           api.categories(),
         ]);
         if (cancelled) return;
         setProducts(toProductCardList(productRes.items));
+        setTotal(productRes.total ?? 0);
+        setPage(productRes.page ?? 1);
         setCategories(['All', ...categoryRes.map((c) => c.name)]);
       } catch (err) {
         if (!cancelled) setError(err.message || 'Failed to load products.');
@@ -107,6 +116,21 @@ export default function Home() {
       cancelled = true;
     };
   }, []);
+
+  const loadMore = async () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const res = await api.products({ page: page + 1, limit: PAGE_SIZE });
+      setProducts((prev) => [...prev, ...toProductCardList(res.items)]);
+      setTotal(res.total ?? total);
+      setPage(res.page ?? page + 1);
+    } catch (err) {
+      setError(err.message || 'Failed to load more products.');
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   // The URL's ?category= param is the single source of truth for the active filter
   const paramCategory = searchParams.get('category');
@@ -194,7 +218,20 @@ export default function Home() {
           <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{error}</div>
         )}
         {!loading && !error && filtered.length > 0 && (
-          <ProductGrid items={filtered} adminMode={false} />
+          <>
+            <ProductGrid items={filtered} adminMode={false} />
+            {filtered.length < total && (
+              <div className="flex justify-center mt-12">
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="px-8 py-3 rounded-full border border-[#ff9933]/40 text-[#ff9933] text-sm font-bold tracking-wider hover:bg-[#ff9933]/10 hover:shadow-[0_0_9px_rgba(255,153,51,0.15)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loadingMore ? 'Loading more...' : 'Load More Products'}
+                </button>
+              </div>
+            )}
+          </>
         )}
         {!loading && !error && filtered.length === 0 && (
           <div className="flex items-center justify-center h-40 text-[#cbb89d]">No products in this category.</div>
