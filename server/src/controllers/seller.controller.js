@@ -1,5 +1,6 @@
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import * as sellerService from '../services/seller.service.js';
+import { listStoreOrders } from '../services/order.service.js';
 
 export const createApplication = asyncHandler(async (req, res) => {
   res.status(201).json(await sellerService.createApplication(req.user.id, req.body));
@@ -7,4 +8,8 @@ export const createApplication = asyncHandler(async (req, res) => {
 
 export const getMyApplications = asyncHandler(async (req, res) => {
   res.json({ items: await sellerService.getMyApplications(req.user.id) });
+});
+
+export const sellerOrders = asyncHandler(async (req, res) => {
+  res.json(await listStoreOrders(req.user.id));
 });

@@ -1,14 +1,98 @@
 import { Package, TrendingUp, DollarSign, Eye, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, HelpCircle, Clock, PackageX, Check } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import GlassCard from '../components/GlassCard';
+import { useToastStore } from '../store/toastStore';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../lib/api';
+import { toProductCardList } from '../lib/productShape';
 
 export default function SellerHub() {
   const [activeTab, setActiveTab] = useState('overview');
+  const { user } = useAuth();
+  const addToast = useToastStore((s) => s.addToast);
 
-  const inventory = [
-    { id: 1, name: "Nova Pro X-15 Gaming Laptop", price: "$2,499.00", status: "Approved", sales: 12 },
-    { id: 2, name: "Aura Sound V2 Headphones", price: "$349.99", status: "Pending", sales: 0 }
-  ];
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loadingInventory, setLoadingInventory] = useState(true);
+  const [inventoryError, setInventoryError] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({ name: '', price: '', category: '', description: '' });
+
+  const [storeOrders, setStoreOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [ordersError, setOrdersError] = useState('');
+
+  const loadInventory = async () => {
+    try {
+      const res = await api.sellerProducts();
+      setProducts(toProductCardList(res.items));
+    } catch (err) {
+      setInventoryError(err.message || 'Failed to load inventory.');
+    } finally {
+      setLoadingInventory(false);
+    }
+  };
+
+  const loadOrders = async () => {
+    try {
+      const res = await api.sellerOrders();
+      setStoreOrders(res.items ?? []);
+    } catch (err) {
+      setOrdersError(err.message || 'Failed to load orders.');
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const cats = await api.categories();
+        setCategories(cats.map((c) => ({ id: c.id, name: c.name })));
+        setForm((f) => ({ ...f, category: cats[0]?.name ?? '' }));
+      } catch {
+        // categories are optional for the form
+      }
+    })();
+    loadInventory();
+    loadOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleAddProduct = async (e) => {
+    e.preventDefault();
+    const price = parseFloat(form.price);
+    if (!form.name.trim() || !price || price <= 0) {
+      addToast('Enter a product name and a valid price.', 'error');
+      return;
+    }
+    const categoryId = categories.find((c) => c.name === form.category)?.id ?? null;
+    setAdding(true);
+    try {
+      await api.createProduct({
+        name: form.name.trim(),
+        description: form.description.trim(),
+        price,
+        category_id: categoryId,
+      });
+      addToast(`"${form.name.trim()}" added to your inventory!`, 'success');
+      setForm({ name: '', price: '', category: categories[0]?.name ?? '', description: '' });
+      setLoadingInventory(true);
+      await loadInventory();
+    } catch (err) {
+      addToast(err.message || 'Failed to add product.', 'error');
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const inventory = products.map((p) => ({
+    id: p.id,
+    name: p.title,
+    price: `$${Number(p.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    status: p.status === 'out_of_stock' ? 'Pending' : 'Approved',
+    sales: 0,
+  }));
 
   const requests = [
     {
@@ -31,11 +115,6 @@ export default function SellerHub() {
     }
   ];
 
-  const storeOrders = [
-    { id: "ORD-501", customer: "Liam Smith", product: "Nova Pro X-15 Gaming Laptop", date: "Today", status: "Processing", amount: "$2,499.00" },
-    { id: "ORD-502", customer: "Emma Johnson", product: "Nova Pro X-15 Gaming Laptop", date: "Yesterday", status: "Shipped", amount: "$2,499.00" },
-  ];
-
   const getRequestIcon = (type) => {
     switch (type) {
       case 'Return Request': return <PackageX className="text-[#ffb4ab]" size={20} />;
@@ -54,14 +133,16 @@ export default function SellerHub() {
         {/* Profile Info */}
         <div className="flex flex-col items-center mb-10 text-center">
           <div className="w-24 h-24 rounded-full bg-[#170e03] border-2 border-[#ff9933]/50 overflow-hidden mb-4 shadow-[0_0_7px_rgba(255,153,51,0.11)]">
-            <img 
-              src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800" 
-              alt="Seller Profile" 
-              className="w-full h-full object-cover"
-            />
+            {user?.avatarUrl ? (
+              <img src={user.avatarUrl} alt="Seller Profile" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center font-[Outfit] text-3xl font-bold text-[#ff9933]">
+                {(user?.fullName || 'S').charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
-          <h2 className="font-[Outfit] text-xl font-bold text-[#fff4e6]">Sarah Jenkins</h2>
-          <p className="text-[#cbb89d] text-xs font-semibold tracking-wider uppercase mt-1">NeonTech Store</p>
+          <h2 className="font-[Outfit] text-xl font-bold text-[#fff4e6]">{user?.fullName || 'Seller'}</h2>
+          <p className="text-[#cbb89d] text-xs font-semibold tracking-wider uppercase mt-1">My Store</p>
           <span className="px-3 py-1 rounded-full bg-[#ffbf66]/10 text-[#ffbf66] text-[10px] font-bold uppercase tracking-wider mt-3 border border-[#ffbf66]/20">
             Verified Seller
           </span>
@@ -101,34 +182,55 @@ export default function SellerHub() {
                   <h2 className="font-[Outfit] text-2xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
                     <PlusCircle className="text-[#ff9933]" /> Add Product
                   </h2>
-                  <form className="flex flex-col gap-4">
+                  <form onSubmit={handleAddProduct} className="flex flex-col gap-4">
                     <div>
                       <label className="text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block">Product Name</label>
-                      <input type="text" className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors" placeholder="Enter name..." />
+                      <input
+                        type="text"
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors"
+                        placeholder="Enter name..."
+                      />
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block">Price ($)</label>
-                        <input type="number" className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors" placeholder="0.00" />
+                        <input
+                          type="number" min="0" step="0.01"
+                          value={form.price}
+                          onChange={(e) => setForm({ ...form, price: e.target.value })}
+                          className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors"
+                          placeholder="0.00"
+                        />
                       </div>
                       <div>
                         <label className="text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block">Category</label>
-                        <select className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors">
-                          <option>Gaming</option>
-                          <option>Audio</option>
-                          <option>Components</option>
+                        <select
+                          value={form.category}
+                          onChange={(e) => setForm({ ...form, category: e.target.value })}
+                          className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors"
+                        >
+                          {categories.length === 0 && <option value="">No categories</option>}
+                          {categories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
                         </select>
                       </div>
                     </div>
 
                     <div>
                       <label className="text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block">Description</label>
-                      <textarea rows="3" className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors resize-none" placeholder="Details..."></textarea>
+                      <textarea
+                        rows="3"
+                        value={form.description}
+                        onChange={(e) => setForm({ ...form, description: e.target.value })}
+                        className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors resize-none"
+                        placeholder="Details..."
+                      />
                     </div>
 
-                    <button type="button" className="w-full py-3 rounded-lg bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] font-[Outfit] text-lg font-semibold mt-2 hover:shadow-[0_0_7px_rgba(255,153,51,0.22)] transition-all">
-                      Submit for Approval
+                    <button type="submit" disabled={adding} className="w-full py-3 rounded-lg bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] font-[Outfit] text-lg font-semibold mt-2 hover:shadow-[0_0_7px_rgba(255,153,51,0.22)] transition-all disabled:opacity-60">
+                      {adding ? 'Adding...' : 'Add Product'}
                     </button>
                   </form>
                 </GlassCard>
@@ -140,6 +242,16 @@ export default function SellerHub() {
                   <h2 className="font-[Outfit] text-2xl font-semibold text-[#fff4e6] mb-6">Your Inventory</h2>
                   
                   <div className="overflow-x-auto">
+                    {loadingInventory ? (
+                      <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading inventory...</div>
+                    ) : inventoryError ? (
+                      <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{inventoryError}</div>
+                    ) : inventory.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-40 gap-3 text-[#9e8c73]">
+                        <Package size={36} className="text-[#4b3d2a]" />
+                        <p className="text-sm">No products yet. Add your first one with the form.</p>
+                      </div>
+                    ) : (
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
@@ -166,6 +278,7 @@ export default function SellerHub() {
                         ))}
                       </tbody>
                     </table>
+                    )}
                   </div>
                 </GlassCard>
               </div>
@@ -182,11 +295,20 @@ export default function SellerHub() {
             
             <GlassCard className="p-6 lg:p-8">
               <div className="overflow-x-auto">
+                {loadingOrders ? (
+                  <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading orders...</div>
+                ) : ordersError ? (
+                  <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{ordersError}</div>
+                ) : storeOrders.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-40 gap-3 text-[#9e8c73]">
+                    <ShoppingBag size={36} className="text-[#4b3d2a]" />
+                    <p className="text-sm">No orders for your store yet.</p>
+                  </div>
+                ) : (
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
                       <th className="py-4 px-4 font-semibold">Order ID</th>
-                      <th className="py-4 px-4 font-semibold">Customer</th>
                       <th className="py-4 px-4 font-semibold">Product</th>
                       <th className="py-4 px-4 font-semibold text-right">Amount</th>
                       <th className="py-4 px-4 font-semibold text-right">Status</th>
@@ -195,13 +317,14 @@ export default function SellerHub() {
                   <tbody>
                     {storeOrders.map(order => (
                       <tr key={order.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{order.id}</td>
-                        <td className="py-4 px-4 text-[#f1e7d7] font-semibold">{order.customer}</td>
-                        <td className="py-4 px-4 text-[#fff4e6]">{order.product}</td>
-                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">{order.amount}</td>
+                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{order.id.slice(0, 8)}</td>
+                        <td className="py-4 px-4 text-[#fff4e6]">
+                          {order.items?.map(i => i.productName).join(', ') || '—'}
+                        </td>
+                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">${Number(order.total).toFixed(2)}</td>
                         <td className="py-4 px-4 text-right">
                           <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
-                            order.status === 'Shipped' ? 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30' : 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30'
+                            order.status === 'delivered' ? 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30' : 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30'
                           }`}>
                             {order.status}
                           </span>
@@ -210,6 +333,7 @@ export default function SellerHub() {
                     ))}
                   </tbody>
                 </table>
+                )}
               </div>
             </GlassCard>
           </div>

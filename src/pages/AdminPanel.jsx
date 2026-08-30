@@ -24,8 +24,12 @@ export default function AdminPanel() {
   const [approvedProducts, setApprovedProducts] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [sellerRequests, setSellerRequests] = useState([]);
+  const [platformOrders, setPlatformOrders] = useState([]);
+  const [realCategories, setRealCategories] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingRequests, setLoadingRequests] = useState(true);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [ordersError, setOrdersError] = useState('');
   const [busy, setBusy] = useState(false);
   const addToast = useToastStore((s) => s.addToast);
 
@@ -71,6 +75,46 @@ export default function AdminPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.adminOrders();
+        setPlatformOrders(res.items ?? []);
+      } catch (err) {
+        setOrdersError(err.message || 'Failed to load orders.');
+      } finally {
+        setLoadingOrders(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const cats = await api.categories();
+        const counts = new Map();
+        try {
+          const res = await api.products({ limit: 100 });
+          for (const p of res.items ?? []) {
+            const name = p.category?.name ?? 'Uncategorized';
+            counts.set(name, (counts.get(name) ?? 0) + 1);
+          }
+        } catch {
+          // counts are a nice-to-have; fall through with 0s
+        }
+        setRealCategories(
+          (cats ?? []).map((c, i) => ({
+            id: c.id,
+            name: c.name,
+            count: counts.get(c.name) ?? 0,
+          })),
+        );
+      } catch {
+        // categories tab stays empty if unavailable
+      }
+    })();
+  }, []);
+
   const handleReview = async (id, action) => {
     const req = sellerRequests.find((r) => r.id === id);
     setBusy(true);
@@ -92,26 +136,13 @@ export default function AdminPanel() {
 
   const allApprovedProducts = approvedProducts;
 
-  const adminCategories = [
-    { id: 1, name: "Gaming & VR", count: 145 },
-    { id: 2, name: "Smart Home", count: 82 },
-    { id: 3, name: "Audio & Sound", count: 210 },
-    { id: 4, name: "PC Components", count: 340 },
-    { id: 5, name: "Wearables", count: 56 },
-  ];
+  const adminCategories = realCategories;
 
   const payments = [
     { id: "TXN-9021", date: "Today, 10:45 AM", type: "Customer Payment", amount: "+$499.00", status: "Completed" },
     { id: "TXN-9020", date: "Today, 09:12 AM", type: "Seller Payout (NeonTech)", amount: "-$1,250.00", status: "Processing" },
     { id: "TXN-9019", date: "Yesterday, 04:30 PM", type: "Platform Fee", amount: "+$45.00", status: "Completed" },
     { id: "TXN-9018", date: "Yesterday, 02:15 PM", type: "Customer Refund", amount: "-$129.00", status: "Completed" },
-  ];
-
-  const platformOrders = [
-    { id: "ORD-9901", customer: "Liam Smith", seller: "NeonTech Store", product: "Nova Pro X-15 Gaming Laptop", date: "Today, 10:30 AM", status: "Processing", amount: "$2,499.00" },
-    { id: "ORD-9902", customer: "Emma Johnson", seller: "Chang Electronics", product: "Quantum Core Q-7 GPU", date: "Yesterday, 02:15 PM", status: "Shipped", amount: "$1,299.00" },
-    { id: "ORD-9903", customer: "Noah Williams", seller: "NeonTech Store", product: "Aura Sound V2 Headphones", date: "Yesterday, 09:45 AM", status: "Delivered", amount: "$349.99" },
-    { id: "ORD-9904", customer: "Olivia Brown", seller: "ElectroWorld", product: "ChronoSync Ultra Smartwatch", date: "Oct 22, 11:20 AM", status: "Pending", amount: "$299.00" },
   ];
 
   return (
@@ -173,12 +204,21 @@ export default function AdminPanel() {
             
             <GlassCard className="p-6 lg:p-8">
               <div className="overflow-x-auto">
+                {loadingOrders ? (
+                  <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading orders...</div>
+                ) : ordersError ? (
+                  <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{ordersError}</div>
+                ) : platformOrders.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-40 gap-3 text-[#9e8c73]">
+                    <ShoppingBag size={36} className="text-[#4b3d2a]" />
+                    <p className="text-sm">No orders placed yet.</p>
+                  </div>
+                ) : (
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
                       <th className="py-4 px-4 font-semibold">Order ID</th>
                       <th className="py-4 px-4 font-semibold">Customer</th>
-                      <th className="py-4 px-4 font-semibold">Seller / Store</th>
                       <th className="py-4 px-4 font-semibold">Product</th>
                       <th className="py-4 px-4 font-semibold">Date</th>
                       <th className="py-4 px-4 font-semibold text-right">Amount</th>
@@ -188,16 +228,19 @@ export default function AdminPanel() {
                   <tbody>
                     {platformOrders.map(order => (
                       <tr key={order.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{order.id}</td>
-                        <td className="py-4 px-4 text-[#f1e7d7] font-semibold">{order.customer}</td>
-                        <td className="py-4 px-4 text-[#ff9933] font-semibold">{order.seller}</td>
-                        <td className="py-4 px-4 text-[#fff4e6]">{order.product}</td>
-                        <td className="py-4 px-4 text-[#cbb89d] text-sm">{order.date}</td>
-                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">{order.amount}</td>
+                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{order.id.slice(0, 8)}</td>
+                        <td className="py-4 px-4 text-[#f1e7d7] font-semibold">{order.customerName ?? '—'}</td>
+                        <td className="py-4 px-4 text-[#fff4e6]">
+                          {order.items?.map(i => i.productName).join(', ') || '—'}
+                        </td>
+                        <td className="py-4 px-4 text-[#cbb89d] text-sm">
+                          {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </td>
+                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">${Number(order.total).toFixed(2)}</td>
                         <td className="py-4 px-4 text-right">
                           <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
-                            order.status === 'Delivered' ? 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30' :
-                            order.status === 'Shipped' ? 'bg-[#ff9933]/20 text-[#ff9933] border-[#ff9933]/30' : 
+                            order.status === 'delivered' ? 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30' :
+                            order.status === 'shipped' ? 'bg-[#ff9933]/20 text-[#ff9933] border-[#ff9933]/30' : 
                             'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30'
                           }`}>
                             {order.status}
@@ -207,6 +250,7 @@ export default function AdminPanel() {
                     ))}
                   </tbody>
                 </table>
+                )}
               </div>
             </GlassCard>
           </div>

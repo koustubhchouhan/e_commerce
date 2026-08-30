@@ -1,5 +1,6 @@
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import * as adminService from '../services/admin.service.js';
+import { listAllOrders } from '../services/order.service.js';
 
 export const listApplications = asyncHandler(async (req, res) => {
   res.json({ items: await adminService.listApplications(req.query) });
@@ -21,4 +22,8 @@ export const listSellers = asyncHandler(async (req, res) => {
 export const revokeSeller = asyncHandler(async (req, res) => {
   await adminService.revokeSeller(req.params.id);
   res.status(204).end();
+});
+
+export const adminOrders = asyncHandler(async (req, res) => {
+  res.json(await listAllOrders());
 });

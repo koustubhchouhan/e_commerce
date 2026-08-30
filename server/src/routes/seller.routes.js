@@ -7,6 +7,7 @@ import {
   deleteProduct,
   addProductImages,
 } from '../controllers/product.controller.js';
+import { sellerOrders } from '../controllers/seller.controller.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate, validateParams } from '../middleware/validate.js';
 import { createProductSchema, updateProductSchema } from '../validators/product.validators.js';
@@ -21,6 +22,7 @@ const upload = multer({
 });
 
 router.get('/seller/products', requireAuth, requireRole('seller', 'admin'), listSellerProducts);
+router.get('/seller/orders', requireAuth, requireRole('seller', 'admin'), sellerOrders);
 router.post(
   '/products',
   requireAuth,
