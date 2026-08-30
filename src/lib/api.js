@@ -125,6 +125,9 @@ export const api = {
     return request(`/products?${qs}`);
   },
   product: (id) => request(`/products/${id}`),
+  productReviews: (id) => request(`/products/${id}/reviews`),
+  createProductReview: (id, { rating, comment }) =>
+    request(`/products/${id}/reviews`, { method: 'POST', body: { rating, comment }, auth: true }),
 
   // ---- Seller products ----
   sellerProducts: () => request('/seller/products', { auth: true }),
@@ -158,6 +161,9 @@ export const api = {
   revokeSeller: (id) => request(`/admin/sellers/${id}`, { method: 'DELETE', auth: true }),
   adminOrders: () => request('/admin/orders', { auth: true }),
   adminCategories: () => request('/admin/categories', { auth: true }),
+  createCategory: (name) => request('/admin/categories', { method: 'POST', body: { name }, auth: true }),
+  deleteCategory: (id) => request(`/admin/categories/${id}`, { method: 'DELETE', auth: true }),
+  adminDeleteProduct: (id) => request(`/admin/products/${id}`, { method: 'DELETE', auth: true }),
 
   // ---- Seller orders ----
   sellerOrders: () => request('/seller/orders', { auth: true }),

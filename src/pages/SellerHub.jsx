@@ -1,4 +1,4 @@
-import { Package, TrendingUp, DollarSign, Eye, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, HelpCircle, Clock, PackageX, Check, UploadCloud } from 'lucide-react';
+import { Package, TrendingUp, DollarSign, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, HelpCircle, Clock, PackageX, Check, UploadCloud } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import GlassCard from '../components/GlassCard';
 import { api } from '../lib/api';
@@ -22,7 +22,6 @@ export default function SellerHub() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
-  const addToast = useToastStore((s) => s.addToast);
 
   useEffect(() => {
     let active = true;
