@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import GlassCard from '../components/GlassCard';
 import { api } from '../lib/api';
 import { useToastStore } from '../store/toastStore';
+import { useAuth } from '../context/AuthContext';
 
 const shortId = (id) => (id ? String(id).slice(0, 8).toUpperCase() : '');
 
@@ -15,6 +16,7 @@ const ORDER_STATUS_STYLES = {
 };
 
 export default function SellerHub() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -92,6 +94,8 @@ export default function SellerHub() {
     }
   ];
 
+  const storeName = products.find((p) => p.storeName)?.storeName || '';
+
   const getRequestIcon = (type) => {
     switch (type) {
       case 'Return Request': return <PackageX className="text-[#ffb4ab]" size={20} />;
@@ -109,15 +113,21 @@ export default function SellerHub() {
         
         {/* Profile Info */}
         <div className="flex flex-col items-center mb-10 text-center">
-          <div className="w-24 h-24 rounded-full bg-[#170e03] border-2 border-[#ff9933]/50 overflow-hidden mb-4 shadow-[0_0_7px_rgba(255,153,51,0.11)]">
-            <img 
-              src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800" 
-              alt="Seller Profile" 
-              className="w-full h-full object-cover"
-            />
+          <div className="w-24 h-24 rounded-full bg-[#170e03] border-2 border-[#ff9933]/50 overflow-hidden mb-4 shadow-[0_0_7px_rgba(255,153,51,0.11)] flex items-center justify-center">
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt="Seller Profile"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="font-[Outfit] text-4xl font-bold text-[#ff9933]">
+                {(user?.fullName || 'S').charAt(0).toUpperCase()}
+              </span>
+            )}
           </div>
-          <h2 className="font-[Outfit] text-xl font-bold text-[#fff4e6]">Sarah Jenkins</h2>
-          <p className="text-[#cbb89d] text-xs font-semibold tracking-wider uppercase mt-1">NeonTech Store</p>
+          <h2 className="font-[Outfit] text-xl font-bold text-[#fff4e6]">{user?.fullName || 'Seller'}</h2>
+          <p className="text-[#cbb89d] text-xs font-semibold tracking-wider uppercase mt-1">{storeName || 'My Store'}</p>
           <span className="px-3 py-1 rounded-full bg-[#ffbf66]/10 text-[#ffbf66] text-[10px] font-bold uppercase tracking-wider mt-3 border border-[#ffbf66]/20">
             Verified Seller
           </span>

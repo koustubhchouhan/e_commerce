@@ -177,6 +177,4 @@ export const api = {
     }),
   myOrders: () => request('/orders', { auth: true }),
   order: (id) => request(`/orders/${id}`, { auth: true }),
-  adminOrders: () => request('/admin/orders', { auth: true }),
-  sellerOrders: () => request('/seller/orders', { auth: true }),
 };

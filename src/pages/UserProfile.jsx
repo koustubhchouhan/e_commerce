@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Package, Shield, MapPin, CreditCard, ChevronRight, Lock, ShieldCheck, Wallet, PackageX } from 'lucide-react';
 import { api } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 const STATUS_BADGES = {
   pending: 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30',
@@ -18,6 +19,7 @@ const formatDate = (iso) => {
 const shortId = (id) => (id ? String(id).slice(0, 8).toUpperCase() : '');
 
 export default function UserProfile() {
+  const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -45,15 +47,21 @@ export default function UserProfile() {
       {/* ═══ Profile Header Section ═══ */}
       <section className="w-full flex flex-col md:flex-row items-start md:items-center gap-6 glass-panel p-6 rounded-xl">
         <div className="w-24 h-24 rounded-full bg-[#2b1d0d] border border-[#4b3d2a] flex items-center justify-center overflow-hidden shrink-0">
-          <img
-            className="w-full h-full object-cover"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnYaqjk_m0qRZY4iQfl4BMsnvnsPWNUYRTHVK86K7qcpoSAeSGNV7nvcUECHxtOidmSYGxmQ-KKySXGJqULj1JGDbbAXH81e6lb81owparsbRTr5dhwiRlSb846wd7ZCCEKMQKYGNPGXmoDwhK5xG0_I-efNpWTAelvIhdRw0vDedvLsEcQgKqMBdJV37LOMRVPqYzY5slRVZTHFRavupe12diD1XYJyqbwVtBGqS8UmpZshcXnbUf"
-            alt="User avatar"
-          />
+          {user?.avatarUrl ? (
+            <img
+              className="w-full h-full object-cover"
+              src={user.avatarUrl}
+              alt="User avatar"
+            />
+          ) : (
+            <span className="font-[Outfit] text-4xl font-bold text-[#ff9933]">
+              {(user?.fullName || 'N').charAt(0).toUpperCase()}
+            </span>
+          )}
         </div>
         <div className="flex-grow">
-          <h1 className="font-[Outfit] text-4xl md:text-5xl font-bold text-[#fff4e6] tracking-tight">Alex Mercer</h1>
-          <p className="font-[Inter] text-lg text-[#cbb89d]">Premium Member since 2023</p>
+          <h1 className="font-[Outfit] text-4xl md:text-5xl font-bold text-[#fff4e6] tracking-tight">{user?.fullName || 'Customer'}</h1>
+          <p className="font-[Inter] text-lg text-[#cbb89d]">{user?.email || 'NovaMarket member'}</p>
         </div>
         <button className="px-6 py-3 bg-gradient-to-r from-[#9c5214] to-[#ff9933] text-[#2e1800] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-lg hover:shadow-[0_0_9px_rgba(255,153,51,0.17)] transition-all duration-300 whitespace-nowrap">
           Edit Profile

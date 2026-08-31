@@ -15,9 +15,7 @@ export default function Checkout() {
   const navigate = useNavigate();
 
   const subtotal = getSubtotal();
-  const shipping = 15.00;
-  const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const total = subtotal;
 
   const [placing, setPlacing] = useState(false);
   const [shipping_form, setShipping] = useState({ firstName: '', lastName: '', address: '', city: '', pin: '', phone: '' });
@@ -150,8 +148,6 @@ export default function Checkout() {
             </div>
             <div className="flex flex-col gap-2 text-sm border-t border-white/10 pt-4">
               <div className="flex justify-between text-[#cbb89d]"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between text-[#cbb89d]"><span>Shipping</span><span>${shipping.toFixed(2)}</span></div>
-              <div className="flex justify-between text-[#cbb89d]"><span>Tax (8%)</span><span>${tax.toFixed(2)}</span></div>
               <div className="flex justify-between text-[#fff4e6] font-bold text-lg pt-2 mt-1 border-t border-white/10"><span>Total</span><span>${total.toFixed(2)}</span></div>
             </div>
             <div className="flex flex-col gap-2 mt-4">
