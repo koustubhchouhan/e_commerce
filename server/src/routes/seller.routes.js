@@ -8,10 +8,12 @@ import {
   addProductImages,
 } from '../controllers/product.controller.js';
 import { listSellerOrders } from '../controllers/order.controller.js';
+import { getStore, updateStore } from '../controllers/seller.controller.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate, validateParams } from '../middleware/validate.js';
 import { createProductSchema, updateProductSchema } from '../validators/product.validators.js';
 import { uuidParamSchema } from '../validators/catalog.validators.js';
+import { updateStoreSchema } from '../validators/seller.validators.js';
 
 const router = Router();
 
@@ -23,6 +25,14 @@ const upload = multer({
 
 router.get('/seller/products', requireAuth, requireRole('seller', 'admin'), listSellerProducts);
 router.get('/seller/orders', requireAuth, requireRole('seller', 'admin'), listSellerOrders);
+router.get('/seller/store', requireAuth, requireRole('seller', 'admin'), getStore);
+router.patch(
+  '/seller/store',
+  requireAuth,
+  requireRole('seller', 'admin'),
+  validate(updateStoreSchema),
+  updateStore
+);
 router.post(
   '/products',
   requireAuth,

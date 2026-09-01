@@ -13,3 +13,11 @@ export const getMyApplications = asyncHandler(async (req, res) => {
 export const sellerOrders = asyncHandler(async (req, res) => {
   res.json(await listStoreOrders(req.user.id));
 });
+
+export const getStore = asyncHandler(async (req, res) => {
+  res.json(await sellerService.getStore(req.user.id));
+});
+
+export const updateStore = asyncHandler(async (req, res) => {
+  res.json(await sellerService.updateStore(req.user.id, req.body));
+});

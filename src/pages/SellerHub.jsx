@@ -24,6 +24,7 @@ export default function SellerHub() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [store, setStore] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -38,6 +39,12 @@ export default function SellerHub() {
           if (active) setCategories(cats.map((c) => ({ id: c.id, name: c.name })));
         } catch {
           // categories are a nicety for the add form; non-fatal
+        }
+        try {
+          const storeData = await api.getSellerStore();
+          if (active) setStore(storeData);
+        } catch {
+          // store is cosmetic in the sidebar; non-fatal
         }
       } catch (err) {
         if (active) setOrdersError(err.message || 'Failed to load store data.');
@@ -94,8 +101,6 @@ export default function SellerHub() {
     }
   ];
 
-  const storeName = products.find((p) => p.storeName)?.storeName || '';
-
   const getRequestIcon = (type) => {
     switch (type) {
       case 'Return Request': return <PackageX className="text-[#ffb4ab]" size={20} />;
@@ -115,19 +120,15 @@ export default function SellerHub() {
         <div className="flex flex-col items-center mb-10 text-center">
           <div className="w-24 h-24 rounded-full bg-[#170e03] border-2 border-[#ff9933]/50 overflow-hidden mb-4 shadow-[0_0_7px_rgba(255,153,51,0.11)] flex items-center justify-center">
             {user?.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt="Seller Profile"
-                className="w-full h-full object-cover"
-              />
+              <img src={user.avatarUrl} alt="Seller Profile" className="w-full h-full object-cover" />
             ) : (
-              <span className="font-[Outfit] text-4xl font-bold text-[#ff9933]">
+              <span className="font-[Outfit] text-3xl font-bold text-[#ff9933]">
                 {(user?.fullName || 'S').charAt(0).toUpperCase()}
               </span>
             )}
           </div>
           <h2 className="font-[Outfit] text-xl font-bold text-[#fff4e6]">{user?.fullName || 'Seller'}</h2>
-          <p className="text-[#cbb89d] text-xs font-semibold tracking-wider uppercase mt-1">{storeName || 'My Store'}</p>
+          <p className="text-[#cbb89d] text-xs font-semibold tracking-wider uppercase mt-1">{store?.name || 'Your Store'}</p>
           <span className="px-3 py-1 rounded-full bg-[#ffbf66]/10 text-[#ffbf66] text-[10px] font-bold uppercase tracking-wider mt-3 border border-[#ffbf66]/20">
             Verified Seller
           </span>

@@ -150,6 +150,10 @@ export const api = {
     request('/seller-applications', { method: 'POST', body: data, auth: true }),
   mySellerApplications: () => request('/seller-applications/me', { auth: true }),
 
+  // ---- Seller store profile ----
+  getSellerStore: () => request('/seller/store', { auth: true }),
+  updateSellerStore: (patch) => request('/seller/store', { method: 'PATCH', body: patch, auth: true }),
+
   // ---- Admin ----
   adminApplications: (status) => {
     const qs = status ? `?status=${encodeURIComponent(status)}` : '';
