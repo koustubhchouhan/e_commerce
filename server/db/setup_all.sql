@@ -41,6 +41,11 @@ create table if not exists public.profiles (
   created_at  timestamptz not null default now()
 );
 
+-- Sign-in method ('email' or 'google') and the bcrypt password hash. Google /
+-- OAuth users have no password, so password_hash stays NULL for them.
+alter table public.profiles add column if not exists auth_provider text not null default 'email';
+alter table public.profiles add column if not exists password_hash text;
+
 -- Auto-create a profile whenever a new auth user is created.
 create or replace function public.handle_new_user()
 returns trigger
@@ -49,8 +54,17 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, full_name, role)
-  values (new.id, coalesce(new.raw_user_meta_data->>'full_name', ''), 'customer');
+  insert into public.profiles (id, full_name, role, auth_provider, password_hash)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'full_name', ''),
+    'customer',
+    coalesce(new.raw_app_meta_data->>'provider', 'email'),
+    case
+      when coalesce(new.raw_app_meta_data->>'provider', 'email') = 'google' then null
+      else new.encrypted_password
+    end
+  );
   return new;
 end;
 $$;
@@ -58,6 +72,19 @@ $$;
 create or replace trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- Backfill existing profiles from auth.users so already-registered users also
+-- carry their real sign-in provider and password hash (idempotent).
+do $$ begin
+  update public.profiles p
+  set auth_provider = coalesce(u.raw_app_meta_data->>'provider', 'email'),
+      password_hash = case
+        when coalesce(u.raw_app_meta_data->>'provider', 'email') = 'google' then null
+        else u.encrypted_password
+      end
+  from auth.users u
+  where u.id = p.id;
+exception when others then null; end $$;
 
 -- Shared trigger: keep updated_at fresh on UPDATE.
 create or replace function public.set_updated_at()
