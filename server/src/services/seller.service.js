@@ -38,3 +38,42 @@ export async function getMyApplications(userId) {
   if (error) throw new AppError(500, `Could not load your applications: ${error.message}`);
   return data ?? [];
 }
+
+// GET /seller/store — the caller's storefront (seller + admin only).
+export async function getStore(userId) {
+  const { data, error } = await db
+    .from('stores')
+    .select('id, name, description, created_at')
+    .eq('owner_id', userId)
+    .maybeSingle();
+
+  if (error) throw new AppError(500, `Could not load your store: ${error.message}`);
+  if (!data) throw new AppError(404, 'No store found for this account');
+
+  return {
+    id: data.id,
+    name: data.name,
+    description: data.description ?? '',
+    createdAt: data.created_at,
+  };
+}
+
+// PATCH /seller/store — update the storefront name/description.
+export async function updateStore(userId, patch) {
+  const { data, error } = await db
+    .from('stores')
+    .update(patch)
+    .eq('owner_id', userId)
+    .select('id, name, description, created_at')
+    .single();
+
+  if (error) throw new AppError(400, `Could not update store: ${error.message}`);
+  if (!data) throw new AppError(404, 'No store found for this account');
+
+  return {
+    id: data.id,
+    name: data.name,
+    description: data.description ?? '',
+    createdAt: data.created_at,
+  };
+}
