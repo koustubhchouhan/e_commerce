@@ -22,15 +22,18 @@ exception when duplicate_object then null; end $$;
 
 -- ---- profiles (1:1 with auth.users) ---------------------------------
 create table if not exists public.profiles (
-  id          uuid primary key references auth.users(id) on delete cascade,
-  full_name   text not null default '',
-  avatar_url  text,
-  role        user_role not null default 'customer',
-  created_at  timestamptz not null default now()
+  id            uuid primary key references auth.users(id) on delete cascade,
+  full_name     text not null default '',
+  email         text,
+  avatar_url    text,
+  role          user_role not null default 'customer',
+  auth_provider text not null default 'email',
+  password_hash text,
+  created_at    timestamptz not null default now()
 );
 
--- Sign-in method ('email' or 'google') and the bcrypt password hash. Google /
--- OAuth users have no password, so password_hash stays NULL for them.
+-- Keep existing installs in sync.
+alter table public.profiles add column if not exists email text;
 alter table public.profiles add column if not exists auth_provider text not null default 'email';
 alter table public.profiles add column if not exists password_hash text;
 
@@ -42,11 +45,12 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, full_name, role, auth_provider, password_hash)
+  insert into public.profiles (id, full_name, role, email, auth_provider, password_hash)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'full_name', ''),
     'customer',
+    new.email,
     coalesce(new.raw_app_meta_data->>'provider', 'email'),
     case
       when coalesce(new.raw_app_meta_data->>'provider', 'email') = 'google' then null
@@ -65,7 +69,8 @@ create or replace trigger on_auth_user_created
 -- carry their real sign-in provider and password hash (idempotent).
 do $$ begin
   update public.profiles p
-  set auth_provider = coalesce(u.raw_app_meta_data->>'provider', 'email'),
+  set email = u.email,
+      auth_provider = coalesce(u.raw_app_meta_data->>'provider', 'email'),
       password_hash = case
         when coalesce(u.raw_app_meta_data->>'provider', 'email') = 'google' then null
         else u.encrypted_password
