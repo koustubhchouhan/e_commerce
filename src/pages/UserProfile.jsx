@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Package, Shield, MapPin, CreditCard, ChevronRight, Lock, ShieldCheck, Wallet, PackageX } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -103,7 +104,11 @@ export default function UserProfile() {
           {!loading && !error && orders.length > 0 && (
             <div className="flex flex-col gap-3">
               {orders.slice(0, 3).map((order) => (
-                <div key={order.id} className="bg-[#34250f]/50 p-4 rounded-lg border border-white/5">
+                <Link
+                  key={order.id}
+                  to={`/orders/${order.id}`}
+                  className="bg-[#34250f]/50 p-4 rounded-lg border border-white/5 hover:bg-[#34250f] hover:border-[#ff9933]/30 transition-colors group"
+                >
                   <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
                     <span className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#cbb89d] uppercase">ORDER #{shortId(order.id)}</span>
                     <span className={`px-2 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider border ${STATUS_BADGES[order.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
@@ -117,9 +122,12 @@ export default function UserProfile() {
                       </p>
                       <p className="text-[#cbb89d] text-xs mt-0.5">{formatDate(order.createdAt)}</p>
                     </div>
-                    <span className="text-[#ff9933] font-[Outfit] text-base font-bold shrink-0">${Number(order.total).toLocaleString()}</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[#ff9933] font-[Outfit] text-base font-bold">${Number(order.total).toLocaleString()}</span>
+                      <ChevronRight size={18} className="text-[#cbb89d] group-hover:text-[#ff9933] group-hover:translate-x-0.5 transition-all" />
+                    </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

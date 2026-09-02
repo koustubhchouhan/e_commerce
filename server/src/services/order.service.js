@@ -142,7 +142,7 @@ export async function listSellerOrders(sellerId) {
 export async function getOrder(userId, userRole, orderId) {
   const { data: order, error } = await db
     .from('orders')
-    .select(ORDER_SELECT)
+    .select('id, user_id, status, subtotal, total, shipping_address, created_at')
     .eq('id', orderId)
     .maybeSingle();
 

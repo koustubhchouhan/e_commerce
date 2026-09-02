@@ -19,6 +19,7 @@ import Contact from "./pages/Contact";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
+import OrderDetails from "./pages/OrderDetails";
 import SearchResults from "./pages/SearchResults";
 import SellerRequests from "./pages/SellerRequests";
 import NotFound from "./pages/NotFound";
@@ -129,6 +130,15 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["customer"]}>
                   <OrderConfirmation />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/orders/:id"
+              element={
+                <ProtectedRoute allowedRoles={["customer"]}>
+                  <OrderDetails />
                 </ProtectedRoute>
               }
             />
