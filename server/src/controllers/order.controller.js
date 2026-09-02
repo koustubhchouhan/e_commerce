@@ -13,6 +13,10 @@ export const listSellerOrders = asyncHandler(async (req, res) => {
   res.json(await orderService.listSellerOrders(req.user.id));
 });
 
+export const updateSellerOrderStatus = asyncHandler(async (req, res) => {
+  res.json(await orderService.updateOrderStatus(req.user.id, req.user.role, req.params.id, req.body.status));
+});
+
 export const getOrder = asyncHandler(async (req, res) => {
   res.json(await orderService.getOrder(req.user.id, req.user.role, req.params.id));
 });

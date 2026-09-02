@@ -93,6 +93,21 @@ export async function listSellerOrders(sellerId) {
     .in('id', orderIds);
   if (orderErr) throw new AppError(500, `Could not load orders: ${orderErr.message}`);
 
+  // An order is fulfillable by this seller only when every line item belongs to
+  // their store (mixed carts span several sellers and must not be shipped by one).
+  const { data: allItems, error: allItemsErr } = await db
+    .from('order_items')
+    .select('order_id, product_id')
+    .in('order_id', orderIds);
+  if (allItemsErr) throw new AppError(500, `Could not load order items: ${allItemsErr.message}`);
+
+  const sellerProductIds = new Set(products.map((p) => p.id));
+  const itemsByOrder = new Map();
+  for (const item of allItems ?? []) {
+    if (!itemsByOrder.has(item.order_id)) itemsByOrder.set(item.order_id, []);
+    itemsByOrder.get(item.order_id).push(item);
+  }
+
   const byOrder = new Map();
   for (const item of orderItems) {
     if (!byOrder.has(item.order_id)) byOrder.set(item.order_id, []);
@@ -100,22 +115,26 @@ export async function listSellerOrders(sellerId) {
   }
 
   return {
-    items: (orders ?? []).map((o) => ({
-      id: o.id,
-      status: o.status,
-      total: Number(o.total),
-      createdAt: o.created_at,
-      customerName: o.profiles?.full_name ?? null,
-      items: (byOrder.get(o.id) ?? []).map((it) => ({
-        id: it.id,
-        productId: it.product_id,
-        productName: it.product_name,
-        unitPrice: Number(it.unit_price),
-        discountPercent: it.discount_percent,
-        quantity: it.quantity,
-        lineTotal: Number(it.line_total),
-      })),
-    })),
+    items: (orders ?? []).map((o) => {
+      const everyItemMine = (itemsByOrder.get(o.id) ?? []).every((it) => sellerProductIds.has(it.product_id));
+      return {
+        id: o.id,
+        status: o.status,
+        total: Number(o.total),
+        createdAt: o.created_at,
+        customerName: o.profiles?.full_name ?? null,
+        fulfillable: (itemsByOrder.get(o.id) ?? []).length > 0 && everyItemMine,
+        items: (byOrder.get(o.id) ?? []).map((it) => ({
+          id: it.id,
+          productId: it.product_id,
+          productName: it.product_name,
+          unitPrice: Number(it.unit_price),
+          discountPercent: it.discount_percent,
+          quantity: it.quantity,
+          lineTotal: Number(it.line_total),
+        })),
+      };
+    }),
   };
 }
 
@@ -135,6 +154,96 @@ export async function getOrder(userId, userRole, orderId) {
 
   const [withItems] = await attachItems([order]);
   return withItems;
+}
+
+// Allowed order lifecycle steps (terminal states have no outgoing steps).
+const STATUS_TRANSITIONS = {
+  pending: ['shipped', 'cancelled'],
+  paid: ['shipped', 'cancelled'],
+  shipped: ['delivered'],
+};
+
+// PATCH /seller/orders/:id/status — advance fulfilment. A seller may only act on
+// orders made up entirely of their own products (mixed carts span sellers, so no
+// single seller ships them); admins may act on any order. Cancelling restores
+// stock so cancelled units can be re-purchased.
+export async function updateOrderStatus(actorUserId, actorRole, orderId, nextStatus) {
+  const { data: order, error } = await db
+    .from('orders')
+    .select('id, status')
+    .eq('id', orderId)
+    .maybeSingle();
+  if (error) throw new AppError(500, `Could not load order: ${error.message}`);
+  if (!order) throw new AppError(404, 'Order not found');
+
+  const allowed = STATUS_TRANSITIONS[order.status] ?? [];
+  if (!allowed.includes(nextStatus)) {
+    throw new AppError(
+      400,
+      `Cannot change an order from "${order.status}" to "${nextStatus}"`
+    );
+  }
+
+  if (actorRole !== 'admin') {
+    const { data: store, error: storeErr } = await db
+      .from('stores')
+      .select('id')
+      .eq('owner_id', actorUserId)
+      .maybeSingle();
+    if (storeErr) throw new AppError(500, `Could not load store: ${storeErr.message}`);
+    if (!store) throw new AppError(403, 'No store found for this account');
+
+    const { data: myProducts, error: prodErr } = await db
+      .from('products')
+      .select('id')
+      .eq('store_id', store.id);
+    if (prodErr) throw new AppError(500, `Could not load products: ${prodErr.message}`);
+
+    const { data: orderItems, error: itemErr } = await db
+      .from('order_items')
+      .select('product_id')
+      .eq('order_id', orderId);
+    if (itemErr) throw new AppError(500, `Could not load order items: ${itemErr.message}`);
+
+    const myProductIds = new Set((myProducts ?? []).map((p) => p.id));
+    const allMine = (orderItems ?? []).length > 0 && (orderItems ?? []).every((i) => myProductIds.has(i.product_id));
+    if (!allMine) {
+      throw new AppError(403, 'This order is not fully yours to fulfil');
+    }
+  }
+
+  if (nextStatus === 'cancelled') {
+    const { data: orderItems, error: itemErr } = await db
+      .from('order_items')
+      .select('product_id, quantity')
+      .eq('order_id', orderId);
+    if (itemErr) throw new AppError(500, `Could not load order items: ${itemErr.message}`);
+
+    for (const item of orderItems ?? []) {
+      if (!item.product_id) continue;
+      const { data: product, error: prodErr } = await db
+        .from('products')
+        .select('stock')
+        .eq('id', item.product_id)
+        .maybeSingle();
+      if (prodErr || !product) continue;
+      const { error: updateErr } = await db
+        .from('products')
+        .update({ stock: Number(product.stock) + Number(item.quantity) })
+        .eq('id', item.product_id);
+      if (updateErr) throw new AppError(500, `Could not restore stock: ${updateErr.message}`);
+    }
+  }
+
+  const { data: updated, error: updateErr } = await db
+    .from('orders')
+    .update({ status: nextStatus })
+    .eq('id', orderId)
+    .select('id, status')
+    .single();
+  if (updateErr) throw new AppError(500, `Could not update order: ${updateErr.message}`);
+
+  return { id: updated.id, status: updated.status };
 }
 
 // Fetches order_items for a set of orders in one query and groups them back

@@ -19,3 +19,9 @@ export const updateStoreSchema = z.object({
   name: z.string().trim().min(1, 'Store name is required').max(120).optional(),
   description: z.string().trim().max(1000).optional(),
 });
+
+// PATCH /seller/orders/:id/status body — the target status the seller (or an
+// admin) is moving the order to. The service validates the transition itself.
+export const updateOrderStatusSchema = z.object({
+  status: z.enum(['shipped', 'delivered', 'cancelled']),
+});

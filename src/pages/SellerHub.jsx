@@ -1,4 +1,4 @@
-import { Package, TrendingUp, DollarSign, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, HelpCircle, Clock, PackageX, Check, UploadCloud } from 'lucide-react';
+import { Package, TrendingUp, DollarSign, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, HelpCircle, Clock, PackageX, Check, UploadCloud, Truck, X } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import GlassCard from '../components/GlassCard';
 import { api } from '../lib/api';
@@ -17,6 +17,7 @@ const ORDER_STATUS_STYLES = {
 
 export default function SellerHub() {
   const { user } = useAuth();
+  const addToast = useToastStore((s) => s.addToast);
   const [activeTab, setActiveTab] = useState('overview');
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -25,6 +26,7 @@ export default function SellerHub() {
   const [categories, setCategories] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [store, setStore] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -77,6 +79,35 @@ export default function SellerHub() {
       case 'out_of_stock': return 'Out of Stock';
       case 'draft': return 'Pending';
       default: return 'Pending';
+    }
+  };
+
+  const orderActions = (order) => {
+    if (!order.fulfillable || !['pending', 'paid', 'shipped'].includes(order.status)) return null;
+    if (order.status === 'shipped') return [{ key: 'delivered', label: 'Deliver', icon: Check }];
+    return [
+      { key: 'shipped', label: 'Ship', icon: Truck },
+      { key: 'cancelled', label: 'Cancel', icon: X },
+    ];
+  };
+
+  const handleOrderStatus = async (order, status) => {
+    if (updatingId) return;
+    setUpdatingId(order.id);
+    try {
+      await api.updateSellerOrderStatus(order.id, status);
+      const res = await api.sellerOrders();
+      setOrders(res.items ?? []);
+      const messages = {
+        shipped: 'Order marked as shipped.',
+        delivered: 'Order marked as delivered.',
+        cancelled: 'Order cancelled and stock restored.',
+      };
+      addToast(messages[status] ?? 'Order updated.', 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to update order.', 'error');
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -242,6 +273,7 @@ export default function SellerHub() {
                       <th className="py-4 px-4 font-semibold">Items</th>
                       <th className="py-4 px-4 font-semibold text-right">Amount</th>
                       <th className="py-4 px-4 font-semibold text-right">Status</th>
+                      <th className="py-4 px-4 font-semibold text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -256,11 +288,34 @@ export default function SellerHub() {
                             {order.status}
                           </span>
                         </td>
+                        <td className="py-4 px-4 text-right whitespace-nowrap">
+                          {orderActions(order) ? (
+                            <div className="flex items-center justify-end gap-2">
+                              {orderActions(order).map((action) => (
+                                <button
+                                  key={action.key}
+                                  disabled={updatingId === order.id}
+                                  onClick={() => handleOrderStatus(order, action.key)}
+                                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                                    action.key === 'cancelled'
+                                      ? 'bg-[#ffb4ab]/10 text-[#ffb4ab] border-[#ffb4ab]/30 hover:bg-[#ffb4ab]/20'
+                                      : 'bg-[#ff9933]/10 text-[#ffbf66] border-[#ff9933]/30 hover:bg-[#ff9933]/20'
+                                  }`}
+                                >
+                                  <action.icon size={14} />
+                                  {action.label}
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-[#4b3d2a] text-xs">—</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                     {orders.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="py-16 text-center text-[#9e8c73] text-sm">No orders for your store yet.</td>
+                        <td colSpan={6} className="py-16 text-center text-[#9e8c73] text-sm">No orders for your store yet.</td>
                       </tr>
                     )}
                   </tbody>
