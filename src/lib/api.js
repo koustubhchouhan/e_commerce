@@ -171,6 +171,8 @@ export const api = {
 
   // ---- Seller orders ----
   sellerOrders: () => request('/seller/orders', { auth: true }),
+  updateSellerOrderStatus: (id, status) =>
+    request(`/seller/orders/${id}/status`, { method: 'PATCH', body: { status }, auth: true }),
 
   // ---- Orders ----
   createOrder: (items, shippingAddress) =>
