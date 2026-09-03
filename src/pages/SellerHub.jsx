@@ -63,15 +63,65 @@ export default function SellerHub() {
   }, []);
 
   const salesByProduct = {};
+  const revenueByProduct = {};
   let revenue = 0;
   let unitsSold = 0;
   for (const order of orders) {
     for (const item of order.items ?? []) {
-      revenue += Number(item.lineTotal || 0);
+      const lineTotal = Number(item.lineTotal || 0);
+      revenue += lineTotal;
       unitsSold += Number(item.quantity || 0);
       salesByProduct[item.productId] = (salesByProduct[item.productId] || 0) + Number(item.quantity || 0);
+      revenueByProduct[item.productId] = (revenueByProduct[item.productId] || 0) + lineTotal;
     }
   }
+
+  let recognizedRevenue = 0;
+  const revenueByStatus = {};
+  for (const order of orders) {
+    let share = 0;
+    for (const item of order.items ?? []) share += Number(item.lineTotal || 0);
+    if (order.status !== 'cancelled') recognizedRevenue += share;
+    revenueByStatus[order.status] = (revenueByStatus[order.status] || 0) + share;
+  }
+
+  const STATUS_ORDER = ['pending', 'paid', 'shipped', 'delivered', 'cancelled'];
+  const statusTotals = STATUS_ORDER.map((s) => ({
+    status: s,
+    count: orders.filter((o) => o.status === s).length,
+    revenue: revenueByStatus[s] ?? 0,
+  }));
+
+  const months = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i -= 1) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({
+      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+      label: d.toLocaleDateString('en-US', { month: 'short' }),
+    });
+  }
+  const monthMap = new Map(months.map((m) => [m.key, { ...m, revenue: 0, orders: 0 }]));
+  for (const order of orders) {
+    const date = order.createdAt ? new Date(order.createdAt) : null;
+    if (!date || Number.isNaN(date.getTime())) continue;
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const bucket = monthMap.get(key);
+    if (!bucket) continue;
+    bucket.orders += 1;
+    for (const item of order.items ?? []) bucket.revenue += Number(item.lineTotal || 0);
+  }
+  const peakMonthRevenue = Math.max(1, ...months.map((m) => monthMap.get(m.key)?.revenue ?? 0));
+
+  const topProducts = products
+    .map((p) => ({
+      ...p,
+      units: salesByProduct[p.id] ?? 0,
+      revenue: revenueByProduct[p.id] ?? 0,
+    }))
+    .filter((p) => p.units > 0)
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 8);
 
   const productStatusLabel = (status) => {
     switch (status) {
@@ -387,21 +437,126 @@ export default function SellerHub() {
           <div className="animate-fade-in-up">
             <header className="mb-10">
               <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Store Analytics</h1>
-              <p className="text-[#cbb89d]">Visualizations and in-depth metrics for your store performance.</p>
+              <p className="text-[#cbb89d]">Performance metrics computed from your store's live order data.</p>
             </header>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <GlassCard className="h-[300px] flex items-center justify-center border-t-2 border-t-[#ff9933]">
-                <p className="text-[#cbb89d] font-[Outfit] text-xl">Revenue Timeline Graph</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <StatCard icon={<DollarSign size={24} />} title="Gross Revenue" value={`$${revenue.toLocaleString('en-US', { maximumFractionDigits: 2 })}`} trend={`${orders.length} order${orders.length === 1 ? '' : 's'}`} />
+              <StatCard icon={<TrendingUp size={24} />} title="Earned Revenue" value={`$${recognizedRevenue.toLocaleString('en-US', { maximumFractionDigits: 2 })}`} trend="excl. cancelled" />
+              <StatCard icon={<ShoppingBag size={24} />} title="Units Sold" value={String(unitsSold)} trend={`${products.length} products listed`} />
+              <StatCard icon={<Package size={24} />} title="Avg Order Share" value={`$${(orders.length ? recognizedRevenue / orders.length : 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}`} trend="per order" />
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-6">
+              <GlassCard className="xl:col-span-8 p-6 lg:p-8">
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
+                  <BarChart3 size={20} className="text-[#ff9933]" /> Revenue — Last 6 Months
+                </h2>
+                {orders.length === 0 ? (
+                  <div className="h-44 flex items-center justify-center text-[#9e8c73] text-sm">No order history yet.</div>
+                ) : (
+                  <div className="flex items-end justify-between gap-3 h-44">
+                    {months.map((m) => {
+                      const b = monthMap.get(m.key);
+                      const h = Math.max(4, Math.round((b.revenue / peakMonthRevenue) * 100));
+                      return (
+                        <div key={m.key} className="flex-1 flex flex-col items-center gap-2 group" title={`$${b.revenue.toLocaleString('en-US', { maximumFractionDigits: 2 })} across ${b.orders} order${b.orders === 1 ? '' : 's'}`}>
+                          <span className="text-[10px] text-[#cbb89d] opacity-0 group-hover:opacity-100 transition-opacity">${Math.round(b.revenue)}</span>
+                          <div className={`w-full max-w-[46px] rounded-t-lg bg-gradient-to-t from-[#ff7418]/40 to-[#ff9933] transition-all ${b.revenue > 0 ? '' : 'bg-white/5 to-white/5 from-white/5'}`} style={{ height: `${h}%` }} />
+                          <span className="text-[11px] text-[#9e8c73] uppercase tracking-wider">{m.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </GlassCard>
-              <GlassCard className="h-[300px] flex items-center justify-center border-t-2 border-t-[#ffd27a]">
-                <p className="text-[#cbb89d] font-[Outfit] text-xl">Top Selling Categories Pie Chart</p>
+
+              <GlassCard className="xl:col-span-4 p-6 lg:p-8">
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
+                  <ShoppingBag size={20} className="text-[#ffd27a]" /> Orders by Status
+                </h2>
+                <div className="flex flex-col gap-3">
+                  {statusTotals.map(({ status, count, revenue: rev }) => (
+                    <div key={status} className="flex items-center gap-3">
+                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${ORDER_STATUS_STYLES[status]?.split(' ')[0] ?? 'bg-white/20'}`} />
+                      <span className="text-sm text-[#cbb89d] capitalize w-24 shrink-0">{status}</span>
+                      <div className="flex-1 h-2 rounded-full bg-white/5 overflow-hidden">
+                        <div className="h-full rounded-full bg-gradient-to-r from-[#ff9933]/70 to-[#ff9933] transition-all" style={{ width: `${orders.length ? Math.round((count / orders.length) * 100) : 0}%` }} />
+                      </div>
+                      <span className="text-sm text-[#fff4e6] font-semibold w-6 text-right">{count}</span>
+                      <span className="text-[11px] text-[#9e8c73] w-16 text-right">${Math.round(rev)}</span>
+                    </div>
+                  ))}
+                  {orders.length === 0 && <p className="text-[#9e8c73] text-sm text-center py-6">No orders yet.</p>}
+                </div>
               </GlassCard>
-              <GlassCard className="h-[300px] flex items-center justify-center border-t-2 border-t-[#ffbf66]">
-                <p className="text-[#cbb89d] font-[Outfit] text-xl">Store Traffic Bar Chart</p>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+              <GlassCard className="xl:col-span-7 p-6 lg:p-8">
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
+                  <Package size={20} className="text-[#ffbf66]" /> Top Products by Revenue
+                </h2>
+                {topProducts.length === 0 ? (
+                  <div className="h-40 flex items-center justify-center text-[#9e8c73] text-sm">No sales recorded yet.</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                          <th className="py-3 px-3 font-semibold">Product</th>
+                          <th className="py-3 px-3 font-semibold text-right">Price</th>
+                          <th className="py-3 px-3 font-semibold text-center">Units</th>
+                          <th className="py-3 px-3 font-semibold text-right">Revenue</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {topProducts.map((p, idx) => (
+                          <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                            <td className="py-3 px-3 text-[#f1e7d7] font-semibold">
+                              <span className="text-[#9e8c73] text-xs mr-2 font-[Inter]">#{idx + 1}</span>
+                              {p.name}
+                            </td>
+                            <td className="py-3 px-3 text-right text-[#cbb89d] text-sm">${Number(p.price).toLocaleString('en-US', { maximumFractionDigits: 2 })}</td>
+                            <td className="py-3 px-3 text-center text-[#fff4e6]">{p.units}</td>
+                            <td className="py-3 px-3 text-right text-[#ff9933] font-semibold">${p.revenue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </GlassCard>
-              <GlassCard className="h-[300px] flex items-center justify-center border-t-2 border-t-[#ffb4ab]">
-                <p className="text-[#cbb89d] font-[Outfit] text-xl">Conversion Funnel</p>
+
+              <GlassCard className="xl:col-span-5 p-6 lg:p-8">
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
+                  <Clock size={20} className="text-[#ff7418]" /> Recent Orders
+                </h2>
+                {orders.length === 0 ? (
+                  <div className="h-40 flex items-center justify-center text-[#9e8c73] text-sm">No orders yet.</div>
+                ) : (
+                  <div className="flex flex-col divide-y divide-white/5">
+                    {orders.slice(0, 6).map((order) => {
+                      const share = (order.items ?? []).reduce((s, it) => s + Number(it.lineTotal || 0), 0);
+                      return (
+                        <div key={order.id} className="py-3 flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-[Inter] text-xs text-[#cbb89d] uppercase tracking-wider">ORDER #{shortId(order.id)}</p>
+                            <p className="text-[#f1e7d7] text-sm font-semibold truncate">
+                              {(order.items ?? []).map((i) => i.productName).join(', ') || '—'}
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-end shrink-0">
+                            <span className="text-[#fff4e6] font-[Outfit] font-bold text-sm">${share.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border mt-1 ${ORDER_STATUS_STYLES[order.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
+                              {order.status}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </GlassCard>
             </div>
           </div>

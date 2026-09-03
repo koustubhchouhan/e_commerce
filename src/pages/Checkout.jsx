@@ -19,7 +19,7 @@ export default function Checkout() {
 
   const [placing, setPlacing] = useState(false);
   const [shipping_form, setShipping] = useState({ firstName: '', lastName: '', address: '', city: '', pin: '', phone: '' });
-  const [payment_form, setPayment] = useState({ cardNumber: '', expiry: '', cvv: '', method: 'card' });
+  const [payment_form, setPayment] = useState({ cardNumber: '', expiry: '', cvv: '' });
 
   const handlePlaceOrder = async () => {
     if (items.length === 0) {
@@ -96,28 +96,16 @@ export default function Checkout() {
           {step === 1 && (
             <GlassCard className="p-8 flex flex-col gap-5">
               <h2 className="font-[Outfit] text-2xl font-semibold text-[#fff4e6] mb-2">Payment</h2>
-              {/* Payment method toggle */}
-              <div className="flex gap-3">
-                {['card', 'wallet'].map(m => (
-                  <button key={m} onClick={() => setPayment({...payment_form, method: m})} className={`flex-1 py-2 rounded-lg text-sm font-bold capitalize transition-all border ${payment_form.method === m ? 'bg-[#c98a12]/20 text-[#ffd27a] border-[#ffd27a]/30' : 'text-[#cbb89d] border-white/10 hover:bg-white/5'}`}>
-                    {m === 'card' ? '💳 Credit / Debit Card' : '⚡ NovaWallet'}
-                  </button>
-                ))}
+              <div className="flex items-center gap-2 text-xs text-[#cbb89d] mb-2">
+                <CreditCard size={15} className="text-[#ffd27a]" /> All major credit & debit cards accepted
               </div>
-              {payment_form.method === 'card' ? (
-                <>
-                  <Field label="Card Number" value={payment_form.cardNumber} onChange={v => setPayment({...payment_form, cardNumber: v})} placeholder="4242 4242 4242 4242" />
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field label="Expiry Date" value={payment_form.expiry} onChange={v => setPayment({...payment_form, expiry: v})} placeholder="MM / YY" />
-                    <Field label="CVV" value={payment_form.cvv} onChange={v => setPayment({...payment_form, cvv: v})} placeholder="•••" />
-                  </div>
-                </>
-              ) : (
-                <div className="bg-[#c98a12]/10 border border-[#ffd27a]/20 rounded-xl p-6 text-center">
-                  <p className="font-[Outfit] text-3xl font-bold text-[#ffd27a] mb-1">$450.00</p>
-                  <p className="text-[#cbb89d] text-sm">NovaWallet Balance</p>
+              <div className="flex flex-col gap-5">
+                <Field label="Card Number" value={payment_form.cardNumber} onChange={v => setPayment({...payment_form, cardNumber: v})} placeholder="4242 4242 4242 4242" />
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Expiry Date" value={payment_form.expiry} onChange={v => setPayment({...payment_form, expiry: v})} placeholder="MM / YY" />
+                  <Field label="CVV" value={payment_form.cvv} onChange={v => setPayment({...payment_form, cvv: v})} placeholder="•••" />
                 </div>
-              )}
+              </div>
               <div className="flex gap-3 mt-4">
                 <button onClick={() => setStep(0)} className="py-3.5 px-6 rounded-xl border border-white/10 text-[#f1e7d7] font-[Outfit] font-bold hover:bg-white/5 transition-all">← Back</button>
                 <button onClick={handlePlaceOrder} disabled={placing} className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-[#c98a12] to-[#ffb52e] text-white font-[Outfit] text-lg font-bold hover:shadow-[0_0_11px_rgba(201,138,18,0.22)] transition-all flex items-center justify-center gap-2 disabled:opacity-60">
@@ -152,7 +140,7 @@ export default function Checkout() {
             </div>
             <div className="flex flex-col gap-2 mt-4">
               <div className="flex items-center gap-2 text-xs text-[#cbb89d]"><ShieldCheck size={14} className="text-[#ff9933]" /> End-to-end encrypted</div>
-              <div className="flex items-center gap-2 text-xs text-[#cbb89d]"><CreditCard size={14} className="text-[#ffd27a]" /> Multiple payment methods</div>
+              <div className="flex items-center gap-2 text-xs text-[#cbb89d]"><CreditCard size={14} className="text-[#ffd27a]" /> All major credit & debit cards</div>
             </div>
           </GlassCard>
         </div>

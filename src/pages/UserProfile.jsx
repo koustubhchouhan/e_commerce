@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Shield, MapPin, CreditCard, ChevronRight, Lock, ShieldCheck, Wallet, PackageX } from 'lucide-react';
+import { Package, Shield, MapPin, CreditCard, ChevronRight, Lock, ShieldCheck, PackageX } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -178,12 +178,10 @@ export default function UserProfile() {
             </div>
             <ChevronRight size={24} className="text-[#cbb89d] group-hover:text-[#fffaf0] transition-colors" />
           </div>
-          <div className="bg-[#34250f]/30 p-3 rounded-lg border border-white/5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Wallet size={20} className="text-[#f1e7d7]" />
-              <span className="font-[Inter] text-base text-[#f1e7d7]">NovaWallet Balance</span>
-            </div>
-            <span className="font-[Outfit] text-xl font-semibold text-[#fff4e6]">$450.00</span>
+          <div className="bg-[#34250f]/30 p-3 rounded-lg border border-white/5">
+            <p className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#cbb89d] uppercase mb-1.5">PAYMENT METHOD</p>
+            <p className="font-[Inter] text-sm text-[#f1e7d7]">Pay by card at checkout.</p>
+            <p className="text-[#cbb89d] text-xs mt-1">No wallet balance on this account.</p>
           </div>
         </a>
 

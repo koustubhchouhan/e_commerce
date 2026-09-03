@@ -108,7 +108,7 @@ export default function Cart() {
                   <ShieldCheck size={16} className="text-[#ff9933]" /> Secure SSL encrypted checkout
                 </div>
                 <div className="flex items-center gap-3 text-xs text-[#cbb89d]">
-                  <CreditCard size={16} className="text-[#ffd27a]" /> Accepts NovaWallet, Crypto, & Major Cards
+                  <CreditCard size={16} className="text-[#ffd27a]" /> Accepts all major credit & debit cards
                 </div>
               </div>
             </GlassCard>
