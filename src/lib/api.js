@@ -183,4 +183,5 @@ export const api = {
     }),
   myOrders: () => request('/orders', { auth: true }),
   order: (id) => request(`/orders/${id}`, { auth: true }),
+  cancelOrder: (id) => request(`/orders/${id}/cancel`, { method: 'PATCH', auth: true }),
 };

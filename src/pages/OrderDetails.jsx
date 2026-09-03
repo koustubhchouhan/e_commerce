@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Package, Truck, CreditCard, Calendar, MapPin, PackageX } from 'lucide-react';
+import { ArrowLeft, Package, Truck, CreditCard, Calendar, MapPin, PackageX, XCircle, Loader2 } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
+import { useToastStore } from '../store/toastStore';
 import { api } from '../lib/api';
 
 const STATUS_BADGES = {
@@ -35,9 +36,12 @@ const money = (n) =>
 
 export default function OrderDetails() {
   const { id } = useParams();
+  const addToast = useToastStore((s) => s.addToast);
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -57,6 +61,23 @@ export default function OrderDetails() {
   }, [id]);
 
   const address = order?.shipping_address ?? null;
+  const cancellable = order && ['pending', 'paid'].includes(order.status);
+
+  const handleCancel = async () => {
+    if (cancelling || !order) return;
+    setCancelling(true);
+    try {
+      await api.cancelOrder(order.id);
+      setOrder((prev) => ({ ...prev, status: 'cancelled' }));
+      setConfirmingCancel(false);
+      addToast('Order cancelled successfully.', 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to cancel order.', 'error');
+      setConfirmingCancel(false);
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   return (
     <div className="max-w-[1100px] mx-auto px-6 md:px-12 py-12 animate-fade-in-up flex flex-col gap-8">
@@ -169,6 +190,48 @@ export default function OrderDetails() {
                         : 'Your order is being processed.'}
                 </p>
               </GlassCard>
+
+              {cancellable && (
+                <GlassCard className="p-6">
+                  {confirmingCancel ? (
+                    <>
+                      <h3 className="font-[Outfit] text-base font-semibold text-[#ffb4ab] mb-1 flex items-center gap-2">
+                        <XCircle size={18} /> Cancel this order?
+                      </h3>
+                      <p className="text-[#cbb89d] text-xs leading-relaxed mb-4">
+                        This will cancel the order and any reserved stock will be released.
+                      </p>
+                      <div className="flex gap-3">
+                        <button
+                          disabled={cancelling}
+                          onClick={handleCancel}
+                          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-[Outfit] text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-br from-[#ffb4ab] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,116,24,0.22)]"
+                        >
+                          {cancelling && <Loader2 size={16} className="animate-spin" />}
+                          {cancelling ? 'Cancelling...' : 'Yes, cancel order'}
+                        </button>
+                        <button
+                          disabled={cancelling}
+                          onClick={() => setConfirmingCancel(false)}
+                          className="px-4 py-2.5 rounded-lg font-[Outfit] text-sm font-bold text-[#cbb89d] border border-white/10 hover:bg-white/5 transition-colors disabled:opacity-50"
+                        >
+                          Keep order
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col gap-1">
+                      <p className="text-[#cbb89d] text-xs mb-3">Order not shipped yet?</p>
+                      <button
+                        onClick={() => setConfirmingCancel(true)}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-[Outfit] text-sm font-bold transition-all bg-[#ffb4ab]/10 text-[#ffb4ab] border border-[#ffb4ab]/30 hover:bg-[#ffb4ab]/20"
+                      >
+                        <XCircle size={16} /> Cancel Order
+                      </button>
+                    </div>
+                  )}
+                </GlassCard>
+              )}
             </div>
           </div>
         </>

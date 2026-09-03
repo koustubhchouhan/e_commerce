@@ -20,3 +20,7 @@ export const updateSellerOrderStatus = asyncHandler(async (req, res) => {
 export const getOrder = asyncHandler(async (req, res) => {
   res.json(await orderService.getOrder(req.user.id, req.user.role, req.params.id));
 });
+
+export const cancelOwnOrder = asyncHandler(async (req, res) => {
+  res.json(await orderService.cancelOrder(req.user.id, req.user.role, req.params.id));
+});

@@ -213,36 +213,70 @@ export async function updateOrderStatus(actorUserId, actorRole, orderId, nextSta
   }
 
   if (nextStatus === 'cancelled') {
-    const { data: orderItems, error: itemErr } = await db
-      .from('order_items')
-      .select('product_id, quantity')
-      .eq('order_id', orderId);
-    if (itemErr) throw new AppError(500, `Could not load order items: ${itemErr.message}`);
-
-    for (const item of orderItems ?? []) {
-      if (!item.product_id) continue;
-      const { data: product, error: prodErr } = await db
-        .from('products')
-        .select('stock')
-        .eq('id', item.product_id)
-        .maybeSingle();
-      if (prodErr || !product) continue;
-      const { error: updateErr } = await db
-        .from('products')
-        .update({ stock: Number(product.stock) + Number(item.quantity) })
-        .eq('id', item.product_id);
-      if (updateErr) throw new AppError(500, `Could not restore stock: ${updateErr.message}`);
-    }
+    await restoreStockForOrder(orderId);
   }
 
+  return setOrderStatus(orderId, nextStatus);
+}
+
+// PATCH /orders/:id/cancel — a customer cancels their own order before it ships
+// (pending/paid only). Admins can cancel any order on behalf of a customer.
+export async function cancelOrder(userId, userRole, orderId) {
+  const { data: order, error } = await db
+    .from('orders')
+    .select('id, user_id, status')
+    .eq('id', orderId)
+    .maybeSingle();
+  if (error) throw new AppError(500, `Could not load order: ${error.message}`);
+  if (!order) throw new AppError(404, 'Order not found');
+
+  if (order.user_id !== userId && userRole !== 'admin') {
+    throw new AppError(403, 'You can only cancel your own orders');
+  }
+
+  const allowed = STATUS_TRANSITIONS[order.status] ?? [];
+  if (!allowed.includes('cancelled')) {
+    throw new AppError(400, `Cannot cancel an order that is "${order.status}"`);
+  }
+
+  await restoreStockForOrder(orderId);
+  return setOrderStatus(orderId, 'cancelled');
+}
+
+// Adds back each cancelled line item's quantity to product stock. Rows whose
+// product no longer exists are skipped so a deletion never blocks a cancel.
+async function restoreStockForOrder(orderId) {
+  const { data: orderItems, error: itemErr } = await db
+    .from('order_items')
+    .select('product_id, quantity')
+    .eq('order_id', orderId);
+  if (itemErr) throw new AppError(500, `Could not load order items: ${itemErr.message}`);
+
+  for (const item of orderItems ?? []) {
+    if (!item.product_id) continue;
+    const { data: product, error: prodErr } = await db
+      .from('products')
+      .select('stock')
+      .eq('id', item.product_id)
+      .maybeSingle();
+    if (prodErr || !product) continue;
+    const { error: updateErr } = await db
+      .from('products')
+      .update({ stock: Number(product.stock) + Number(item.quantity) })
+      .eq('id', item.product_id);
+    if (updateErr) throw new AppError(500, `Could not restore stock: ${updateErr.message}`);
+  }
+}
+
+// Sets an order's status and returns the minimal updated row.
+async function setOrderStatus(orderId, status) {
   const { data: updated, error: updateErr } = await db
     .from('orders')
-    .update({ status: nextStatus })
+    .update({ status })
     .eq('id', orderId)
     .select('id, status')
     .single();
   if (updateErr) throw new AppError(500, `Could not update order: ${updateErr.message}`);
-
   return { id: updated.id, status: updated.status };
 }
 
