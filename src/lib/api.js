@@ -164,6 +164,8 @@ export const api = {
   adminSellers: () => request('/admin/sellers', { auth: true }),
   revokeSeller: (id) => request(`/admin/sellers/${id}`, { method: 'DELETE', auth: true }),
   adminOrders: () => request('/admin/orders', { auth: true }),
+  adminUpdateOrderStatus: (id, status) =>
+    request(`/admin/orders/${id}/status`, { method: 'PATCH', body: { status }, auth: true }),
   adminCategories: () => request('/admin/categories', { auth: true }),
   createCategory: (name) => request('/admin/categories', { method: 'POST', body: { name }, auth: true }),
   deleteCategory: (id) => request(`/admin/categories/${id}`, { method: 'DELETE', auth: true }),
