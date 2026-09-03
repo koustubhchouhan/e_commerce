@@ -5,6 +5,7 @@ import {
   listSellers,
   revokeSeller,
   listAllOrders,
+  updateAdminOrderStatus,
   listCategories,
   createCategory,
   deleteCategory,
@@ -19,6 +20,7 @@ import {
 import {
   listApplicationsQuerySchema,
   reviewApplicationSchema,
+  updateOrderStatusSchema,
 } from '../validators/seller.validators.js';
 
 const router = Router();
@@ -47,6 +49,14 @@ router.delete(
   revokeSeller
 );
 router.get('/admin/orders', requireAuth, requireRole('admin'), listAllOrders);
+router.patch(
+  '/admin/orders/:id/status',
+  requireAuth,
+  requireRole('admin'),
+  validateParams(uuidParamSchema),
+  validate(updateOrderStatusSchema),
+  updateAdminOrderStatus
+);
 router.get('/admin/categories', requireAuth, requireRole('admin'), listCategories);
 router.post(
   '/admin/categories',

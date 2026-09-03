@@ -1,5 +1,6 @@
-import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2 } from 'lucide-react';
+import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ProductGrid } from './Home';
 import GlassCard from '../components/GlassCard';
 import { useToastStore } from '../store/toastStore';
@@ -33,6 +34,8 @@ const ORDER_STATUS_STYLES = {
   cancelled: 'bg-[#ffb4ab]/20 text-[#ffb4ab] border-[#ffb4ab]/30',
 };
 
+const ORDER_STATUS_TABS = ['all', 'pending', 'paid', 'shipped', 'delivered', 'cancelled'];
+
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('products');
 
@@ -46,6 +49,8 @@ export default function AdminPanel() {
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [updating, setUpdating] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
   const [categoryModal, setCategoryModal] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const addToast = useToastStore((s) => s.addToast);
@@ -92,17 +97,20 @@ export default function AdminPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const loadOrders = async (spinner = true) => {
+    if (spinner) setLoadingOrders(true);
+    try {
+      const res = await api.adminOrders();
+      setOrders(res.items ?? []);
+    } catch {
+      addToast('Failed to load orders.', 'error');
+    } finally {
+      if (spinner) setLoadingOrders(false);
+    }
+  };
+
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await api.adminOrders();
-        setOrders(res.items ?? []);
-      } catch {
-        addToast('Failed to load orders.', 'error');
-      } finally {
-        setLoadingOrders(false);
-      }
-    })();
+    loadOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -191,6 +199,41 @@ export default function AdminPanel() {
     }
   };
 
+  const orderActions = (order) => {
+    if (order.status === 'pending' || order.status === 'paid') {
+      return [
+        { key: 'shipped', label: 'Ship', icon: Truck },
+        { key: 'cancelled', label: 'Cancel', icon: X },
+      ];
+    }
+    if (order.status === 'shipped') {
+      return [{ key: 'delivered', label: 'Deliver', icon: Truck }];
+    }
+    return [];
+  };
+
+  const handleOrderStatus = async (order, status) => {
+    if (updating) return;
+    setUpdating({ id: order.id, status });
+    try {
+      await api.adminUpdateOrderStatus(order.id, status);
+      await loadOrders(false);
+      addToast(
+        status === 'cancelled'
+          ? `Order ${shortId(order.id)} cancelled — stock restored.`
+          : `Order ${shortId(order.id)} marked as ${status}.`,
+        status === 'cancelled' ? 'error' : 'success',
+      );
+    } catch (err) {
+      addToast(err.message || 'Failed to update order.', 'error');
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const visibleOrders =
+    statusFilter === 'all' ? orders : orders.filter((o) => o.status === statusFilter);
+
   return (
     <div className="flex min-h-[calc(100vh-80px)] animate-fade-in-up">
       {/* Sidebar Navigation */}
@@ -248,6 +291,22 @@ export default function AdminPanel() {
               </div>
             </div>
             
+            <div className="flex flex-wrap items-center gap-2 mb-6">
+              {ORDER_STATUS_TABS.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setStatusFilter(tab)}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all ${
+                    statusFilter === tab
+                      ? 'bg-[#ff9933]/20 text-[#ff9933] border-[#ff9933]/30'
+                      : 'text-[#cbb89d] border-white/10 hover:bg-white/5'
+                  }`}
+                >
+                  {tab === 'all' ? 'All' : tab}
+                </button>
+              ))}
+            </div>
+
             <GlassCard className="p-6 lg:p-8">
               {loadingOrders && (
                 <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading orders...</div>
@@ -263,12 +322,17 @@ export default function AdminPanel() {
                       <th className="py-4 px-4 font-semibold">Date</th>
                       <th className="py-4 px-4 font-semibold text-right">Amount</th>
                       <th className="py-4 px-4 font-semibold text-right">Status</th>
+                      <th className="py-4 px-4 font-semibold text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.map(order => (
+                    {visibleOrders.map(order => (
                       <tr key={order.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{shortId(order.id)}</td>
+                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">
+                          <Link to={`/orders/${order.id}`} className="hover:text-[#ff9933] transition-colors" title="View full order">
+                            {shortId(order.id)}
+                          </Link>
+                        </td>
                         <td className="py-4 px-4 text-[#f1e7d7] font-semibold">{order.customerName || 'Customer'}</td>
                         <td className="py-4 px-4 text-[#fff4e6]">{order.items?.map((i) => i.productName).join(', ') || '—'}</td>
                         <td className="py-4 px-4 text-[#cbb89d] text-sm">{formatDate(order.createdAt)}</td>
@@ -278,11 +342,43 @@ export default function AdminPanel() {
                             {order.status}
                           </span>
                         </td>
+                        <td className="py-4 px-4 text-right whitespace-nowrap">
+                          {orderActions(order).length > 0 ? (
+                            <div className="flex items-center justify-end gap-2">
+                              {orderActions(order).map((action) => {
+                                const active = updating?.id === order.id && updating?.status === action.key;
+                                return (
+                                  <button
+                                    key={action.key}
+                                    disabled={!!updating && updating.id === order.id}
+                                    onClick={() => handleOrderStatus(order, action.key)}
+                                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
+                                      action.key === 'cancelled'
+                                        ? 'bg-[#ffb4ab]/10 text-[#ffb4ab] border-[#ffb4ab]/30 hover:bg-[#ffb4ab]/20'
+                                        : 'bg-[#ff9933]/10 text-[#ffbf66] border-[#ff9933]/30 hover:bg-[#ff9933]/20'
+                                    }`}
+                                  >
+                                    {active ? (
+                                      <Loader2 size={14} className="animate-spin" />
+                                    ) : (
+                                      <action.icon size={14} />
+                                    )}
+                                    {active ? 'Updating...' : action.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <span className="text-[#4b3d2a] text-xs">—</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
-                    {orders.length === 0 && (
+                    {visibleOrders.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="py-16 text-center text-[#9e8c73] text-sm">No orders have been placed yet.</td>
+                        <td colSpan={7} className="py-16 text-center text-[#9e8c73] text-sm">
+                          {statusFilter === 'all' ? 'No orders have been placed yet.' : `No ${statusFilter} orders right now.`}
+                        </td>
                       </tr>
                     )}
                   </tbody>

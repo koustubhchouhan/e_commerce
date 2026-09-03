@@ -10,6 +10,10 @@ export const listAllOrders = asyncHandler(async (req, res) => {
   res.json(await orderService.listAllOrders());
 });
 
+export const updateAdminOrderStatus = asyncHandler(async (req, res) => {
+  res.json(await orderService.updateOrderStatus(req.user.id, req.user.role, req.params.id, req.body.status));
+});
+
 export const listCategories = asyncHandler(async (req, res) => {
   res.json({ items: await adminService.listCategories() });
 });
