@@ -10,6 +10,7 @@ import {
   createCategory,
   deleteCategory,
   deleteProduct,
+  getPlatformLedger,
 } from '../controllers/admin.controller.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate, validateQuery, validateParams } from '../middleware/validate.js';
@@ -79,5 +80,6 @@ router.delete(
   validateParams(uuidParamSchema),
   deleteProduct
 );
+router.get('/admin/ledger', requireAuth, requireRole('admin'), getPlatformLedger);
 
 export default router;
