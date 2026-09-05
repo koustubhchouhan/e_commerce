@@ -206,6 +206,20 @@ create table if not exists public.reviews (
 
 create index if not exists idx_reviews_product_id on public.reviews(product_id);
 
+-- ---- contact_messages -------------------------------------------------
+create table if not exists public.contact_messages (
+  id         uuid primary key default gen_random_uuid(),
+  first_name text not null,
+  last_name  text not null,
+  email      text not null,
+  subject    text not null,
+  message    text not null,
+  is_read    boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_contact_messages_created_at on public.contact_messages(created_at);
+
 -- =====================================================================
 -- Row Level Security: enable on every table (default-deny).
 -- The Express API uses the service_role key, which BYPASSES RLS, and is
@@ -222,6 +236,7 @@ alter table public.product_images      enable row level security;
 alter table public.orders              enable row level security;
 alter table public.order_items         enable row level security;
 alter table public.reviews             enable row level security;
+alter table public.contact_messages    enable row level security;
 
 
 -- ###################### create_order.sql ######################
@@ -344,6 +359,6 @@ on conflict (slug) do nothing;
 -- immediately (otherwise you may get "table not found in schema cache").
 notify pgrst, 'reload schema';
 
--- Sanity check: should list all 9 tables.
+-- Sanity check: should list all 10 tables.
 select table_name from information_schema.tables
 where table_schema = 'public' order by table_name;

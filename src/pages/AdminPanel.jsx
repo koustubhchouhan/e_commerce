@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProductGrid } from './Home';
@@ -43,10 +43,12 @@ export default function AdminPanel() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [sellerRequests, setSellerRequests] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [busy, setBusy] = useState(false);
   const [updating, setUpdating] = useState(null);
@@ -123,6 +125,47 @@ export default function AdminPanel() {
       addToast('Failed to load categories.', 'error');
     } finally {
       setLoadingCategories(false);
+    }
+  };
+
+  const loadMessages = async (spinner = true) => {
+    if (spinner) setLoadingMessages(true);
+    try {
+      const res = await api.adminContactMessages();
+      setMessages(res.items ?? []);
+    } catch {
+      addToast('Failed to load messages.', 'error');
+    } finally {
+      if (spinner) setLoadingMessages(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleToggleMessageRead = async (msg) => {
+    try {
+      await api.adminUpdateContactMessage(msg.id, !msg.isRead);
+      setMessages((prev) =>
+        prev.map((m) => (m.id === msg.id ? { ...m, isRead: !m.isRead } : m)),
+      );
+    } catch (err) {
+      addToast(err.message || 'Failed to update message.', 'error');
+    }
+  };
+
+  const handleDeleteMessage = async (msg) => {
+    setBusy(true);
+    try {
+      await api.adminDeleteContactMessage(msg.id);
+      setMessages((prev) => prev.filter((m) => m.id !== msg.id));
+      addToast(`Message from ${msg.name} deleted.`, 'error');
+    } catch (err) {
+      addToast(err.message || 'Failed to delete message.', 'error');
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -244,6 +287,7 @@ export default function AdminPanel() {
           <SidebarLink icon={<Grid size={20} />} label="Products" active={activeTab === 'products'} onClick={() => setActiveTab('products')} />
           <SidebarLink icon={<UserCheck size={20} />} label="Seller Approvals" active={activeTab === 'seller-requests'} onClick={() => setActiveTab('seller-requests')} />
           <SidebarLink icon={<ShoppingBag size={20} />} label="Orders" active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} />
+          <SidebarLink icon={<Inbox size={20} />} label="Messages" badge={messages.filter((m) => !m.isRead).length} active={activeTab === 'messages'} onClick={() => setActiveTab('messages')} />
           <SidebarLink icon={<Star size={20} />} label="Featured Products" active={activeTab === 'featured'} onClick={() => setActiveTab('featured')} />
           <SidebarLink icon={<LayoutDashboard size={20} />} label="Categories" active={activeTab === 'categories'} onClick={() => setActiveTab('categories')} />
           <SidebarLink icon={<CreditCard size={20} />} label="Payments" active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} />
@@ -389,6 +433,85 @@ export default function AdminPanel() {
           </div>
         )}
 
+        {/* MESSAGES TAB (Contact form submissions) */}
+        {activeTab === 'messages' && (
+          <div className="animate-fade-in-up">
+            <div className="flex justify-between items-center mb-10">
+              <div>
+                <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Support Inbox</h1>
+                <p className="text-[#cbb89d]">Messages submitted through the public Contact page.</p>
+              </div>
+            </div>
+
+            <GlassCard className="p-6 lg:p-8">
+              {loadingMessages && (
+                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading messages...</div>
+              )}
+              {!loadingMessages && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                      <th className="py-4 px-4 font-semibold">From</th>
+                      <th className="py-4 px-4 font-semibold">Message</th>
+                      <th className="py-4 px-4 font-semibold">Date</th>
+                      <th className="py-4 px-4 font-semibold text-center">Status</th>
+                      <th className="py-4 px-4 font-semibold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {messages.map(msg => (
+                      <tr key={msg.id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${msg.isRead ? 'opacity-60' : ''}`}>
+                        <td className="py-4 px-4">
+                          <p className="text-[#f1e7d7] font-semibold">{msg.name}</p>
+                          <a href={`mailto:${msg.email}`} className="text-[#cbb89d] text-xs hover:text-[#ff9933] transition-colors">{msg.email}</a>
+                        </td>
+                        <td className="py-4 px-4 max-w-md">
+                          <p className="text-[#fff4e6] font-semibold text-sm">{msg.subject}</p>
+                          <p className="text-[#9e8c73] text-sm line-clamp-2">{msg.message}</p>
+                        </td>
+                        <td className="py-4 px-4 text-[#cbb89d] text-sm whitespace-nowrap">{formatDate(msg.createdAt)}</td>
+                        <td className="py-4 px-4 text-center">
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${msg.isRead ? 'bg-white/10 text-[#cbb89d] border-white/10' : 'bg-[#ff9933]/20 text-[#ffd27a] border-[#ff9933]/30'}`}>
+                            {msg.isRead ? 'Read' : 'New'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleToggleMessageRead(msg)}
+                              title={msg.isRead ? 'Mark as unread' : 'Mark as read'}
+                              className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ffbf66] hover:bg-[#ff9933]/20 transition-colors"
+                            >
+                              {msg.isRead ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMessage(msg)}
+                              disabled={busy}
+                              title="Delete"
+                              className="p-2 rounded-lg bg-[#ffb4ab]/10 text-[#ffb4ab] hover:bg-[#ffb4ab]/20 transition-colors disabled:opacity-50"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {messages.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-16 text-center text-[#9e8c73] text-sm">
+                          No messages yet — submissions from the Contact page will show up here.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              )}
+            </GlassCard>
+          </div>
+        )}
+
         {/* SELLER APPROVALS TAB */}
         {activeTab === 'seller-requests' && (
           <div className="animate-fade-in-up max-w-5xl">
@@ -513,7 +636,7 @@ export default function AdminPanel() {
         )}
 
         {/* Placeholder for remaining tabs */}
-        {activeTab !== 'products' && activeTab !== 'featured' && activeTab !== 'seller-requests' && activeTab !== 'categories' && activeTab !== 'payments' && activeTab !== 'orders' && (
+        {activeTab !== 'products' && activeTab !== 'featured' && activeTab !== 'seller-requests' && activeTab !== 'categories' && activeTab !== 'payments' && activeTab !== 'orders' && activeTab !== 'messages' && (
           <div className="h-[600px] flex flex-col items-center justify-center animate-fade-in-up opacity-70">
             <h2 className="font-[Outfit] text-3xl font-bold text-[#fff4e6] mb-2 capitalize">{activeTab.replace('-', ' ')}</h2>
             <p className="text-[#cbb89d]">This admin module is currently under construction.</p>
@@ -564,7 +687,7 @@ export default function AdminPanel() {
   );
 }
 
-function SidebarLink({ icon, label, active, onClick }) {
+function SidebarLink({ icon, label, active, onClick, badge }) {
   return (
     <button 
       onClick={onClick}
@@ -574,7 +697,12 @@ function SidebarLink({ icon, label, active, onClick }) {
           : 'text-[#cbb89d] hover:bg-[#34250f]/50 hover:text-[#f1e7d7]'
       }`}
     >
-      {icon} {label}
+      {icon} <span className="flex-1">{label}</span>
+      {badge > 0 && (
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#ff9933]/20 text-[#ffd27a] border border-[#ff9933]/30">
+          {badge}
+        </span>
+      )}
     </button>
   );
 }
