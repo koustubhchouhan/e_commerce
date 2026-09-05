@@ -211,3 +211,142 @@ export async function revokeSeller(sellerId) {
     .eq('id', sellerId);
   if (demoteErr) throw new AppError(500, `Could not revoke seller role: ${demoteErr.message}`);
 }
+
+// =====================================================================
+// Payments & Ledger
+// =====================================================================
+
+// Flat commission the platform keeps on every settled order.
+export const PLATFORM_FEE_RATE = 0.1;
+// Only orders that were actually paid for count as revenue. "pending" is a
+// cart that was never paid, and "cancelled" money never settles.
+const REVENUE_STATUSES = ['paid', 'shipped', 'delivered'];
+const round2 = (n) => Math.round(n * 100) / 100;
+
+// GET /admin/ledger — gross sales, platform fees and net payouts derived
+// entirely from live order data. Totals are summed at order level; the
+// per-seller split attributes each line item back to its store via product_id.
+export async function getPlatformLedger() {
+  const { data: orders, error } = await db
+    .from('orders')
+    .select('id, status, total, created_at, profiles(full_name)')
+    .order('created_at', { ascending: false });
+  if (error) throw new AppError(500, `Could not load orders: ${error.message}`);
+
+  const all = orders ?? [];
+  const revenueOrders = all.filter((o) => REVENUE_STATUSES.includes(o.status));
+  const revenueIds = revenueOrders.map((o) => o.id);
+
+  let unitsSold = 0;
+  let sellers = [];
+  let unattributedGross = 0;
+
+  if (revenueIds.length > 0) {
+    const { data: items, error: itemErr } = await db
+      .from('order_items')
+      .select('order_id, product_id, quantity, line_total')
+      .in('order_id', revenueIds);
+    if (itemErr) throw new AppError(500, `Could not load order items: ${itemErr.message}`);
+
+    const productIds = [...new Set((items ?? []).map((i) => i.product_id).filter(Boolean))];
+    const storeByProduct = new Map();
+    const pendingSellers = new Map(); // storeId -> { name, sellerName }
+
+    if (productIds.length > 0) {
+      const { data: products, error: prodErr } = await db
+        .from('products')
+        .select('id, store_id')
+        .in('id', productIds);
+      if (prodErr) throw new AppError(500, `Could not load products: ${prodErr.message}`);
+
+      const storeIds = [...new Set((products ?? []).map((p) => p.store_id).filter(Boolean))];
+      if (storeIds.length > 0) {
+        const { data: stores, error: storeErr } = await db
+          .from('stores')
+          .select('id, name, owner_id, profiles(full_name)')
+          .in('id', storeIds);
+        if (storeErr) throw new AppError(500, `Could not load stores: ${storeErr.message}`);
+        for (const s of stores ?? []) {
+          pendingSellers.set(s.id, { name: s.name, sellerName: s.profiles?.[0]?.full_name ?? null });
+        }
+      }
+      for (const p of products ?? []) {
+        if (pendingSellers.has(p.store_id)) storeByProduct.set(p.id, p.store_id);
+      }
+    }
+
+    // Accumulate per store: distinct orders, units and goods value.
+    const acc = new Map();
+    for (const it of items ?? []) {
+      unitsSold += it.quantity;
+      const storeId = storeByProduct.get(it.product_id);
+      const amt = Number(it.line_total);
+      if (!storeId) {
+        // Product was deleted after purchase — money settled but no store to pay.
+        unattributedGross += amt;
+        continue;
+      }
+      if (!acc.has(storeId)) {
+        const meta = pendingSellers.get(storeId);
+        acc.set(storeId, {
+          id: storeId,
+          name: meta?.name ?? 'Unknown store',
+          sellerName: meta?.sellerName ?? null,
+          orderIds: new Set(),
+          units: 0,
+          gross: 0,
+        });
+      }
+      const row = acc.get(storeId);
+      row.orderIds.add(it.order_id);
+      row.units += it.quantity;
+      row.gross += amt;
+    }
+
+    sellers = [...acc.values()]
+      .map(({ orderIds, gross, units, ...rest }) => ({
+        ...rest,
+        orderCount: orderIds.size,
+        units,
+        gross: round2(gross),
+        fee: round2(gross * PLATFORM_FEE_RATE),
+        payout: round2(gross * (1 - PLATFORM_FEE_RATE)),
+      }))
+      .sort((a, b) => b.gross - a.gross);
+  }
+
+  const grossSales = round2(revenueOrders.reduce((sum, o) => sum + Number(o.total), 0));
+  const platformFees = round2(grossSales * PLATFORM_FEE_RATE);
+  const sellerPayouts = round2(grossSales - platformFees);
+
+  const transactions = revenueOrders.slice(0, 50).map((o) => {
+    const total = Number(o.total);
+    const fee = round2(total * PLATFORM_FEE_RATE);
+    return {
+      id: o.id,
+      status: o.status,
+      total,
+      fee,
+      payout: round2(total - fee),
+      createdAt: o.created_at,
+      customerName: o.profiles?.full_name ?? null,
+    };
+  });
+
+  return {
+    feeRate: PLATFORM_FEE_RATE,
+    asOf: new Date().toISOString(),
+    summary: {
+      grossSales,
+      platformFees,
+      sellerPayouts,
+      orders: revenueOrders.length,
+      unitsSold,
+      pendingOrders: all.filter((o) => o.status === 'pending').length,
+      cancelledOrders: all.filter((o) => o.status === 'cancelled').length,
+    },
+    sellers,
+    grossUnattributed: round2(unattributedGross),
+    transactions,
+  };
+}

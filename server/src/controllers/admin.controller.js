@@ -49,3 +49,7 @@ export const revokeSeller = asyncHandler(async (req, res) => {
   await adminService.revokeSeller(req.params.id);
   res.status(204).end();
 });
+
+export const getPlatformLedger = asyncHandler(async (req, res) => {
+  res.json(await adminService.getPlatformLedger());
+});

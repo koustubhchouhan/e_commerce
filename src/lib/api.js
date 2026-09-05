@@ -170,6 +170,7 @@ export const api = {
   createCategory: (name) => request('/admin/categories', { method: 'POST', body: { name }, auth: true }),
   deleteCategory: (id) => request(`/admin/categories/${id}`, { method: 'DELETE', auth: true }),
   adminDeleteProduct: (id) => request(`/admin/products/${id}`, { method: 'DELETE', auth: true }),
+  adminLedger: () => request('/admin/ledger', { auth: true }),
 
   // ---- Seller orders ----
   sellerOrders: () => request('/seller/orders', { auth: true }),

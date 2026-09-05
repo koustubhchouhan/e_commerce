@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff } from 'lucide-react';
+import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, DollarSign, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProductGrid } from './Home';
@@ -36,6 +36,9 @@ const ORDER_STATUS_STYLES = {
 
 const ORDER_STATUS_TABS = ['all', 'pending', 'paid', 'shipped', 'delivered', 'cancelled'];
 
+const money = (n) =>
+  `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('products');
 
@@ -50,6 +53,8 @@ export default function AdminPanel() {
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [ledger, setLedger] = useState(null);
+  const [loadingLedger, setLoadingLedger] = useState(true);
   const [busy, setBusy] = useState(false);
   const [updating, setUpdating] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -142,6 +147,22 @@ export default function AdminPanel() {
 
   useEffect(() => {
     loadMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadLedger = async (spinner = true) => {
+    if (spinner) setLoadingLedger(true);
+    try {
+      setLedger(await api.adminLedger());
+    } catch {
+      addToast('Failed to load ledger.', 'error');
+    } finally {
+      if (spinner) setLoadingLedger(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLedger();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -619,19 +640,156 @@ export default function AdminPanel() {
             <div className="flex justify-between items-center mb-10">
               <div>
                 <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Platform Payments & Ledger</h1>
-                <p className="text-[#cbb89d]">Monitor customer transactions, platform fees, and seller payouts.</p>
+                <p className="text-[#cbb89d]">Gross sales, platform fees and seller payouts computed live from real order data.</p>
               </div>
             </div>
-            
-            <GlassCard className="p-6 lg:p-8">
-              <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-                <CreditCard size={40} className="text-[#34250f]" />
-                <p className="text-[#f1e7d7] font-[Outfit] text-lg font-semibold">Payments & Ledger</p>
-                <p className="text-[#cbb89d] text-sm max-w-md">
-                  Payment processing is not wired up yet. Once a payment provider is integrated, transaction history will appear here.
-                </p>
-              </div>
-            </GlassCard>
+
+            {loadingLedger && (
+              <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading ledger...</div>
+            )}
+
+            {!loadingLedger && ledger && ledger.summary && (
+              <>
+                {ledger.summary.orders === 0 ? (
+                  <GlassCard className="p-6 lg:p-8">
+                    <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                      <CreditCard size={40} className="text-[#34250f]" />
+                      <p className="text-[#f1e7d7] font-[Outfit] text-lg font-semibold">No settled payments yet</p>
+                      <p className="text-[#cbb89d] text-sm max-w-md">
+                        Revenue appears here once orders are paid, shipped, or delivered. Pending and cancelled orders are excluded.
+                      </p>
+                    </div>
+                  </GlassCard>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                      <StatCard icon={<DollarSign size={24} />} title="Gross Sales" value={money(ledger.summary.grossSales)} trend={`${ledger.summary.orders} order${ledger.summary.orders === 1 ? '' : 's'}`} />
+                      <StatCard icon={<Percent size={24} />} title="Platform Fees" value={money(ledger.summary.platformFees)} trend={`${Math.round(ledger.feeRate * 100)}% commission`} />
+                      <StatCard icon={<Wallet size={24} />} title="Seller Payouts" value={money(ledger.summary.sellerPayouts)} trend={`${ledger.sellers.length} seller${ledger.sellers.length === 1 ? '' : 's'}`} />
+                      <StatCard icon={<ShoppingBag size={24} />} title="Units Sold" value={String(ledger.summary.unitsSold)} trend={`${ledger.summary.cancelledOrders} cancelled`} />
+                    </div>
+
+                    <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-6">
+                      <GlassCard className="xl:col-span-8 p-6 lg:p-8">
+                        <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
+                          <TrendingUp size={20} className="text-[#ff9933]" /> Recent Transactions
+                        </h2>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse">
+                            <thead>
+                              <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                                <th className="py-3 px-3 font-semibold">Order</th>
+                                <th className="py-3 px-3 font-semibold">Customer</th>
+                                <th className="py-3 px-3 font-semibold">Date</th>
+                                <th className="py-3 px-3 font-semibold text-center">Status</th>
+                                <th className="py-3 px-3 font-semibold text-right">Amount</th>
+                                <th className="py-3 px-3 font-semibold text-right">Platform Fee</th>
+                                <th className="py-3 px-3 font-semibold text-right">Seller Payout</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {ledger.transactions.slice(0, 25).map((t) => (
+                                <tr key={t.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                  <td className="py-3 px-3 text-[#ff9933] font-mono text-xs font-semibold">{shortId(t.id)}</td>
+                                  <td className="py-3 px-3 text-[#f1e7d7] text-sm">{t.customerName ?? '—'}</td>
+                                  <td className="py-3 px-3 text-[#9e8c73] text-xs whitespace-nowrap">{formatDate(t.createdAt)}</td>
+                                  <td className="py-3 px-3 text-center">
+                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${ORDER_STATUS_STYLES[t.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
+                                      {t.status}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-3 text-right text-[#fff4e6] font-semibold text-sm">{money(t.total)}</td>
+                                  <td className="py-3 px-3 text-right text-[#ffd27a] text-sm">{money(t.fee)}</td>
+                                  <td className="py-3 px-3 text-right text-[#9dd0a0] text-sm">{money(t.payout)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </GlassCard>
+
+                      <GlassCard className="xl:col-span-4 p-6 lg:p-8">
+                        <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
+                          <Percent size={20} className="text-[#ffd27a]" /> Fee Split
+                        </h2>
+                        {(() => {
+                          const gross = ledger.summary.grossSales;
+                          const feePct = gross ? (ledger.summary.platformFees / gross) * 100 : 0;
+                          const payPct = gross ? (ledger.summary.sellerPayouts / gross) * 100 : 0;
+                          return (
+                            <>
+                              <div className="flex h-3 rounded-full overflow-hidden bg-white/5 mb-6">
+                                <div className="bg-[#ffd27a] transition-all" style={{ width: `${feePct}%` }} title={`Platform ${money(ledger.summary.platformFees)}`} />
+                                <div className="bg-[#9dd0a0] transition-all" style={{ width: `${payPct}%` }} title={`Sellers ${money(ledger.summary.sellerPayouts)}`} />
+                              </div>
+                              <div className="flex flex-col gap-3">
+                                <div className="flex items-center gap-3">
+                                  <span className="w-2.5 h-2.5 rounded-full bg-[#ffd27a] shrink-0" />
+                                  <span className="text-sm text-[#cbb89d] flex-1">Platform commission</span>
+                                  <span className="text-sm text-[#fff4e6] font-semibold">{money(ledger.summary.platformFees)}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <span className="w-2.5 h-2.5 rounded-full bg-[#9dd0a0] shrink-0" />
+                                  <span className="text-sm text-[#cbb89d] flex-1">Net to sellers</span>
+                                  <span className="text-sm text-[#fff4e6] font-semibold">{money(ledger.summary.sellerPayouts)}</span>
+                                </div>
+                              </div>
+                              {ledger.grossUnattributed > 0.009 && (
+                                <p className="text-[11px] text-[#9e8c73] mt-5 leading-relaxed">
+                                  Includes {money(ledger.grossUnattributed)} from orders whose products were removed afterwards.
+                                </p>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </GlassCard>
+                    </div>
+
+                    <GlassCard className="p-6 lg:p-8">
+                      <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-2 flex items-center gap-2">
+                        <Wallet size={20} className="text-[#ffbf66]" /> Revenue by Seller
+                      </h2>
+                      <p className="text-[#9e8c73] text-xs mb-6">
+                        Each line item is attributed back to the store that sold it. {Math.round(ledger.feeRate * 100)}% commission is deducted from each store's gross before payout.
+                      </p>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                              <th className="py-3 px-3 font-semibold">Store</th>
+                              <th className="py-3 px-3 font-semibold">Seller</th>
+                              <th className="py-3 px-3 font-semibold text-center">Orders</th>
+                              <th className="py-3 px-3 font-semibold text-center">Units</th>
+                              <th className="py-3 px-3 font-semibold text-right">Gross</th>
+                              <th className="py-3 px-3 font-semibold text-right">Platform Fee</th>
+                              <th className="py-3 px-3 font-semibold text-right">Payout</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {ledger.sellers.map((s) => (
+                              <tr key={s.storeId} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                <td className="py-3 px-3 text-[#f1e7d7] font-semibold text-sm">{s.storeName}</td>
+                                <td className="py-3 px-3 text-[#9e8c73] text-sm">{s.sellerName ?? '—'}</td>
+                                <td className="py-3 px-3 text-center text-[#cbb89d] text-sm">{s.orderCount}</td>
+                                <td className="py-3 px-3 text-center text-[#cbb89d] text-sm">{s.units}</td>
+                                <td className="py-3 px-3 text-right text-[#fff4e6] text-sm">{money(s.gross)}</td>
+                                <td className="py-3 px-3 text-right text-[#ffd27a] text-sm">{money(s.fee)}</td>
+                                <td className="py-3 px-3 text-right text-[#9dd0a0] font-semibold text-sm">{money(s.payout)}</td>
+                              </tr>
+                            ))}
+                            {ledger.sellers.length === 0 && (
+                              <tr>
+                                <td colSpan={7} className="py-12 text-center text-[#9e8c73] text-sm">No seller revenue to show yet.</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </GlassCard>
+                  </>
+                )}
+              </>
+            )}
           </div>
         )}
 
@@ -684,6 +842,25 @@ export default function AdminPanel() {
         </div>
       )}
     </div>
+  );
+}
+
+function StatCard({ icon, title, value, trend }) {
+  return (
+    <GlassCard className="p-6">
+      <div className="flex justify-between items-start mb-4">
+        <div className="text-[#ff9933] bg-[#ff9933]/10 p-3 rounded-lg border border-[#ff9933]/20">
+          {icon}
+        </div>
+        <span className="text-xs font-bold tracking-wider px-2 py-1 rounded-full bg-[#ff9933]/20 text-[#ff9933]">
+          {trend}
+        </span>
+      </div>
+      <div>
+        <h3 className="text-[#cbb89d] text-sm font-semibold uppercase tracking-wider mb-1">{title}</h3>
+        <p className="font-[Outfit] text-3xl font-bold text-[#fff4e6]">{value}</p>
+      </div>
+    </GlassCard>
   );
 }
 
