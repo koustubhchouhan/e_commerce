@@ -9,6 +9,7 @@ import sellerRoutes from './routes/seller.routes.js';
 import sellerApplicationsRoutes from './routes/sellerApplications.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import orderRoutes from './routes/order.routes.js';
+import contactRoutes from './routes/contact.routes.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 export function createApp() {
@@ -26,6 +27,7 @@ export function createApp() {
   app.use(sellerApplicationsRoutes);
   app.use(adminRoutes);
   app.use(orderRoutes);
+  app.use(contactRoutes);
 
   // Fallbacks (order matters: 404 first, then the error handler)
   app.use(notFound);

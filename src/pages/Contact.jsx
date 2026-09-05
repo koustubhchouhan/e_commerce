@@ -1,13 +1,33 @@
-import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import { useState } from 'react';
+import { Mail, Phone, MapPin, Send, Loader2 } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
 import { useToastStore } from '../store/toastStore';
+import { api } from '../lib/api';
+
+const inputClass = 'w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-3 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors';
 
 export default function Contact() {
   const addToast = useToastStore(s => s.addToast);
-  const handleSubmit = (e) => {
+  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', subject: '', message: '' });
+  const [sending, setSending] = useState(false);
+
+  const set = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }));
+
+  const canSubmit = Object.values(form).every((v) => v.trim().length > 0) && !sending;
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    addToast('Message sent! We\'ll get back to you soon.', 'success');
-    e.target.reset();
+    if (sending) return;
+    setSending(true);
+    try {
+      await api.submitContactMessage(form);
+      setForm({ first_name: '', last_name: '', email: '', subject: '', message: '' });
+      addToast('Message sent! We\'ll get back to you soon.', 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to send message. Please try again.', 'error');
+    } finally {
+      setSending(false);
+    }
   };
   return (
     <div className="max-w-[1200px] mx-auto px-12 py-16 animate-fade-in-up">
@@ -61,27 +81,28 @@ export default function Contact() {
             <div className="grid grid-cols-2 gap-5">
               <div>
                 <label className="text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block">First Name</label>
-                <input type="text" className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-3 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors" placeholder="John" />
+                <input type="text" value={form.first_name} onChange={set('first_name')} className={inputClass} placeholder="John" required />
               </div>
               <div>
                 <label className="text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block">Last Name</label>
-                <input type="text" className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-3 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors" placeholder="Doe" />
+                <input type="text" value={form.last_name} onChange={set('last_name')} className={inputClass} placeholder="Doe" required />
               </div>
             </div>
             <div>
               <label className="text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block">Email Address</label>
-              <input type="email" className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-3 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors" placeholder="john@example.com" />
+              <input type="email" value={form.email} onChange={set('email')} className={inputClass} placeholder="john@example.com" required />
             </div>
             <div>
               <label className="text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block">Subject</label>
-              <input type="text" className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-3 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors" placeholder="How can we help?" />
+              <input type="text" value={form.subject} onChange={set('subject')} className={inputClass} placeholder="How can we help?" required />
             </div>
             <div>
               <label className="text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block">Message</label>
-              <textarea rows="5" className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-3 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors resize-none" placeholder="Your message here..."></textarea>
+              <textarea rows="5" value={form.message} onChange={set('message')} className={`${inputClass} resize-none`} placeholder="Your message here..." required />
             </div>
-            <button type="submit" className="w-full py-4 rounded-lg bg-[#34250f]/50 border border-[#ff9933]/30 text-[#fff4e6] font-[Outfit] text-lg font-semibold tracking-wider flex items-center justify-center gap-2 hover:bg-gradient-to-br hover:from-[#ff9933] hover:to-[#ff7418] hover:text-[#2e1800] hover:border-transparent transition-all mt-2 group">
-              <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" /> Send Transmission
+            <button type="submit" disabled={!canSubmit} className="w-full py-4 rounded-lg bg-[#34250f]/50 border border-[#ff9933]/30 text-[#fff4e6] font-[Outfit] text-lg font-semibold tracking-wider flex items-center justify-center gap-2 hover:bg-gradient-to-br hover:from-[#ff9933] hover:to-[#ff7418] hover:text-[#2e1800] hover:border-transparent transition-all mt-2 group disabled:opacity-50 disabled:cursor-not-allowed">
+              {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />}
+              {sending ? 'Sending...' : 'Send Transmission'}
             </button>
           </form>
         </GlassCard>
