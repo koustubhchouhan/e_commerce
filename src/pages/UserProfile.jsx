@@ -145,11 +145,11 @@ export default function UserProfile() {
           <div className="space-y-3">
             <div className="flex items-center gap-3 text-[#cbb89d]">
               <Lock size={16} />
-              <span className="font-[Inter] text-sm">Change Password</span>
+              <span className="font-[Inter] text-sm">Signed in via email / Google</span>
             </div>
             <div className="flex items-center gap-3 text-[#cbb89d]">
               <ShieldCheck size={16} />
-              <span className="font-[Inter] text-sm">2-Step Verification Active</span>
+              <span className="font-[Inter] text-sm">Two-step verification: coming soon</span>
             </div>
           </div>
         </a>
@@ -164,8 +164,8 @@ export default function UserProfile() {
             <ChevronRight size={24} className="text-[#cbb89d] group-hover:text-[#ff7418] transition-colors" />
           </div>
           <div className="bg-[#34250f]/30 p-3 rounded-lg border border-white/5">
-            <span className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#ffbf66] block mb-1 uppercase">DEFAULT</span>
-            <p className="font-[Inter] text-base text-[#f1e7d7]">1284 Neon Boulevard, Apt 404<br/>Neo-Angeles, CA 90210</p>
+            <p className="font-[Inter] text-sm text-[#f1e7d7]">No saved addresses yet.</p>
+            <p className="text-[#cbb89d] text-xs mt-1">Saved shipping addresses are coming soon.</p>
           </div>
         </a>
 

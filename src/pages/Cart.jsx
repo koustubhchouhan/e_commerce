@@ -10,9 +10,9 @@ export default function Cart() {
   const navigate = useNavigate();
 
   const subtotal = getSubtotal();
-  const shipping = items.length > 0 ? 15.00 : 0;
-  const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const total = subtotal;
+  const sellers = [...new Set(items.map(({ product }) => product?.storeName).filter(Boolean))];
+  const mixedSellers = sellers.length > 1;
 
   const handleRemove = (id, title) => {
     removeItem(id);
@@ -31,6 +31,12 @@ export default function Cart() {
           <p className="text-[#cbb89d] mt-1 text-sm">{items.length === 0 ? 'Your cart is empty.' : `${items.reduce((a,i)=>a+i.quantity,0)} item(s) in your cart.`}</p>
         </div>
       </header>
+
+      {mixedSellers && (
+        <div className="bg-[#c98a12]/10 border border-[#ffd27a]/30 rounded-xl px-5 py-4 text-sm text-[#ffd27a]">
+          Your cart contains items from {sellers.length} different sellers: {sellers.join(', ')}. Each store ships its own order — please place a separate checkout for each store.
+        </div>
+      )}
 
       {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
@@ -56,6 +62,7 @@ export default function Cart() {
                     </button>
                   </div>
                   <p className="font-[Outfit] text-xl font-bold text-[#ff9933]">${product.price.toLocaleString()}</p>
+                  {product.storeName && <span className="text-[11px] text-[#9e8c73] uppercase tracking-wider font-[Inter]">by {product.storeName}</span>}
                   <div className="flex items-center gap-4 mt-2">
                     <div className="flex items-center bg-[#221708] border border-white/10 rounded-lg p-1">
                       <button onClick={() => updateQty(product.id, quantity - 1)} className="w-8 h-8 flex items-center justify-center text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/5 rounded-md transition-colors"><Minus size={14} /></button>
@@ -83,14 +90,6 @@ export default function Cart() {
                 <div className="flex justify-between items-center text-[#cbb89d]">
                   <span>Subtotal</span>
                   <span className="text-[#f1e7d7] font-medium">${subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center text-[#cbb89d]">
-                  <span>Shipping</span>
-                  <span className="text-[#f1e7d7] font-medium">${shipping.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center text-[#cbb89d]">
-                  <span>Estimated Tax (8%)</span>
-                  <span className="text-[#f1e7d7] font-medium">${tax.toFixed(2)}</span>
                 </div>
               </div>
 

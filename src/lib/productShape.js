@@ -23,6 +23,7 @@ export function toProductCard(p) {
     badge: discount ? `-${p.discount_percent}% OFF` : outOfStock ? 'SOLD OUT' : null,
     badgeColor: discount ? 'error' : 'secondary',
     category: p.category?.name ?? 'Uncategorized',
+    storeName: p.storeName ?? null,
     stock: p.stock,
     status: p.status,
   };
