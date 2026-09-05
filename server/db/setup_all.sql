@@ -250,6 +250,7 @@ declare
   v_product_id uuid;
   v_qty        int;
   v_product    record;
+  v_first_store uuid := null;
   v_unit_price numeric(10,2);
   v_discount   int;
   v_line_total numeric(12,2);
@@ -273,7 +274,7 @@ begin
     end if;
 
     -- Lock this product row until the transaction commits.
-    select id, name, price, discount_percent, stock, status
+    select id, name, price, discount_percent, stock, status, store_id
       into v_product
       from public.products
       where id = v_product_id
@@ -287,6 +288,14 @@ begin
     end if;
     if v_product.stock < v_qty then
       raise exception 'Insufficient stock for product %', v_product_id;
+    end if;
+
+    -- A single order belongs to one store so a seller can always fulfil it.
+    -- Mixed carts are rejected instead of dead-ending for every seller.
+    if v_first_store is null then
+      v_first_store := v_product.store_id;
+    elsif v_product.store_id is distinct from v_first_store then
+      raise exception 'Checkout can only contain items from one store; please place separate orders for each seller';
     end if;
 
     v_unit_price := v_product.price;

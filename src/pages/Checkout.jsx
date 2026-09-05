@@ -16,6 +16,7 @@ export default function Checkout() {
 
   const subtotal = getSubtotal();
   const total = subtotal;
+  const sellers = [...new Set(items.map(({ product }) => product?.storeName).filter(Boolean))];
 
   const [placing, setPlacing] = useState(false);
   const [shipping_form, setShipping] = useState({ firstName: '', lastName: '', address: '', city: '', pin: '', phone: '' });
@@ -108,8 +109,8 @@ export default function Checkout() {
               </div>
               <div className="flex gap-3 mt-4">
                 <button onClick={() => setStep(0)} className="py-3.5 px-6 rounded-xl border border-white/10 text-[#f1e7d7] font-[Outfit] font-bold hover:bg-white/5 transition-all">← Back</button>
-                <button onClick={handlePlaceOrder} disabled={placing} className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-[#c98a12] to-[#ffb52e] text-white font-[Outfit] text-lg font-bold hover:shadow-[0_0_11px_rgba(201,138,18,0.22)] transition-all flex items-center justify-center gap-2 disabled:opacity-60">
-                  {placing ? 'Placing...' : 'Place Order'} {!placing && <ArrowRight size={20} />}
+                <button onClick={handlePlaceOrder} disabled={placing || sellers.length > 1} className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-[#c98a12] to-[#ffb52e] text-white font-[Outfit] text-lg font-bold hover:shadow-[0_0_11px_rgba(201,138,18,0.22)] transition-all flex items-center justify-center gap-2 disabled:opacity-60">
+                  {placing ? 'Placing...' : sellers.length > 1 ? 'Check out one store at a time' : 'Place Order'} {!placing && <ArrowRight size={20} />}
                 </button>
               </div>
             </GlassCard>
@@ -120,6 +121,13 @@ export default function Checkout() {
         <div className="lg:col-span-5">
           <GlassCard className="p-6 sticky top-28">
             <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-5">Your Order</h2>
+
+            {sellers.length > 1 && (
+              <div className="bg-[#c98a12]/10 border border-[#ffd27a]/30 rounded-lg p-3 mb-4 text-xs text-[#ffd27a] leading-relaxed">
+                Your cart spans {sellers.length} stores ({sellers.join(', ')}). Orders must be placed one store at a time — please check out each seller separately.
+              </div>
+            )}
+
             <div className="flex flex-col gap-3 mb-6 max-h-[300px] overflow-y-auto">
               {items.map(({ product, quantity }) => (
                 <div key={product.id} className="flex items-center gap-3 border-b border-white/5 pb-3">
@@ -128,7 +136,10 @@ export default function Checkout() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[#f1e7d7] text-sm font-semibold truncate">{product.title}</p>
-                    <p className="text-[#cbb89d] text-xs">Qty: {quantity}</p>
+                    <p className="text-[#cbb89d] text-xs">
+                      {product.storeName && <span className="text-[#9e8c73] uppercase tracking-wider text-[10px]">by {product.storeName} · </span>}
+                      Qty: {quantity}
+                    </p>
                   </div>
                   <span className="text-[#ff9933] text-sm font-bold shrink-0">${(product.price * quantity).toLocaleString()}</span>
                 </div>

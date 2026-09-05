@@ -17,7 +17,7 @@ export function ProductGrid({ items, adminMode = false, adminOnDelete }) {
   );
 }
 
-function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor, adminMode, adminOnDelete }) {
+function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor, storeName, adminMode, adminOnDelete }) {
   const addItem = useCartStore(s => s.addItem);
   const addToast = useToastStore(s => s.addToast);
   const [added, setAdded] = useState(false);
@@ -28,7 +28,7 @@ function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor,
   };
 
   const handleAdd = () => {
-    addItem({ id, title, price, img });
+    addItem({ id, title, price, img, storeName });
     addToast(`${title} added to cart!`, 'success');
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
@@ -56,6 +56,7 @@ function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor,
             {oldPrice && <span className="text-[#cbb89d] text-[10px] line-through">${oldPrice}</span>}
           </div>
         </div>
+        {storeName && <p className="text-[10px] text-[#9e8c73] font-[Inter] tracking-[0.05em] uppercase mb-1">by {storeName}</p>}
         <p className="text-[#cbb89d] text-xs leading-relaxed mb-4 line-clamp-2 flex-1">
           {desc}
         </p>

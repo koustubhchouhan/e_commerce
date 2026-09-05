@@ -1,4 +1,4 @@
-import { Package, TrendingUp, DollarSign, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, HelpCircle, Clock, PackageX, Check, UploadCloud, Truck, X } from 'lucide-react';
+import { Package, TrendingUp, DollarSign, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, Clock, Check, UploadCloud, Truck, X } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import GlassCard from '../components/GlassCard';
 import { api } from '../lib/api';
@@ -158,36 +158,6 @@ export default function SellerHub() {
       addToast(err.message || 'Failed to update order.', 'error');
     } finally {
       setUpdatingId(null);
-    }
-  };
-
-  const requests = [
-    {
-      id: "REQ-091",
-      customer: "Alex Mercer",
-      type: "Return Request",
-      product: "Nova Pro X-15 Gaming Laptop",
-      date: "2 hours ago",
-      status: "Pending",
-      message: "The cooling fans seem unusually loud during standard usage. Requesting a replacement or return."
-    },
-    {
-      id: "REQ-090",
-      customer: "Jordan Lee",
-      type: "Restock Inquiry",
-      product: "Aura Sound V2 Headphones",
-      date: "1 day ago",
-      status: "Resolved",
-      message: "When will the Midnight Black version be back in stock?"
-    }
-  ];
-
-  const getRequestIcon = (type) => {
-    switch (type) {
-      case 'Return Request': return <PackageX className="text-[#ffb4ab]" size={20} />;
-      case 'Restock Inquiry': return <HelpCircle className="text-[#ff9933]" size={20} />;
-      case 'Order Modification': return <Clock className="text-[#ffd27a]" size={20} />;
-      default: return <MessageSquareWarning className="text-[#f1e7d7]" size={20} />;
     }
   };
 
@@ -380,56 +350,18 @@ export default function SellerHub() {
           <div className="animate-fade-in-up">
             <header className="mb-10">
               <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Messages & Complaints</h1>
-              <p className="text-[#cbb89d]">Manage incoming inquiries, return requests, and order modifications.</p>
+              <p className="text-[#cbb89d]">Incoming inquiries, return requests, and order modifications will appear here.</p>
             </header>
-            
-            <div className="flex flex-col gap-6 max-w-4xl">
-              {requests.map((req) => (
-                <GlassCard key={req.id} className="p-6">
-                  <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
-                    <div className="flex items-start gap-4">
-                      <div className="mt-1 p-2 bg-white/5 rounded-full border border-white/10 shrink-0">
-                        {getRequestIcon(req.type)}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6]">{req.type}</h2>
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                            req.status === 'Pending' ? 'bg-[#c98a12]/20 text-[#ffd27a] border-[#ffd27a]/30' : 'bg-[#ff9933]/10 text-[#ff9933] border-[#ff9933]/20'
-                          }`}>
-                            {req.status}
-                          </span>
-                        </div>
-                        <p className="text-[#cbb89d] text-sm mt-1">
-                          From: <span className="font-semibold text-[#f1e7d7]">{req.customer}</span> • {req.date}
-                        </p>
-                        <p className="text-[#cbb89d] text-sm">
-                          Product: <span className="text-[#ff7418] hover:underline cursor-pointer">{req.product}</span>
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-xs font-[Inter] font-bold tracking-wider text-[#cbb89d] uppercase shrink-0">
-                      {req.id}
-                    </span>
-                  </div>
-                  
-                  <div className="bg-[#221708]/80 p-4 rounded-lg border border-white/5 mb-4 text-[#f1e7d7] text-sm italic">
-                    "{req.message}"
-                  </div>
 
-                  {req.status === 'Pending' && (
-                    <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-white/10">
-                      <button className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-[#9c5214]/50 hover:bg-[#ff9933]/20 border border-[#ff9933]/30 text-[#fff4e6] text-sm font-semibold transition-all">
-                        <Check size={16} /> Resolve Request
-                      </button>
-                      <button className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-[#34250f]/50 hover:bg-white/10 border border-white/10 text-[#f1e7d7] text-sm font-semibold transition-all">
-                        Reply to Customer
-                      </button>
-                    </div>
-                  )}
-                </GlassCard>
-              ))}
-            </div>
+            <GlassCard className="p-12 flex flex-col items-center justify-center text-center max-w-4xl">
+              <div className="p-3 bg-white/5 rounded-full border border-white/10 mb-4">
+                <MessageSquareWarning size={28} className="text-[#ff9933]" />
+              </div>
+              <p className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-2">No support requests yet</p>
+              <p className="text-[#cbb89d] text-sm max-w-md leading-relaxed">
+                Customer messaging and return handling are coming soon. Orders placed from your store already appear under the Orders tab.
+              </p>
+            </GlassCard>
           </div>
         )}
 
