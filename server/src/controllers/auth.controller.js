@@ -226,8 +226,21 @@ export const oauthSession = asyncHandler(async (req, res) => {
   if (!profile) {
     throw new AppError(404, 'No NovaMarket account matches this Google account. Sign up first.');
   }
+  // The profile row is keyed by the same auth user id that Google just
+  // authenticated, so this is the account owner. GoTrue links the Google
+  // identity onto an email+password account once Google has verified the
+  // email, so the profile may still be tagged `email`. That is a login, not a
+  // takeover attempt — a separate Google account would have its own user id
+  // and its own (google-tagged) profile row. Allow it and upgrade the tag so
+  // future sign-ins skip this path.
   if (profile.auth_provider !== 'google') {
-    throw new AppError(409, 'This email already has a password account. Log in with your email and password.');
+    const { error: tagErr } = await db
+      .from('profiles')
+      .update({ auth_provider: 'google' })
+      .eq('id', profile.id);
+    if (tagErr) {
+      throw new AppError(500, `Could not update profile: ${tagErr.message}`);
+    }
   }
 
   await backfillProfileFromProvider(profile.id, profile, supabaseUser.user_metadata);
