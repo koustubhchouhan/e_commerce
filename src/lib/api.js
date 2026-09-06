@@ -86,13 +86,13 @@ async function tryRefresh() {
 
 export const api = {
   // ---- Auth ----
-  async register({ email, password, fullName }) {
+  async register({ email, password, fullName, role = 'customer' }) {
     const data = await request('/auth/register', {
       method: 'POST',
-      body: { email, password, fullName },
+      body: { email, password, fullName, role },
     });
     tokenStore.set(data.session);
-    return data.user;
+    return data;
   },
   async login(email, password) {
     const data = await request('/auth/login', {
@@ -101,6 +101,16 @@ export const api = {
     });
     tokenStore.set(data.session);
     return data.user;
+  },
+  // Exchange a browser-side OAuth (Google) session for our shaped session.
+  // mode: 'login' | 'signup'; role (signup only) is the chosen account type.
+  async oauthSession(session, { mode, role }) {
+    const data = await request('/auth/oauth/session', {
+      method: 'POST',
+      body: { session, mode, role },
+    });
+    tokenStore.set(data.session);
+    return data;
   },
   async me() {
     const data = await request('/auth/me', { auth: true });

@@ -1,16 +1,28 @@
 import { useState, useEffect } from 'react';
-import { User, Mail, Lock, EyeOff, Eye, ArrowRight, AlertCircle } from 'lucide-react';
+import { User, Mail, Lock, EyeOff, Eye, ArrowRight, AlertCircle, Globe, Smartphone } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToastStore } from '../store/toastStore';
+import { startGoogleOAuth, isGoogleOAuthConfigured } from '../lib/googleAuth';
+
+// Account types offered at sign-up. Admin is never self-selectable — it is
+// granted by the platform, not applied for.
+const SIGNUP_ROLES = [
+  { key: 'customer', label: 'Customer', hint: 'Shop the storefront' },
+  { key: 'seller', label: 'Seller', hint: 'Sell your own products (reviewed)' },
+];
 
 export default function SignUp() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [role, setRole] = useState('customer');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
   const { register, user } = useAuth();
+  const addToast = useToastStore((s) => s.addToast);
   const navigate = useNavigate();
 
   // Redirect only once auth state has committed, to avoid racing ProtectedRoute
@@ -26,11 +38,33 @@ export default function SignUp() {
     setError('');
     setSubmitting(true);
     try {
-      await register({ email: email.trim(), password, fullName: fullName.trim() });
+      const data = await register({
+        email: email.trim(),
+        password,
+        fullName: fullName.trim(),
+        role,
+      });
+      if (data.sellerApplication?.status === 'pending') {
+        addToast(
+          `Your store "${data.sellerApplication.storeName}" is pending admin approval. You'll get seller access once it's approved.`
+        );
+      }
       // Navigation is handled by the effect above once `user` is set.
     } catch (err) {
       setError(err?.message || 'Could not create your account. Please try again.');
       setSubmitting(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setError('');
+    setGoogleBusy(true);
+    try {
+      await startGoogleOAuth({ mode: 'signup', role });
+      // The browser is about to leave for Google's consent screen.
+    } catch (err) {
+      setGoogleBusy(false);
+      setError(err?.message || 'Could not start Google sign-up.');
     }
   };
 
@@ -105,6 +139,43 @@ export default function SignUp() {
               </button>
             </div>
 
+            {/* Account type — admin is never offered here */}
+            <div className="mb-6">
+              <p className="text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">
+                I want to sign up as
+              </p>
+              <div className="flex flex-col gap-2">
+                {SIGNUP_ROLES.map((r) => {
+                  const active = role === r.key;
+                  return (
+                    <button
+                      key={r.key}
+                      type="button"
+                      onClick={() => setRole(r.key)}
+                      className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg border text-left transition-all ${
+                        active
+                          ? 'bg-[#ff9933]/15 border-[#ff9933]/50 text-[#fff4e6]'
+                          : 'bg-white/5 border-white/10 text-[#cbb89d] hover:bg-white/10 hover:text-[#f1e7d7]'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2 font-[Outfit] font-semibold text-sm">
+                        <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${active ? 'border-[#ff9933]' : 'border-white/25'}`}>
+                          {active && <span className="w-2 h-2 rounded-full bg-[#ff9933]" />}
+                        </span>
+                        {r.label}
+                      </span>
+                      <span className={`text-[11px] ${active ? 'text-[#cbb89d]' : 'text-[#9e8c73]'}`}>{r.hint}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {role === 'seller' && (
+                <p className="text-[#ffd27a] text-xs mt-2">
+                  Seller accounts need admin approval before you can list products.
+                </p>
+              )}
+            </div>
+
             <button
               type="submit"
               disabled={submitting}
@@ -115,6 +186,45 @@ export default function SignUp() {
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform" />
             </button>
           </form>
+
+          {/* Divider */}
+          <div className="relative flex items-center justify-center my-8">
+            <div className="absolute w-full h-[1px] bg-white/10" />
+            <span className="relative px-3 py-1 rounded-full text-[10px] font-semibold tracking-wider text-[#cbb89d] uppercase bg-[#2a2212]">
+              Or sign up with
+            </span>
+          </div>
+
+          {/* Social — the account type chosen above is attached to the sign-up */}
+          <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={handleGoogle}
+              disabled={googleBusy || submitting}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[#f1e7d7] text-sm hover:bg-white/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Globe size={18} /> {googleBusy ? 'Redirecting…' : 'Google'}
+            </button>
+            <button
+              type="button"
+              disabled
+              title="Apple sign-in is not available yet"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[#f1e7d7]/40 text-sm cursor-not-allowed"
+            >
+              <Smartphone size={18} /> Apple
+            </button>
+          </div>
+          {role === 'seller' && (
+            <p className="text-[10px] text-[#9e8c73] mt-3 leading-relaxed text-center">
+              Signing up as a Seller with Google still requires admin approval before you can list products.
+            </p>
+          )}
+          {!isGoogleOAuthConfigured && (
+            <p className="text-[10px] text-[#c98a12] mt-2 leading-relaxed">
+              Google sign-up needs VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY set, plus the provider
+              enabled in Supabase.
+            </p>
+          )}
         </div>
 
         <p className="text-center mt-8 text-[#cbb89d] text-sm">

@@ -39,10 +39,18 @@ export function AuthProvider({ children }) {
     return u;
   };
 
-  const register = async ({ email, password, fullName }) => {
-    const u = await api.register({ email, password, fullName });
-    setUser(u);
-    return u;
+  const register = async ({ email, password, fullName, role }) => {
+    const data = await api.register({ email, password, fullName, role });
+    setUser(data.user);
+    return data;
+  };
+
+  // Completes a Google sign-in/sign-up: the browser OAuth client already holds
+  // the Supabase session; we swap it for our shaped app session via the backend.
+  const loginWithGoogle = async (session, { mode, role }) => {
+    const data = await api.oauthSession(session, { mode, role });
+    setUser(data.user);
+    return data;
   };
 
   const logout = () => {
@@ -54,7 +62,7 @@ export function AuthProvider({ children }) {
   const userRole = user?.role ?? 'guest';
 
   return (
-    <AuthContext.Provider value={{ user, userRole, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, userRole, loading, login, register, loginWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );

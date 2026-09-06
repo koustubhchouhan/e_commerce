@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
+import AuthCallback from "./pages/AuthCallback";
 import ProductDetails from "./pages/ProductDetails";
 import AdminPanel from "./pages/AdminPanel";
 import SellerHub from "./pages/SellerHub";
@@ -45,7 +46,9 @@ function App() {
   const { userRole, loading } = useAuth();
   const location = useLocation();
   const hideNavAndFooter =
-    location.pathname === "/login" || location.pathname === "/signup";
+    location.pathname === "/login" ||
+    location.pathname === "/signup" ||
+    location.pathname === "/auth/callback";
 
   // While we restore an existing session, avoid rendering routes (a protected
   // route would otherwise bounce a logged-in user to /login on hard refresh).
@@ -70,6 +73,7 @@ function App() {
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
 
             <Route
               path="/home"
