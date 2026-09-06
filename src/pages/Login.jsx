@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ShoppingCart, Mail, Lock, EyeOff, Eye, ArrowRight, Globe, Smartphone, AlertCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { startGoogleOAuth, isGoogleOAuthConfigured } from '../lib/googleAuth';
 
 // Development convenience only. `import.meta.env.DEV` is false in production
 // builds, so Vite strips this list and the buttons below out of the bundle.
@@ -13,13 +14,25 @@ const DEV_ACCOUNTS = [
   { label: 'Admin', email: 'admin@novamarket.test' },
 ];
 
+// Role the person intends to sign in as. This is only a UX guard — the real
+// role still comes from the server. If the selection mismatches the account,
+// we say so instead of silently dropping them somewhere unexpected.
+const LOGIN_ROLES = [
+  { key: 'customer', label: 'Customer' },
+  { key: 'seller', label: 'Seller' },
+  { key: 'admin', label: 'Admin' },
+];
+const ROLE_LABELS = { admin: 'Admin', seller: 'Seller', customer: 'Customer' };
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const { login, user } = useAuth();
+  const [googleBusy, setGoogleBusy] = useState(false);
+  const { login, logout, user } = useAuth();
   const navigate = useNavigate();
 
   const routeForRole = (role) => {
@@ -40,11 +53,33 @@ export default function Login() {
     setError('');
     setSubmitting(true);
     try {
-      await login(email.trim(), password);
+      const account = await login(email.trim(), password);
+      // Optional "signing in as" guard: if the chosen role doesn't match the
+      // account's real role, refuse rather than bounce them into the wrong area.
+      if (selectedRole && account?.role && account.role !== selectedRole) {
+        logout();
+        setSubmitting(false);
+        setError(
+          `There is no ${ROLE_LABELS[selectedRole] ?? selectedRole} account for this email — it is registered as ${ROLE_LABELS[account.role] ?? account.role}. Select the correct option, or sign up with this role using a different email.`
+        );
+        return;
+      }
       // Navigation is handled by the effect above once `user` is set.
     } catch (err) {
       setError(err?.message || 'Login failed. Please try again.');
       setSubmitting(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setError('');
+    setGoogleBusy(true);
+    try {
+      await startGoogleOAuth({ mode: 'login', role: selectedRole || undefined });
+      // The browser is about to leave for Google's consent screen.
+    } catch (err) {
+      setGoogleBusy(false);
+      setError(err?.message || 'Could not start Google sign-in.');
     }
   };
 
@@ -135,6 +170,37 @@ export default function Login() {
               <a href="#" className="text-[#ff9933] text-sm hover:text-[#ffbf66] transition-colors">Forgot Password?</a>
             </div>
 
+            {/* Optional role guard: verify the account is the role they expect */}
+            <div className="mb-6">
+              <p className="text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">
+                Signing in as
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {LOGIN_ROLES.map((r) => {
+                  const active = selectedRole === r.key;
+                  return (
+                    <button
+                      key={r.key}
+                      type="button"
+                      onClick={() => setSelectedRole(active ? '' : r.key)}
+                      className={`px-4 py-2 rounded-full text-xs font-bold tracking-wider uppercase border transition-all ${
+                        active
+                          ? 'bg-[#ff9933]/20 text-[#ff9933] border-[#ff9933]/40'
+                          : 'bg-white/5 text-[#cbb89d] border-white/10 hover:bg-white/10 hover:text-[#f1e7d7]'
+                      }`}
+                    >
+                      {r.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[#9e8c73] text-xs mt-2">
+                {selectedRole
+                  ? `We'll check this account actually is a ${ROLE_LABELS[selectedRole]} before signing you in.`
+                  : 'Optional — leave unselected to go straight to your account.'}
+              </p>
+            </div>
+
             <button
               type="submit"
               disabled={submitting}
@@ -156,13 +222,29 @@ export default function Login() {
 
           {/* Social */}
           <div className="flex gap-4">
-            <button type="button" className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[#f1e7d7] text-sm hover:bg-white/10 transition-colors">
-              <Globe size={18} /> Google
+            <button
+              type="button"
+              onClick={handleGoogle}
+              disabled={googleBusy || submitting}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[#f1e7d7] text-sm hover:bg-white/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <Globe size={18} /> {googleBusy ? 'Redirecting…' : 'Google'}
             </button>
-            <button type="button" className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[#f1e7d7] text-sm hover:bg-white/10 transition-colors">
+            <button
+              type="button"
+              disabled
+              title="Apple sign-in is not available yet"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[#f1e7d7]/40 text-sm cursor-not-allowed"
+            >
               <Smartphone size={18} /> Apple
             </button>
           </div>
+          {!isGoogleOAuthConfigured && (
+            <p className="text-[10px] text-[#c98a12] mt-3 leading-relaxed">
+              Google sign-in needs VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY set, plus the
+              provider enabled in Supabase.
+            </p>
+          )}
 
           {/* Dev-only role shortcuts — removed from production builds */}
           {import.meta.env.DEV && (
