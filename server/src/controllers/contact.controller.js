@@ -13,6 +13,14 @@ export const updateContactMessage = asyncHandler(async (req, res) => {
   res.json(await contactService.updateContactMessage(req.params.id, req.body));
 });
 
+export const listSellerContactMessages = asyncHandler(async (req, res) => {
+  res.json(await contactService.listSellerContactMessages(req.user.id));
+});
+
+export const updateSellerContactMessage = asyncHandler(async (req, res) => {
+  res.json(await contactService.updateSellerContactMessage(req.user.id, req.params.id, req.body));
+});
+
 export const deleteContactMessage = asyncHandler(async (req, res) => {
   await contactService.deleteContactMessage(req.params.id);
   res.status(204).end();

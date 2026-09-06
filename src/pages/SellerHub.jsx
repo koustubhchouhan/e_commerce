@@ -1,4 +1,4 @@
-import { Package, TrendingUp, DollarSign, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, Clock, Check, UploadCloud, Truck, X } from 'lucide-react';
+import { Package, TrendingUp, DollarSign, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, Clock, Check, UploadCloud, Truck, X, Eye, EyeOff } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import GlassCard from '../components/GlassCard';
 import { api } from '../lib/api';
@@ -6,6 +6,23 @@ import { useToastStore } from '../store/toastStore';
 import { useAuth } from '../context/AuthContext';
 
 const shortId = (id) => (id ? String(id).slice(0, 8).toUpperCase() : '');
+
+const timeAgo = (iso) => {
+  if (!iso) return 'recently';
+  const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days > 1 ? 's' : ''} ago`;
+};
+
+const formatDate = (iso) => {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
 
 const ORDER_STATUS_STYLES = {
   delivered: 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30',
@@ -27,6 +44,10 @@ export default function SellerHub() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [store, setStore] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(true);
+  const [messagesError, setMessagesError] = useState('');
+  const [togglingId, setTogglingId] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -61,6 +82,42 @@ export default function SellerHub() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await api.sellerContactMessages();
+        if (!active) return;
+        setMessages(res.items ?? []);
+      } catch (err) {
+        if (active) setMessagesError(err.message || 'Failed to load messages.');
+      } finally {
+        if (active) setMessagesLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const unreadMessages = messages.filter((m) => !m.isRead).length;
+
+  const handleToggleMessageRead = async (msg) => {
+    if (togglingId) return;
+    setTogglingId(msg.id);
+    try {
+      await api.updateSellerContactMessage(msg.id, !msg.isRead);
+      setMessages((prev) =>
+        prev.map((m) => (m.id === msg.id ? { ...m, isRead: !m.isRead } : m)),
+      );
+      addToast(msg.isRead ? 'Marked as unread.' : 'Marked as read.', 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to update message.', 'error');
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   const salesByProduct = {};
   const revenueByProduct = {};
@@ -190,7 +247,7 @@ export default function SellerHub() {
           <SidebarLink icon={<ShoppingBag size={20} />} label="Orders" active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} />
           <SidebarLink icon={<LayoutDashboard size={20} />} label="Store Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
           <SidebarLink icon={<BarChart3 size={20} />} label="Analytics" active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} />
-          <SidebarLink icon={<MessageSquareWarning size={20} />} label="Messages & Complaints" active={activeTab === 'messages'} onClick={() => setActiveTab('messages')} />
+          <SidebarLink icon={<MessageSquareWarning size={20} />} label="Messages & Complaints" badge={unreadMessages} active={activeTab === 'messages'} onClick={() => setActiveTab('messages')} />
         </nav>
       </aside>
 
@@ -350,17 +407,76 @@ export default function SellerHub() {
           <div className="animate-fade-in-up">
             <header className="mb-10">
               <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Messages & Complaints</h1>
-              <p className="text-[#cbb89d]">Incoming inquiries, return requests, and order modifications will appear here.</p>
+              <p className="text-[#cbb89d]">
+                {unreadMessages > 0
+                  ? `${unreadMessages} unread message${unreadMessages === 1 ? '' : 's'} from customers.`
+                  : 'Inquiries customers send about your products appear here.'}
+              </p>
             </header>
 
-            <GlassCard className="p-12 flex flex-col items-center justify-center text-center max-w-4xl">
-              <div className="p-3 bg-white/5 rounded-full border border-white/10 mb-4">
-                <MessageSquareWarning size={28} className="text-[#ff9933]" />
+            <GlassCard className="p-6 lg:p-8">
+              {messagesLoading && (
+                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading messages...</div>
+              )}
+              {!messagesLoading && messagesError && (
+                <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{messagesError}</div>
+              )}
+              {!messagesLoading && !messagesError && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                      <th className="py-4 px-4 font-semibold">From</th>
+                      <th className="py-4 px-4 font-semibold">Message</th>
+                      <th className="py-4 px-4 font-semibold">About</th>
+                      <th className="py-4 px-4 font-semibold">Date</th>
+                      <th className="py-4 px-4 font-semibold text-center">Status</th>
+                      <th className="py-4 px-4 font-semibold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {messages.map((msg) => (
+                      <tr key={msg.id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${msg.isRead ? 'opacity-60' : ''}`}>
+                        <td className="py-4 px-4">
+                          <p className="text-[#f1e7d7] font-semibold">{msg.name}</p>
+                          <a href={`mailto:${msg.email}`} className="text-[#cbb89d] text-xs hover:text-[#ff9933] transition-colors">{msg.email}</a>
+                        </td>
+                        <td className="py-4 px-4 max-w-md">
+                          <p className="text-[#fff4e6] font-semibold text-sm">{msg.subject}</p>
+                          <p className="text-[#9e8c73] text-sm line-clamp-2">{msg.message}</p>
+                        </td>
+                        <td className="py-4 px-4 text-[#cbb89d] text-sm">{msg.productName || 'Store inquiry'}</td>
+                        <td className="py-4 px-4 text-[#cbb89d] text-sm whitespace-nowrap" title={formatDate(msg.createdAt)}>{timeAgo(msg.createdAt)}</td>
+                        <td className="py-4 px-4 text-center">
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${msg.isRead ? 'bg-white/10 text-[#cbb89d] border-white/10' : 'bg-[#ff9933]/20 text-[#ffd27a] border-[#ff9933]/30'}`}>
+                            {msg.isRead ? 'Read' : 'New'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center justify-end">
+                            <button
+                              onClick={() => handleToggleMessageRead(msg)}
+                              disabled={togglingId === msg.id}
+                              title={msg.isRead ? 'Mark as unread' : 'Mark as read'}
+                              className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ffbf66] hover:bg-[#ff9933]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {msg.isRead ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {messages.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="py-16 text-center text-[#9e8c73] text-sm">
+                          No customer messages yet — questions sent from a product page land here.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-              <p className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-2">No support requests yet</p>
-              <p className="text-[#cbb89d] text-sm max-w-md leading-relaxed">
-                Customer messaging and return handling are coming soon. Orders placed from your store already appear under the Orders tab.
-              </p>
+              )}
             </GlassCard>
           </div>
         )}
@@ -499,7 +615,7 @@ export default function SellerHub() {
   );
 }
 
-function SidebarLink({ icon, label, active, onClick }) {
+function SidebarLink({ icon, label, active, onClick, badge }) {
   return (
     <button 
       onClick={onClick}
@@ -509,7 +625,13 @@ function SidebarLink({ icon, label, active, onClick }) {
           : 'text-[#cbb89d] hover:bg-[#34250f]/50 hover:text-[#f1e7d7]'
       }`}
     >
-      {icon} {label}
+      {icon}
+      <span className="flex-1">{label}</span>
+      {badge > 0 && (
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#ff9933] text-[#2e1800]">
+          {badge}
+        </span>
+      )}
     </button>
   );
 }

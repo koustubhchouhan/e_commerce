@@ -46,6 +46,7 @@ export function serializeProduct(row, coverUrl) {
     category: row.categories
       ? { id: row.categories.id, name: row.categories.name, slug: row.categories.slug }
       : null,
+    storeId: row.store_id ?? null,
     storeName: row.stores?.name ?? null,
     coverImage: coverUrl,
   };

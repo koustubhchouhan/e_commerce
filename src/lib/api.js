@@ -205,4 +205,9 @@ export const api = {
     request(`/admin/contact-messages/${id}`, { method: 'PATCH', body: { is_read: isRead }, auth: true }),
   adminDeleteContactMessage: (id) =>
     request(`/admin/contact-messages/${id}`, { method: 'DELETE', auth: true }),
+
+  // ---- Seller contact inbox ----
+  sellerContactMessages: () => request('/seller/contact-messages', { auth: true }),
+  updateSellerContactMessage: (id, isRead) =>
+    request(`/seller/contact-messages/${id}`, { method: 'PATCH', body: { is_read: isRead }, auth: true }),
 };

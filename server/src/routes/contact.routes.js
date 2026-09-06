@@ -3,6 +3,8 @@ import {
   createContactMessage,
   listContactMessages,
   updateContactMessage,
+  listSellerContactMessages,
+  updateSellerContactMessage,
   deleteContactMessage,
 } from '../controllers/contact.controller.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
@@ -18,7 +20,23 @@ const router = Router();
 // Public
 router.post('/contact', validate(createContactMessageSchema), createContactMessage);
 
-// Admin inbox
+// Seller inbox — messages customers sent about the seller's products/store.
+router.get(
+  '/seller/contact-messages',
+  requireAuth,
+  requireRole('seller', 'admin'),
+  listSellerContactMessages
+);
+router.patch(
+  '/seller/contact-messages/:id',
+  requireAuth,
+  requireRole('seller', 'admin'),
+  validateParams(uuidParamSchema),
+  validate(updateContactMessageSchema),
+  updateSellerContactMessage
+);
+
+// Admin inbox (sees everything, including seller-bound messages)
 router.get('/admin/contact-messages', requireAuth, requireRole('admin'), listContactMessages);
 router.patch(
   '/admin/contact-messages/:id',

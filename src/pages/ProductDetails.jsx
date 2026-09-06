@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { ShoppingCart, ChevronLeft, ChevronRight, CheckCircle, Star, StarHalf, PackageX } from 'lucide-react';
+import { ShoppingCart, ChevronLeft, ChevronRight, CheckCircle, Star, StarHalf, PackageX, MessageCircle } from 'lucide-react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import GlassCard from '../components/GlassCard';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
+import { useAuth } from '../context/AuthContext';
 import { api, tokenStore } from '../lib/api';
 import { toProductCard } from '../lib/productShape';
 
@@ -23,6 +24,7 @@ export default function ProductDetails() {
   const addItem = useCartStore(s => s.addItem);
   const addToast = useToastStore(s => s.addToast);
   const navigate = useNavigate();
+  const { userRole } = useAuth();
   const isLoggedIn = Boolean(tokenStore.access);
 
   useEffect(() => {
@@ -208,6 +210,14 @@ export default function ProductDetails() {
                 Buy Now
               </button>
             </div>
+            {userRole === 'customer' && product.storeName && (
+              <Link
+                to={`/contact?product=${product.id}`}
+                className="mt-3 w-full py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 text-[#cbb89d] border border-white/10 hover:text-[#ff9933] hover:border-[#ff9933]/40 transition-colors"
+              >
+                <MessageCircle size={16} /> Ask {product.storeName} a question
+              </Link>
+            )}
           </div>
         </GlassCard>
       </div>
