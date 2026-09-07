@@ -30,3 +30,37 @@ export const oauthSessionSchema = z.object({
   mode: z.enum(['login', 'signup']),
   role: z.enum(['customer', 'seller']).optional(),
 });
+
+// Shipping address shape — mirrors what checkout stores on an order, so a
+// saved default can be reused at the register without any reshaping.
+const shippingAddressSchema = z
+  .object({
+    firstName: z.string().max(120).optional().default(''),
+    lastName: z.string().max(120).optional().default(''),
+    address: z.string().max(300).optional().default(''),
+    city: z.string().max(120).optional().default(''),
+    pin: z.string().max(20).optional().default(''),
+    phone: z.string().max(40).optional().default(''),
+  })
+  .nullable()
+  .optional();
+
+// PATCH /auth/profile — all fields optional; only provided ones are written.
+export const updateProfileSchema = z.object({
+  fullName: z.string().min(1).max(120).optional(),
+  phone: z.string().max(40).nullable().optional(),
+  avatarUrl: z.string().url('Avatar URL must be a valid URL').max(500).nullable().optional(),
+  shippingAddress: shippingAddressSchema,
+});
+
+// POST /auth/password — current password is optional so Google-only accounts
+// (which have no password yet) can set one without proving a nonexistent one.
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1).optional().default(''),
+  newPassword: z.string().min(8, 'New password must be at least 8 characters'),
+});
+
+// POST /auth/email — changing the sign-in email.
+export const changeEmailSchema = z.object({
+  newEmail: z.string().email('Enter a valid email address'),
+});

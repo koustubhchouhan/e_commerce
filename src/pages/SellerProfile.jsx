@@ -3,6 +3,7 @@ import { Store, Shield, MapPin, ChevronRight, CheckCircle, Wallet, X, Save } fro
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useToastStore } from '../store/toastStore';
+import AccountSettingsModal from '../components/AccountSettingsModal';
 
 const shortId = (id) => (id ? String(id).slice(0, 8).toUpperCase() : '');
 
@@ -24,6 +25,7 @@ export default function SellerProfile() {
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [busy, setBusy] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
 
   const loadStore = async () => {
     setLoading(true);
@@ -96,13 +98,21 @@ export default function SellerProfile() {
             {store && <span className="text-[#cbb89d] text-sm"> • Seller since {formatSince(store.createdAt)}</span>}
           </p>
         </div>
-        <button
-          onClick={openEdit}
-          disabled={!store}
-          className="px-6 py-3 bg-gradient-to-r from-[#9c5214] to-[#ff9933] text-[#2e1800] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-lg hover:shadow-[0_0_9px_rgba(255,153,51,0.17)] transition-all duration-300 disabled:opacity-50"
-        >
-          Edit Store Profile
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setAccountOpen(true)}
+            className="px-6 py-3 rounded-lg border border-white/15 text-[#f1e7d7] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase hover:bg-white/5 transition-all duration-300"
+          >
+            Edit Account
+          </button>
+          <button
+            onClick={openEdit}
+            disabled={!store}
+            className="px-6 py-3 bg-gradient-to-r from-[#9c5214] to-[#ff9933] text-[#2e1800] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-lg hover:shadow-[0_0_9px_rgba(255,153,51,0.17)] transition-all duration-300 disabled:opacity-50"
+          >
+            Edit Store Profile
+          </button>
+        </div>
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
@@ -248,6 +258,8 @@ export default function SellerProfile() {
           </div>
         </div>
       )}
+
+      <AccountSettingsModal open={accountOpen} onClose={() => setAccountOpen(false)} initialTab="profile" />
     </div>
   );
 }

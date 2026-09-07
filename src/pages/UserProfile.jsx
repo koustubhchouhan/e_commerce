@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Package, Shield, MapPin, CreditCard, ChevronRight, Lock, ShieldCheck, PackageX } from 'lucide-react';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import AccountSettingsModal from '../components/AccountSettingsModal';
 
 const STATUS_BADGES = {
   pending: 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30',
@@ -24,6 +25,13 @@ export default function UserProfile() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState('profile');
+
+  const openSettings = (tab = 'profile') => {
+    setSettingsTab(tab);
+    setSettingsOpen(true);
+  };
 
   useEffect(() => {
     let active = true;
@@ -64,7 +72,10 @@ export default function UserProfile() {
           <h1 className="font-[Outfit] text-4xl md:text-5xl font-bold text-[#fff4e6] tracking-tight">{user?.fullName || 'Customer'}</h1>
           <p className="font-[Inter] text-lg text-[#cbb89d]">{user?.email || 'NovaMarket member'}</p>
         </div>
-        <button className="px-6 py-3 bg-gradient-to-r from-[#9c5214] to-[#ff9933] text-[#2e1800] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-lg hover:shadow-[0_0_9px_rgba(255,153,51,0.17)] transition-all duration-300 whitespace-nowrap">
+        <button
+          onClick={() => openSettings('profile')}
+          className="px-6 py-3 bg-gradient-to-r from-[#9c5214] to-[#ff9933] text-[#2e1800] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-lg hover:shadow-[0_0_9px_rgba(255,153,51,0.17)] transition-all duration-300 whitespace-nowrap"
+        >
           Edit Profile
         </button>
       </section>
@@ -134,7 +145,7 @@ export default function UserProfile() {
         </div>
 
         {/* Login & Security — 4 cols */}
-        <a href="#" className="lg:col-span-4 glass-panel p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 min-h-[280px]">
+        <button type="button" onClick={() => openSettings('security')} className="lg:col-span-4 glass-panel p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 min-h-[280px] w-full text-left">
           <div className="flex justify-between items-start mb-6">
             <div className="flex flex-col gap-2 text-[#ffd27a]">
               <Shield size={28} className="group-hover:scale-110 transition-transform" />
@@ -149,13 +160,13 @@ export default function UserProfile() {
             </div>
             <div className="flex items-center gap-3 text-[#cbb89d]">
               <ShieldCheck size={16} />
-              <span className="font-[Inter] text-sm">Two-step verification: coming soon</span>
+              <span className="font-[Inter] text-sm">Manage email & password</span>
             </div>
           </div>
-        </a>
+        </button>
 
         {/* Addresses — 6 cols */}
-        <a href="#" className="lg:col-span-6 glass-panel p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 min-h-[200px]">
+        <button type="button" onClick={() => openSettings('profile')} className="lg:col-span-6 glass-panel p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 min-h-[200px] w-full text-left">
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-3 text-[#ff7418]">
               <MapPin size={28} className="group-hover:scale-110 transition-transform" />
@@ -164,28 +175,34 @@ export default function UserProfile() {
             <ChevronRight size={24} className="text-[#cbb89d] group-hover:text-[#ff7418] transition-colors" />
           </div>
           <div className="bg-[#34250f]/30 p-3 rounded-lg border border-white/5">
-            <p className="font-[Inter] text-sm text-[#f1e7d7]">No saved addresses yet.</p>
-            <p className="text-[#cbb89d] text-xs mt-1">Saved shipping addresses are coming soon.</p>
+            <p className="font-[Inter] text-sm text-[#f1e7d7]">
+              {user?.shippingAddress?.address
+                ? `${user.shippingAddress.firstName ?? ''} ${user.shippingAddress.address}, ${user.shippingAddress.city ?? ''}`
+                : 'No default shipping address saved yet.'}
+            </p>
+            <p className="text-[#cbb89d] text-xs mt-1">Click to set your default shipping address.</p>
           </div>
-        </a>
+        </button>
 
         {/* Payment Options — 6 cols */}
-        <a href="#" className="lg:col-span-6 glass-panel p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 min-h-[200px]">
+        <div className="lg:col-span-6 glass-panel p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 min-h-[200px]">
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-3 text-[#fffaf0]">
               <CreditCard size={28} className="group-hover:scale-110 transition-transform" />
               <h2 className="font-[Outfit] text-xl font-semibold">Payment Options</h2>
             </div>
-            <ChevronRight size={24} className="text-[#cbb89d] group-hover:text-[#fffaf0] transition-colors" />
+            <ChevronRight size={24} className="text-[#cbb89d]" />
           </div>
           <div className="bg-[#34250f]/30 p-3 rounded-lg border border-white/5">
             <p className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#cbb89d] uppercase mb-1.5">PAYMENT METHOD</p>
             <p className="font-[Inter] text-sm text-[#f1e7d7]">Pay by card at checkout.</p>
             <p className="text-[#cbb89d] text-xs mt-1">No wallet balance on this account.</p>
           </div>
-        </a>
+        </div>
 
       </section>
+
+      <AccountSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} initialTab={settingsTab} />
     </div>
   );
 }

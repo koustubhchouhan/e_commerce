@@ -120,6 +120,34 @@ export const api = {
     tokenStore.clear();
   },
 
+  // ---- Account / profile ----
+  async updateProfile(patch) {
+    const data = await request('/auth/profile', { method: 'PATCH', body: patch, auth: true });
+    return data.user;
+  },
+  async uploadAvatar(file) {
+    const form = new FormData();
+    form.append('avatar', file);
+    const data = await request('/auth/profile/avatar', {
+      method: 'POST',
+      body: form,
+      auth: true,
+      formData: true,
+    });
+    return data.user;
+  },
+  async changePassword({ currentPassword, newPassword }) {
+    return request('/auth/password', {
+      method: 'POST',
+      body: { currentPassword, newPassword },
+      auth: true,
+    });
+  },
+  async changeEmail(newEmail) {
+    const data = await request('/auth/email', { method: 'POST', body: { newEmail }, auth: true });
+    return data.user;
+  },
+
   // ---- Generic helpers for later milestones (catalog, orders, etc.) ----
   get: (path, opts) => request(path, { ...opts, method: 'GET' }),
   post: (path, body, opts) => request(path, { ...opts, method: 'POST', body }),

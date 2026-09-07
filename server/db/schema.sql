@@ -22,20 +22,24 @@ exception when duplicate_object then null; end $$;
 
 -- ---- profiles (1:1 with auth.users) ---------------------------------
 create table if not exists public.profiles (
-  id            uuid primary key references auth.users(id) on delete cascade,
-  full_name     text not null default '',
-  email         text,
-  avatar_url    text,
-  role          user_role not null default 'customer',
-  auth_provider text not null default 'email',
-  password_hash text,
-  created_at    timestamptz not null default now()
+  id               uuid primary key references auth.users(id) on delete cascade,
+  full_name        text not null default '',
+  email            text,
+  avatar_url       text,
+  phone            text,
+  shipping_address jsonb,
+  role             user_role not null default 'customer',
+  auth_provider    text not null default 'email',
+  password_hash    text,
+  created_at       timestamptz not null default now()
 );
 
 -- Keep existing installs in sync.
 alter table public.profiles add column if not exists email text;
 alter table public.profiles add column if not exists auth_provider text not null default 'email';
 alter table public.profiles add column if not exists password_hash text;
+alter table public.profiles add column if not exists phone text;
+alter table public.profiles add column if not exists shipping_address jsonb;
 
 -- Auto-create a profile whenever a new auth user is created.
 create or replace function public.handle_new_user()

@@ -58,11 +58,17 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  // Merge freshly saved profile fields (name/avatar/phone/email...) into the
+  // in-memory user so the UI reflects the change without a full reload.
+  const applyUserPatch = (patch) => {
+    setUser((prev) => (prev ? { ...prev, ...patch } : patch));
+  };
+
   // Kept for backward compatibility: the rest of the app gates on this string.
   const userRole = user?.role ?? 'guest';
 
   return (
-    <AuthContext.Provider value={{ user, userRole, loading, login, register, loginWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, userRole, loading, login, register, loginWithGoogle, logout, applyUserPatch }}>
       {children}
     </AuthContext.Provider>
   );

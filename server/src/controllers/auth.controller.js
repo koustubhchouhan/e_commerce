@@ -1,18 +1,32 @@
 import { db, authClient } from '../config/supabase.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import { AppError } from '../middleware/error.js';
+import { removeProductImage, uploadProductImage } from '../services/storage.service.js';
 
-// Shapes a Supabase session + our profile into the response the frontend expects.
-// Roles always come from our `profiles` table, never from client input.
-async function buildAuthResponse(user, session) {
+// Maps a `profiles` row to the user object every auth endpoint returns.
+// Roles come from our table only, never from client input.
+function toUser(profile, fallbackEmail) {
+  return {
+    id: profile.id,
+    email: profile.email || fallbackEmail || '',
+    role: profile.role,
+    fullName: profile.full_name ?? '',
+    avatarUrl: profile.avatar_url ?? null,
+    phone: profile.phone ?? null,
+    shippingAddress: profile.shipping_address ?? null,
+  };
+}
+
+// Reads the caller's profile row and shapes it. Throws a helpful 500 when the
+// profiles table or the matching row is missing so a broken DB is not treated
+// as a silent default-role login.
+async function readProfileUser(userId, fallbackEmail) {
   const { data: profile, error } = await db
     .from('profiles')
-    .select('role, full_name, avatar_url')
-    .eq('id', user.id)
+    .select('id, email, role, full_name, avatar_url, phone, shipping_address')
+    .eq('id', userId)
     .single();
 
-  // Don't paper over a missing table / missing row with a default role — that
-  // makes a broken database look like a successful login.
   if (error) {
     throw new AppError(
       500,
@@ -22,15 +36,14 @@ async function buildAuthResponse(user, session) {
   if (!profile) {
     throw new AppError(500, 'No profile row for this user — is the handle_new_user trigger installed?');
   }
+  return toUser(profile, fallbackEmail);
+}
 
+// Shapes a Supabase session + our profile into the response the frontend expects.
+async function buildAuthResponse(user, session) {
+  const shapedUser = await readProfileUser(user.id, user.email);
   return {
-    user: {
-      id: user.id,
-      email: user.email,
-      role: profile.role,
-      fullName: profile.full_name ?? '',
-      avatarUrl: profile.avatar_url ?? null,
-    },
+    user: shapedUser,
     session: {
       accessToken: session.access_token,
       refreshToken: session.refresh_token,
@@ -245,4 +258,112 @@ export const oauthSession = asyncHandler(async (req, res) => {
 
   await backfillProfileFromProvider(profile.id, profile, supabaseUser.user_metadata);
   res.json(await buildAuthResponse(supabaseUser, browserSession));
+});
+
+// PATCH /auth/profile — updates the caller's own profile row. Every role can
+// edit their personal details; role/email/id can never be changed here.
+export const updateProfile = asyncHandler(async (req, res) => {
+  const { fullName, phone, avatarUrl, shippingAddress } = req.body;
+
+  const patch = {};
+  if (fullName !== undefined) patch.full_name = (fullName ?? '').trim();
+  if (phone !== undefined) patch.phone = ((phone ?? '').trim() || null);
+  if (avatarUrl !== undefined) patch.avatar_url = avatarUrl || null;
+  if (shippingAddress !== undefined) patch.shipping_address = shippingAddress || null;
+
+  if (Object.keys(patch).length === 0) {
+    throw new AppError(400, 'Nothing to update');
+  }
+
+  const { error } = await db.from('profiles').update(patch).eq('id', req.user.id);
+  if (error) throw new AppError(500, `Could not update profile: ${error.message}`);
+
+  res.json({ user: await readProfileUser(req.user.id, req.user.email) });
+});
+
+// POST /auth/profile/avatar — multipart avatar upload (field name "avatar").
+// Stored in the same public bucket as product images, under an `avatars`/
+// folder; the previous avatar (if it was ours) is removed afterwards.
+export const uploadAvatar = asyncHandler(async (req, res) => {
+  const file = req.file;
+  if (!file) throw new AppError(400, 'No avatar file uploaded');
+  if (!/^image\//.test(file.mimetype)) {
+    throw new AppError(400, 'Avatar must be an image file (JPG, PNG, WebP...)');
+  }
+
+  const { url } = await uploadProductImage({ file, folder: 'avatars' });
+
+  const { data: current } = await db
+    .from('profiles')
+    .select('avatar_url')
+    .eq('id', req.user.id)
+    .single();
+
+  const { error } = await db
+    .from('profiles')
+    .update({ avatar_url: url })
+    .eq('id', req.user.id);
+  if (error) {
+    await removeProductImage(url);
+    throw new AppError(500, `Could not save avatar: ${error.message}`);
+  }
+
+  // Clean up the old avatar object only after the new one is safely persisted.
+  if (current?.avatar_url && current.avatar_url !== url) {
+    await removeProductImage(current.avatar_url);
+  }
+
+  res.json({ user: await readProfileUser(req.user.id, req.user.email) });
+});
+
+// POST /auth/password — changes the auth password via the Supabase admin API.
+// Accounts created with email+password must prove the current password first;
+// Google-only accounts have no password yet, so they may simply set one.
+export const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  const { data: profile } = await db
+    .from('profiles')
+    .select('auth_provider, password_hash')
+    .eq('id', req.user.id)
+    .maybeSingle();
+
+  const hasPassword = Boolean(profile?.password_hash);
+  if (hasPassword) {
+    if (!currentPassword) throw new AppError(400, 'Enter your current password');
+    const { error: signInErr } = await authClient.auth.signInWithPassword({
+      email: req.user.email,
+      password: currentPassword,
+    });
+    if (signInErr) throw new AppError(401, 'Current password is incorrect');
+  }
+  if (currentPassword && currentPassword === newPassword) {
+    throw new AppError(400, 'New password must be different from your current password');
+  }
+
+  const { error } = await db.auth.admin.updateUserById(req.user.id, { password: newPassword });
+  if (error) throw new AppError(400, `Could not update password: ${error.message}`);
+
+  res.json({ message: 'Password updated' });
+});
+
+// POST /auth/email — changes the sign-in email. The Supabase auth user is
+// updated directly (pre-confirmed, mirroring how registration works in this
+// prototype) and the profile copy is kept in sync.
+export const changeEmail = asyncHandler(async (req, res) => {
+  const { newEmail } = req.body;
+
+  const { error: authErr } = await db.auth.admin.updateUserById(req.user.id, {
+    email: newEmail,
+    email_confirm: true,
+  });
+  if (authErr) throw new AppError(409, `Could not update email: ${authErr.message}`);
+
+  const { error: profileErr } = await db
+    .from('profiles')
+    .update({ email: newEmail })
+    .eq('id', req.user.id);
+  if (profileErr) throw new AppError(500, `Could not update profile: ${profileErr.message}`);
+
+  res.json({ user: await readProfileUser(req.user.id, newEmail) });
 });

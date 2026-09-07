@@ -16,17 +16,19 @@ export async function requireAuth(req, res, next) {
 
     const { data: profile, error: profileErr } = await db
       .from('profiles')
-      .select('role, full_name, avatar_url')
+      .select('email, role, full_name, avatar_url, phone, shipping_address')
       .eq('id', data.user.id)
       .single();
     if (profileErr || !profile) throw new AppError(401, 'Profile not found');
 
     req.user = {
       id: data.user.id,
-      email: data.user.email,
+      email: profile.email || data.user.email,
       role: profile.role,
       fullName: profile.full_name,
       avatarUrl: profile.avatar_url,
+      phone: profile.phone ?? null,
+      shippingAddress: profile.shipping_address ?? null,
     };
     next();
   } catch (err) {

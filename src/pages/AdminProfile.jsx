@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Shield, Users, UserCheck, Store, Check, X, Clock, CheckCircle, Trash2, Lock, AlertTriangle } from 'lucide-react';
 import { useToastStore } from '../store/toastStore';
 import { api } from '../lib/api';
+import AccountSettingsModal from '../components/AccountSettingsModal';
 
 const timeAgo = (iso) => {
   if (!iso) return 'recently';
@@ -26,6 +27,7 @@ export default function AdminProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const addToast = useToastStore((s) => s.addToast);
 
   const loadAll = async () => {
@@ -122,6 +124,12 @@ export default function AdminProfile() {
           </div>
           <p className="font-[Inter] text-lg text-[#cbb89d] mt-1">Global Platform Settings & Security</p>
         </div>
+        <button
+          onClick={() => setAccountOpen(true)}
+          className="px-6 py-3 bg-gradient-to-r from-[#9c5214] to-[#ff9933] text-[#2e1800] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-lg hover:shadow-[0_0_9px_rgba(255,153,51,0.17)] transition-all duration-300 whitespace-nowrap"
+        >
+          Edit Account
+        </button>
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6">
@@ -248,6 +256,8 @@ export default function AdminProfile() {
         </div>
 
       </section>
+
+      <AccountSettingsModal open={accountOpen} onClose={() => setAccountOpen(false)} initialTab="profile" />
     </div>
   );
 }
