@@ -2,8 +2,11 @@ import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
 import { removeProductImage } from './storage.service.js';
 
+// `profiles!seller_applications_user_id_fkey` disambiguates the embed: the
+// table has two FKs to profiles (user_id and reviewed_by), so PostgREST would
+// otherwise reject the implicit relationship as ambiguous.
 const APPLICATION_SELECT =
-  'id, store_name, contact_email, status, created_at, reviewed_at, profiles(full_name)';
+  'id, store_name, contact_email, status, created_at, reviewed_at, profiles!seller_applications_user_id_fkey(full_name)';
 
 // GET /admin/seller-applications — optionally filtered by status (default all).
 export async function listApplications({ status } = {}) {
