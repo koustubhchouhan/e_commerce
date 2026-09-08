@@ -2,11 +2,12 @@ import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
 import { removeProductImage } from './storage.service.js';
 
-// `profiles!seller_applications_user_id_fkey` disambiguates the embed: the
-// table has two FKs to profiles (user_id and reviewed_by), so PostgREST would
-// otherwise reject the implicit relationship as ambiguous.
+// Applications are loaded without an embedded profile relation, because the
+// table has two FKs to profiles (user_id and reviewed_by) and embed hints tied
+// to the exact constraint name are fragile across DBs. We fetch the applicant
+// names in a second query instead.
 const APPLICATION_SELECT =
-  'id, store_name, contact_email, status, created_at, reviewed_at, profiles!seller_applications_user_id_fkey(full_name)';
+  'id, user_id, store_name, contact_email, status, created_at, reviewed_at';
 
 // GET /admin/seller-applications — optionally filtered by status (default all).
 export async function listApplications({ status } = {}) {
@@ -16,14 +17,27 @@ export async function listApplications({ status } = {}) {
   const { data, error } = await query.order('created_at', { ascending: false });
   if (error) throw new AppError(500, `Could not load applications: ${error.message}`);
 
-  return (data ?? []).map((a) => ({
+  const applications = data ?? [];
+  if (applications.length === 0) return [];
+
+  const userIds = applications.map((a) => a.user_id).filter(Boolean);
+  const { data: applicants, error: profileErr } = await db
+    .from('profiles')
+    .select('id, full_name')
+    .in('id', userIds);
+
+  if (profileErr) throw new AppError(500, `Could not load applicants: ${profileErr.message}`);
+
+  const nameById = new Map((applicants ?? []).map((p) => [p.id, p.full_name]));
+
+  return applications.map((a) => ({
     id: a.id,
     storeName: a.store_name,
     contactEmail: a.contact_email,
     status: a.status,
     createdAt: a.created_at,
     reviewedAt: a.reviewed_at,
-    applicant: a.profiles?.full_name ?? null,
+    applicant: nameById.get(a.user_id) ?? null,
   }));
 }
 

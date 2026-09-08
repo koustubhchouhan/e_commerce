@@ -92,8 +92,8 @@ export default function AdminPanel() {
           status: 'Pending',
         })),
       );
-    } catch {
-      addToast('Failed to load seller requests.', 'error');
+    } catch (err) {
+      addToast(`Failed to load seller requests: ${err?.message ?? 'unknown error'}`, 'error');
     } finally {
       setLoadingRequests(false);
     }
