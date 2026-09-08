@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, CreditCard, ArrowRight, Check } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 
 const STEPS = ['Shipping', 'Payment'];
@@ -19,8 +20,34 @@ export default function Checkout() {
   const sellers = [...new Set(items.map(({ product }) => product?.storeName).filter(Boolean))];
 
   const [placing, setPlacing] = useState(false);
-  const [shipping_form, setShipping] = useState({ firstName: '', lastName: '', address: '', city: '', pin: '', phone: '' });
+  const [shipping_form, setShipping] = useState({
+    firstName: '',
+    lastName: '',
+    address: '',
+    city: '',
+    pin: '',
+    phone: '',
+  });
   const [payment_form, setPayment] = useState({ cardNumber: '', expiry: '', cvv: '' });
+  const { user } = useAuth();
+  const saved = user?.shippingAddress;
+  const appliedDefault = useRef(false);
+
+  // Once the session is available, pre-fill the shipping form with the saved
+  // default address. Runs a single time so edits made by the user win.
+  useEffect(() => {
+    if (appliedDefault.current || !saved) return;
+    appliedDefault.current = true;
+    setShipping({
+      firstName: saved.firstName ?? '',
+      lastName: saved.lastName ?? '',
+      address: saved.address ?? '',
+      city: saved.city ?? '',
+      pin: saved.pin ?? '',
+      phone: saved.phone ?? '',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saved]);
 
   const handlePlaceOrder = async () => {
     if (items.length === 0) {
