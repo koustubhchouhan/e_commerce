@@ -38,8 +38,9 @@ export default function AdminProfile() {
         api.adminApplications('pending'),
         api.adminSellers(),
       ]);
+      const pendingRequests = reqs?.items ?? [];
       setRequests(
-        (reqs ?? []).map((r) => ({
+        pendingRequests.map((r) => ({
           id: r.id,
           store: r.storeName,
           name: r.applicant ?? '—',
@@ -47,8 +48,9 @@ export default function AdminProfile() {
           date: timeAgo(r.createdAt),
         })),
       );
+      const approvedSellers = sellers?.items ?? [];
       setApproved(
-        (sellers ?? []).map((s) => ({
+        approvedSellers.map((s) => ({
           id: s.id,
           store: s.store?.name ?? 'Store',
           name: s.fullName ?? '—',

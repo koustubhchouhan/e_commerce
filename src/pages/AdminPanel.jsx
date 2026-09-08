@@ -81,9 +81,9 @@ export default function AdminPanel() {
   const loadRequests = async () => {
     setLoadingRequests(true);
     try {
-      const reqs = await api.adminApplications('pending');
+      const reqs = (await api.adminApplications('pending'))?.items ?? [];
       setSellerRequests(
-        (reqs ?? []).map((r) => ({
+        reqs.map((r) => ({
           id: r.id,
           user: r.applicant ?? '—',
           email: r.contactEmail,
