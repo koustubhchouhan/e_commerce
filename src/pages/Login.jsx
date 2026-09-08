@@ -4,16 +4,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { startGoogleOAuth, isGoogleOAuthConfigured } from '../lib/googleAuth';
 
-// Development convenience only. `import.meta.env.DEV` is false in production
-// builds, so Vite strips this list and the buttons below out of the bundle.
-// Accounts come from `npm run seed:users` in the server directory.
-const DEV_PASSWORD = 'password123';
-const DEV_ACCOUNTS = [
-  { label: 'Customer', email: 'customer@novamarket.test' },
-  { label: 'Seller', email: 'seller@novamarket.test' },
-  { label: 'Admin', email: 'admin@novamarket.test' },
-];
-
 // Role the person intends to sign in as. This is only a UX guard — the real
 // role still comes from the server. If the selection mismatches the account,
 // we say so instead of silently dropping them somewhere unexpected.
@@ -80,21 +70,6 @@ export default function Login() {
     } catch (err) {
       setGoogleBusy(false);
       setError(err?.message || 'Could not start Google sign-in.');
-    }
-  };
-
-  // Dev-only: sign in as a seeded role account.
-  const quickLogin = async (devEmail) => {
-    setError('');
-    setSubmitting(true);
-    try {
-      await login(devEmail, DEV_PASSWORD);
-    } catch (err) {
-      setError(
-        err?.message ||
-          'Quick login failed. Run "npm run seed:users" in the server directory first.'
-      );
-      setSubmitting(false);
     }
   };
 
@@ -244,28 +219,6 @@ export default function Login() {
               Google sign-in needs VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY set, plus the
               provider enabled in Supabase.
             </p>
-          )}
-
-          {/* Dev-only role shortcuts — removed from production builds */}
-          {import.meta.env.DEV && (
-            <div className="mt-8 rounded-lg border border-dashed border-[#ff9933]/25 bg-[#ff9933]/[0.03] p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#ff9933]/70 mb-3">
-                Dev quick login
-              </p>
-              <div className="flex gap-2">
-                {DEV_ACCOUNTS.map((account) => (
-                  <button
-                    key={account.email}
-                    type="button"
-                    disabled={submitting}
-                    onClick={() => quickLogin(account.email)}
-                    className="flex-1 py-2 rounded-md bg-white/5 border border-white/10 text-[#cbb89d] text-xs font-medium hover:bg-[#ff9933]/10 hover:text-[#ff9933] hover:border-[#ff9933]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {account.label}
-                  </button>
-                ))}
-              </div>
-            </div>
           )}
         </div>
 
