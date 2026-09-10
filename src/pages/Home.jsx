@@ -3,6 +3,7 @@ import { ShoppingCart, CheckCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import GlassCard from '../components/GlassCard';
 import { useCartStore } from '../store/cartStore';
+import { inr } from '../lib/money';
 import { useToastStore } from '../store/toastStore';
 import { api } from '../lib/api';
 import { toProductCardList } from '../lib/productShape';
@@ -52,8 +53,8 @@ function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor,
             {title}
           </Link>
           <div className="flex flex-col items-end shrink-0 pl-2">
-            <span className="font-[Outfit] text-lg font-semibold text-[#fff4e6]">${price}</span>
-            {oldPrice && <span className="text-[#cbb89d] text-[10px] line-through">${oldPrice}</span>}
+            <span className="font-[Outfit] text-lg font-semibold text-[#fff4e6]">{inr(price)}</span>
+            {oldPrice && <span className="text-[#cbb89d] text-[10px] line-through">{inr(oldPrice)}</span>}
           </div>
         </div>
         {storeName && <p className="text-[10px] text-[#9e8c73] font-[Inter] tracking-[0.05em] uppercase mb-1">by {storeName}</p>}

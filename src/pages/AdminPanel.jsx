@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, DollarSign, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProductGrid } from './Home';
@@ -6,6 +6,7 @@ import GlassCard from '../components/GlassCard';
 import { useToastStore } from '../store/toastStore';
 import { api } from '../lib/api';
 import { toProductCardList } from '../lib/productShape';
+import { inr } from '../lib/money';
 
 const timeAgo = (iso) => {
   if (!iso) return 'recently';
@@ -35,9 +36,6 @@ const ORDER_STATUS_STYLES = {
 };
 
 const ORDER_STATUS_TABS = ['all', 'pending', 'paid', 'shipped', 'delivered', 'cancelled'];
-
-const money = (n) =>
-  `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('products');
@@ -401,7 +399,7 @@ export default function AdminPanel() {
                         <td className="py-4 px-4 text-[#f1e7d7] font-semibold">{order.customerName || 'Customer'}</td>
                         <td className="py-4 px-4 text-[#fff4e6]">{order.items?.map((i) => i.productName).join(', ') || '—'}</td>
                         <td className="py-4 px-4 text-[#cbb89d] text-sm">{formatDate(order.createdAt)}</td>
-                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">${Number(order.total).toLocaleString()}</td>
+                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">{inr(order.total)}</td>
                         <td className="py-4 px-4 text-right">
                           <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${ORDER_STATUS_STYLES[order.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
                             {order.status}
@@ -663,9 +661,9 @@ export default function AdminPanel() {
                 ) : (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                      <StatCard icon={<DollarSign size={24} />} title="Gross Sales" value={money(ledger.summary.grossSales)} trend={`${ledger.summary.orders} order${ledger.summary.orders === 1 ? '' : 's'}`} />
-                      <StatCard icon={<Percent size={24} />} title="Platform Fees" value={money(ledger.summary.platformFees)} trend={`${Math.round(ledger.feeRate * 100)}% commission`} />
-                      <StatCard icon={<Wallet size={24} />} title="Seller Payouts" value={money(ledger.summary.sellerPayouts)} trend={`${ledger.sellers.length} seller${ledger.sellers.length === 1 ? '' : 's'}`} />
+                      <StatCard icon={<IndianRupee size={24} />} title="Gross Sales" value={inr(ledger.summary.grossSales)} trend={`${ledger.summary.orders} order${ledger.summary.orders === 1 ? '' : 's'}`} />
+                      <StatCard icon={<Percent size={24} />} title="Platform Fees" value={inr(ledger.summary.platformFees)} trend={`${Math.round(ledger.feeRate * 100)}% commission`} />
+                      <StatCard icon={<Wallet size={24} />} title="Seller Payouts" value={inr(ledger.summary.sellerPayouts)} trend={`${ledger.sellers.length} seller${ledger.sellers.length === 1 ? '' : 's'}`} />
                       <StatCard icon={<ShoppingBag size={24} />} title="Units Sold" value={String(ledger.summary.unitsSold)} trend={`${ledger.summary.cancelledOrders} cancelled`} />
                     </div>
 
@@ -698,9 +696,9 @@ export default function AdminPanel() {
                                       {t.status}
                                     </span>
                                   </td>
-                                  <td className="py-3 px-3 text-right text-[#fff4e6] font-semibold text-sm">{money(t.total)}</td>
-                                  <td className="py-3 px-3 text-right text-[#ffd27a] text-sm">{money(t.fee)}</td>
-                                  <td className="py-3 px-3 text-right text-[#9dd0a0] text-sm">{money(t.payout)}</td>
+                                  <td className="py-3 px-3 text-right text-[#fff4e6] font-semibold text-sm">{inr(t.total)}</td>
+                                  <td className="py-3 px-3 text-right text-[#ffd27a] text-sm">{inr(t.fee)}</td>
+                                  <td className="py-3 px-3 text-right text-[#9dd0a0] text-sm">{inr(t.payout)}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -719,24 +717,24 @@ export default function AdminPanel() {
                           return (
                             <>
                               <div className="flex h-3 rounded-full overflow-hidden bg-white/5 mb-6">
-                                <div className="bg-[#ffd27a] transition-all" style={{ width: `${feePct}%` }} title={`Platform ${money(ledger.summary.platformFees)}`} />
-                                <div className="bg-[#9dd0a0] transition-all" style={{ width: `${payPct}%` }} title={`Sellers ${money(ledger.summary.sellerPayouts)}`} />
+                                <div className="bg-[#ffd27a] transition-all" style={{ width: `${feePct}%` }} title={`Platform ${inr(ledger.summary.platformFees)}`} />
+                                <div className="bg-[#9dd0a0] transition-all" style={{ width: `${payPct}%` }} title={`Sellers ${inr(ledger.summary.sellerPayouts)}`} />
                               </div>
                               <div className="flex flex-col gap-3">
                                 <div className="flex items-center gap-3">
                                   <span className="w-2.5 h-2.5 rounded-full bg-[#ffd27a] shrink-0" />
                                   <span className="text-sm text-[#cbb89d] flex-1">Platform commission</span>
-                                  <span className="text-sm text-[#fff4e6] font-semibold">{money(ledger.summary.platformFees)}</span>
+                                  <span className="text-sm text-[#fff4e6] font-semibold">{inr(ledger.summary.platformFees)}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
                                   <span className="w-2.5 h-2.5 rounded-full bg-[#9dd0a0] shrink-0" />
                                   <span className="text-sm text-[#cbb89d] flex-1">Net to sellers</span>
-                                  <span className="text-sm text-[#fff4e6] font-semibold">{money(ledger.summary.sellerPayouts)}</span>
+                                  <span className="text-sm text-[#fff4e6] font-semibold">{inr(ledger.summary.sellerPayouts)}</span>
                                 </div>
                               </div>
                               {ledger.grossUnattributed > 0.009 && (
                                 <p className="text-[11px] text-[#9e8c73] mt-5 leading-relaxed">
-                                  Includes {money(ledger.grossUnattributed)} from orders whose products were removed afterwards.
+                                  Includes {inr(ledger.grossUnattributed)} from orders whose products were removed afterwards.
                                 </p>
                               )}
                             </>
@@ -772,9 +770,9 @@ export default function AdminPanel() {
                                 <td className="py-3 px-3 text-[#9e8c73] text-sm">{s.sellerName ?? '—'}</td>
                                 <td className="py-3 px-3 text-center text-[#cbb89d] text-sm">{s.orderCount}</td>
                                 <td className="py-3 px-3 text-center text-[#cbb89d] text-sm">{s.units}</td>
-                                <td className="py-3 px-3 text-right text-[#fff4e6] text-sm">{money(s.gross)}</td>
-                                <td className="py-3 px-3 text-right text-[#ffd27a] text-sm">{money(s.fee)}</td>
-                                <td className="py-3 px-3 text-right text-[#9dd0a0] font-semibold text-sm">{money(s.payout)}</td>
+                                <td className="py-3 px-3 text-right text-[#fff4e6] text-sm">{inr(s.gross)}</td>
+                                <td className="py-3 px-3 text-right text-[#ffd27a] text-sm">{inr(s.fee)}</td>
+                                <td className="py-3 px-3 text-right text-[#9dd0a0] font-semibold text-sm">{inr(s.payout)}</td>
                               </tr>
                             ))}
                             {ledger.sellers.length === 0 && (

@@ -6,6 +6,7 @@ import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
+import { inr } from '../lib/money';
 
 const STEPS = ['Shipping', 'Payment'];
 
@@ -168,13 +169,13 @@ export default function Checkout() {
                       Qty: {quantity}
                     </p>
                   </div>
-                  <span className="text-[#ff9933] text-sm font-bold shrink-0">${(product.price * quantity).toLocaleString()}</span>
+                  <span className="text-[#ff9933] text-sm font-bold shrink-0">{inr(product.price * quantity)}</span>
                 </div>
               ))}
             </div>
             <div className="flex flex-col gap-2 text-sm border-t border-white/10 pt-4">
-              <div className="flex justify-between text-[#cbb89d]"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between text-[#fff4e6] font-bold text-lg pt-2 mt-1 border-t border-white/10"><span>Total</span><span>${total.toFixed(2)}</span></div>
+              <div className="flex justify-between text-[#cbb89d]"><span>Subtotal</span><span>{inr(subtotal)}</span></div>
+              <div className="flex justify-between text-[#fff4e6] font-bold text-lg pt-2 mt-1 border-t border-white/10"><span>Total</span><span>{inr(total)}</span></div>
             </div>
             <div className="flex flex-col gap-2 mt-4">
               <div className="flex items-center gap-2 text-xs text-[#cbb89d]"><ShieldCheck size={14} className="text-[#ff9933]" /> End-to-end encrypted</div>

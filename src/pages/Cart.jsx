@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import GlassCard from '../components/GlassCard';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
+import { inr } from '../lib/money';
 
 export default function Cart() {
   const { items, removeItem, updateQty, getSubtotal } = useCartStore();
@@ -61,7 +62,7 @@ export default function Cart() {
                       <Trash2 size={18} />
                     </button>
                   </div>
-                  <p className="font-[Outfit] text-xl font-bold text-[#ff9933]">${product.price.toLocaleString()}</p>
+                  <p className="font-[Outfit] text-xl font-bold text-[#ff9933]">{inr(product.price)}</p>
                   {product.storeName && <span className="text-[11px] text-[#9e8c73] uppercase tracking-wider font-[Inter]">by {product.storeName}</span>}
                   <div className="flex items-center gap-4 mt-2">
                     <div className="flex items-center bg-[#221708] border border-white/10 rounded-lg p-1">
@@ -70,7 +71,7 @@ export default function Cart() {
                       <button onClick={() => updateQty(product.id, quantity + 1)} className="w-8 h-8 flex items-center justify-center text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/5 rounded-md transition-colors"><Plus size={14} /></button>
                     </div>
                     <span className="text-xs text-[#cbb89d] font-medium uppercase tracking-wider">
-                      Subtotal: <span className="text-[#f1e7d7]">${(product.price * quantity).toLocaleString()}</span>
+                      Subtotal: <span className="text-[#f1e7d7]">{inr(product.price * quantity)}</span>
                     </span>
                   </div>
                 </div>

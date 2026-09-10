@@ -3,14 +3,12 @@ import { Search, Filter, Edit, Trash2, PlusCircle, CheckCircle, Clock, XCircle, 
 import GlassCard from '../components/GlassCard';
 import { useToastStore } from '../store/toastStore';
 import { api } from '../lib/api';
+import { inr } from '../lib/money';
 
 const STATUSES = ['Active', 'Out of Stock', 'Pending Approval'];
 
 const STATUS_TO_API = { 'Active': 'active', 'Out of Stock': 'out_of_stock', 'Pending Approval': 'draft' };
 const API_TO_STATUS = { 'active': 'Active', 'out_of_stock': 'Out of Stock', 'draft': 'Pending Approval' };
-
-const formatPrice = (n) =>
-  '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default function SellerInventory() {
   const [inventory, setInventory] = useState([]);
@@ -231,10 +229,10 @@ export default function SellerInventory() {
                     <td className="py-4 px-4 text-[#cbb89d] text-sm">{item.category}</td>
                     <td className="py-4 px-4 text-right">
                       <div className="flex flex-col items-end">
-                        <span className="text-[#ff9933] font-semibold">{formatPrice(finalPrice)}</span>
+                        <span className="text-[#ff9933] font-semibold">{inr(finalPrice)}</span>
                         {item.discount > 0 && (
                           <span className="text-[10px] text-[#cbb89d] flex items-center gap-1">
-                            <span className="line-through">{formatPrice(item.price)}</span>
+                            <span className="line-through">{inr(item.price)}</span>
                             <span className="text-[#ffbf66] font-bold">-{item.discount}%</span>
                           </span>
                         )}
@@ -472,7 +470,7 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
             {/* Price + Discount */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className={labelClass}>Price (USD) <span className="text-[#ffb4ab]">*</span></label>
+                <label className={labelClass}>Price (INR) <span className="text-[#ffb4ab]">*</span></label>
                 <input
                   type="number" min="0" step="0.01"
                   className={`${inputClass} ${touched && !priceValid ? 'border-[#ffb4ab]/60' : ''}`}
@@ -492,12 +490,12 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
             {priceValid && (
               <div className="flex flex-wrap items-center gap-2 -mt-1 text-sm bg-[#100901]/40 border border-white/5 rounded-lg px-4 py-3">
                 <span className="text-[#cbb89d]">Customers pay</span>
-                <span className="text-[#ff9933] font-[Outfit] font-bold text-lg">{formatPrice(salePrice)}</span>
+                <span className="text-[#ff9933] font-[Outfit] font-bold text-lg">{inr(salePrice)}</span>
                 {discountNum > 0 && (
                   <>
-                    <span className="text-[#9e8c73] line-through text-xs">{formatPrice(priceNum)}</span>
+                    <span className="text-[#9e8c73] line-through text-xs">{inr(priceNum)}</span>
                     <span className="text-[#ffbf66] text-xs bg-[#ff9933]/10 border border-[#ff9933]/20 px-2 py-0.5 rounded-full font-semibold">
-                      save {formatPrice(priceNum - salePrice)} ({discountNum}% off)
+                      save {inr(priceNum - salePrice)} ({discountNum}% off)
                     </span>
                   </>
                 )}

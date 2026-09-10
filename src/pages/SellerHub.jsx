@@ -1,4 +1,5 @@
-import { Package, TrendingUp, DollarSign, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, Clock, Check, UploadCloud, Truck, X, Eye, EyeOff } from 'lucide-react';
+import { Package, TrendingUp, IndianRupee, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, Clock, Check, UploadCloud, Truck, X, Eye, EyeOff } from 'lucide-react';
+import { inr } from '../lib/money';
 import { useEffect, useState, useRef } from 'react';
 import GlassCard from '../components/GlassCard';
 import { api } from '../lib/api';
@@ -263,7 +264,7 @@ export default function SellerHub() {
 
             {/* Analytics Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              <StatCard icon={<DollarSign size={24} />} title="Total Revenue" value={`$${revenue.toLocaleString('en-US', { maximumFractionDigits: 2 })}`} trend={`${orders.length} order${orders.length === 1 ? '' : 's'}`} />
+              <StatCard icon={<IndianRupee size={24} />} title="Total Revenue" value={inr(revenue)} trend={`${orders.length} order${orders.length === 1 ? '' : 's'}`} />
               <StatCard icon={<Package size={24} />} title="Products Sold" value={String(unitsSold)} trend={`${products.length} in stock`} />
               <StatCard icon={<ShoppingBag size={24} />} title="Store Orders" value={String(orders.length)} trend={`${salesByProduct ? Object.keys(salesByProduct).length : 0} products sold`} />
               <StatCard icon={<TrendingUp size={24} />} title="Inventory Items" value={String(products.length)} trend={loadingProducts ? 'loading...' : 'live'} />
@@ -299,7 +300,7 @@ export default function SellerHub() {
                           return (
                           <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                             <td className="py-4 px-4 font-[Outfit] text-lg font-semibold text-[#f1e7d7]">{item.name}</td>
-                            <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">${Number(item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">{inr(item.price)}</td>
                             <td className="py-4 px-4 text-center text-[#fff4e6]">{salesByProduct[item.id] ?? 0}</td>
                             <td className="py-4 px-4 text-right">
                               <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
@@ -359,7 +360,7 @@ export default function SellerHub() {
                         <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{shortId(order.id)}</td>
                         <td className="py-4 px-4 text-[#f1e7d7] font-semibold">{order.customerName || 'Customer'}</td>
                         <td className="py-4 px-4 text-[#fff4e6]">{order.items?.map((i) => i.productName).join(', ') || '—'}</td>
-                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">${Number(order.total).toLocaleString()}</td>
+                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">{inr(order.total)}</td>
                         <td className="py-4 px-4 text-right">
                           <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${ORDER_STATUS_STYLES[order.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
                             {order.status}
@@ -489,10 +490,10 @@ export default function SellerHub() {
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <StatCard icon={<DollarSign size={24} />} title="Gross Revenue" value={`$${revenue.toLocaleString('en-US', { maximumFractionDigits: 2 })}`} trend={`${orders.length} order${orders.length === 1 ? '' : 's'}`} />
-              <StatCard icon={<TrendingUp size={24} />} title="Earned Revenue" value={`$${recognizedRevenue.toLocaleString('en-US', { maximumFractionDigits: 2 })}`} trend="excl. cancelled" />
+              <StatCard icon={<IndianRupee size={24} />} title="Gross Revenue" value={inr(revenue)} trend={`${orders.length} order${orders.length === 1 ? '' : 's'}`} />
+              <StatCard icon={<TrendingUp size={24} />} title="Earned Revenue" value={inr(recognizedRevenue)} trend="excl. cancelled" />
               <StatCard icon={<ShoppingBag size={24} />} title="Units Sold" value={String(unitsSold)} trend={`${products.length} products listed`} />
-              <StatCard icon={<Package size={24} />} title="Avg Order Share" value={`$${(orders.length ? recognizedRevenue / orders.length : 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}`} trend="per order" />
+              <StatCard icon={<Package size={24} />} title="Avg Order Share" value={inr(orders.length ? recognizedRevenue / orders.length : 0)} trend="per order" />
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-6">
@@ -508,7 +509,7 @@ export default function SellerHub() {
                       const b = monthMap.get(m.key);
                       const h = Math.max(4, Math.round((b.revenue / peakMonthRevenue) * 100));
                       return (
-                        <div key={m.key} className="flex-1 flex flex-col items-center gap-2 group" title={`$${b.revenue.toLocaleString('en-US', { maximumFractionDigits: 2 })} across ${b.orders} order${b.orders === 1 ? '' : 's'}`}>
+                        <div key={m.key} className="flex-1 flex flex-col items-center gap-2 group" title={`${inr(b.revenue)} across ${b.orders} order${b.orders === 1 ? '' : 's'}`}>
                           <span className="text-[10px] text-[#cbb89d] opacity-0 group-hover:opacity-100 transition-opacity">${Math.round(b.revenue)}</span>
                           <div className={`w-full max-w-[46px] rounded-t-lg bg-gradient-to-t from-[#ff7418]/40 to-[#ff9933] transition-all ${b.revenue > 0 ? '' : 'bg-white/5 to-white/5 from-white/5'}`} style={{ height: `${h}%` }} />
                           <span className="text-[11px] text-[#9e8c73] uppercase tracking-wider">{m.label}</span>
@@ -565,9 +566,9 @@ export default function SellerHub() {
                               <span className="text-[#9e8c73] text-xs mr-2 font-[Inter]">#{idx + 1}</span>
                               {p.name}
                             </td>
-                            <td className="py-3 px-3 text-right text-[#cbb89d] text-sm">${Number(p.price).toLocaleString('en-US', { maximumFractionDigits: 2 })}</td>
+                            <td className="py-3 px-3 text-right text-[#cbb89d] text-sm">{inr(p.price)}</td>
                             <td className="py-3 px-3 text-center text-[#fff4e6]">{p.units}</td>
-                            <td className="py-3 px-3 text-right text-[#ff9933] font-semibold">${p.revenue.toLocaleString('en-US', { maximumFractionDigits: 2 })}</td>
+                            <td className="py-3 px-3 text-right text-[#ff9933] font-semibold">{inr(p.revenue)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -595,7 +596,7 @@ export default function SellerHub() {
                             </p>
                           </div>
                           <div className="flex flex-col items-end shrink-0">
-                            <span className="text-[#fff4e6] font-[Outfit] font-bold text-sm">${share.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+                            <span className="text-[#fff4e6] font-[Outfit] font-bold text-sm">{inr(share)}</span>
                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border mt-1 ${ORDER_STATUS_STYLES[order.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
                               {order.status}
                             </span>
@@ -714,7 +715,7 @@ function AddProductForm({ categories = [], onAdded }) {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className={labelClass}>Price ($)</label>
+            <label className={labelClass}>Price (INR)</label>
             <input type="number" min="0" step="0.01" className={inputClass} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" />
           </div>
           <div>

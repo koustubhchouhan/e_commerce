@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { CheckCircle, Package, ArrowRight } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
+import { inr } from '../lib/money';
 
 export default function OrderConfirmation() {
   const location = useLocation();
@@ -33,7 +34,7 @@ export default function OrderConfirmation() {
           {total != null && (
             <div className="flex justify-between items-center py-3 border-b border-white/10">
               <span className="text-[#cbb89d] text-sm">Total Paid</span>
-              <span className="font-[Outfit] text-lg font-semibold text-[#fff4e6]">${Number(total).toFixed(2)}</span>
+              <span className="font-[Outfit] text-lg font-semibold text-[#fff4e6]">{inr(total)}</span>
             </div>
           )}
           <div className="flex justify-between items-center py-3 border-b border-white/10">

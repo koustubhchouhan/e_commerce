@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, Shield, MapPin, CreditCard, ChevronRight, Lock, ShieldCheck, PackageX } from 'lucide-react';
 import { api } from '../lib/api';
+import { inr } from '../lib/money';
 import { useAuth } from '../context/AuthContext';
 import AccountSettingsModal from '../components/AccountSettingsModal';
 
@@ -134,7 +135,7 @@ export default function UserProfile() {
                       <p className="text-[#cbb89d] text-xs mt-0.5">{formatDate(order.createdAt)}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[#ff9933] font-[Outfit] text-base font-bold">${Number(order.total).toLocaleString()}</span>
+                      <span className="text-[#ff9933] font-[Outfit] text-base font-bold">{inr(order.total)}</span>
                       <ChevronRight size={18} className="text-[#cbb89d] group-hover:text-[#ff9933] group-hover:translate-x-0.5 transition-all" />
                     </div>
                   </div>

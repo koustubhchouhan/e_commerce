@@ -7,6 +7,7 @@ import { useToastStore } from '../store/toastStore';
 import { useAuth } from '../context/AuthContext';
 import { api, tokenStore } from '../lib/api';
 import { toProductCard } from '../lib/productShape';
+import { inr } from '../lib/money';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -183,8 +184,8 @@ export default function ProductDetails() {
           <span className="text-[#ff9933] text-xs font-bold uppercase tracking-widest mb-2">{product.category}</span>
           <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-4 leading-tight">{product.title}</h1>
           <div className="flex items-baseline gap-4 mb-8 pb-6 border-b border-white/10">
-            <span className="font-[Outfit] text-4xl font-bold text-white">${product.price.toLocaleString()}</span>
-            {product.oldPrice && <span className="text-[#cbb89d] text-lg line-through">${product.oldPrice.toLocaleString()}</span>}
+            <span className="font-[Outfit] text-4xl font-bold text-white">{inr(product.price)}</span>
+            {product.oldPrice && <span className="text-[#cbb89d] text-lg line-through">{inr(product.oldPrice)}</span>}
             {savePct !== null && savePct > 0 && (
               <span className="ml-auto px-3 py-1 rounded-full text-[10px] font-bold tracking-wider bg-[#ff9933]/20 text-[#ff9933] border border-[#ff9933]/30">SAVE {savePct}%</span>
             )}

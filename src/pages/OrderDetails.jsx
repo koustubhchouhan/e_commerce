@@ -4,6 +4,7 @@ import { ArrowLeft, Package, Truck, CreditCard, Calendar, MapPin, PackageX, XCir
 import GlassCard from '../components/GlassCard';
 import { useToastStore } from '../store/toastStore';
 import { api } from '../lib/api';
+import { inr } from '../lib/money';
 
 const STATUS_BADGES = {
   pending: 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30',
@@ -30,9 +31,6 @@ const formatDate = (iso) => {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 };
-
-const money = (n) =>
-  Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default function OrderDetails() {
   const { id } = useParams();
@@ -129,12 +127,12 @@ export default function OrderDetails() {
                     <div className="flex-1 min-w-0">
                       <p className="text-[#f1e7d7] font-semibold truncate">{item.productName}</p>
                       <p className="text-[#cbb89d] text-xs mt-0.5">
-                        ${money(item.unitPrice)}
+                        {inr(item.unitPrice)}
                         {item.discountPercent > 0 && <span className="text-[#ffbf66]"> · -{item.discountPercent}%</span>}
                         {' '}× {item.quantity}
                       </p>
                     </div>
-                    <span className="text-[#fff4e6] font-[Outfit] font-bold shrink-0">${money(item.lineTotal)}</span>
+                    <span className="text-[#fff4e6] font-[Outfit] font-bold shrink-0">{inr(item.lineTotal)}</span>
                   </div>
                 ))}
               </div>
@@ -147,9 +145,9 @@ export default function OrderDetails() {
                   <CreditCard size={18} className="text-[#ffd27a]" /> Summary
                 </h2>
                 <div className="flex flex-col gap-2 text-sm">
-                  <div className="flex justify-between text-[#cbb89d]"><span>Subtotal</span><span>${money(order.subtotal)}</span></div>
+                  <div className="flex justify-between text-[#cbb89d]"><span>Subtotal</span><span>{inr(order.subtotal)}</span></div>
                   <div className="flex justify-between text-[#fff4e6] font-bold text-lg pt-2 mt-1 border-t border-white/10">
-                    <span>Total</span><span>${money(order.total)}</span>
+                    <span>Total</span><span>{inr(order.total)}</span>
                   </div>
                 </div>
               </GlassCard>
