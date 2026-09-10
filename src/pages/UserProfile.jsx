@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Shield, MapPin, CreditCard, ChevronRight, Lock, ShieldCheck, PackageX } from 'lucide-react';
+import { Package, Shield, MapPin, CreditCard, ChevronRight, Lock, ShieldCheck, PackageX, Store, Clock, CheckCircle } from 'lucide-react';
 import { api } from '../lib/api';
 import { inr } from '../lib/money';
 import { useAuth } from '../context/AuthContext';
 import AccountSettingsModal from '../components/AccountSettingsModal';
+import SellerApplicationModal from '../components/SellerApplicationModal';
 
 const STATUS_BADGES = {
   pending: 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30',
@@ -28,6 +29,36 @@ export default function UserProfile() {
   const [error, setError] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState('profile');
+  const [sellerOpen, setSellerOpen] = useState(false);
+  const [sellerApp, setSellerApp] = useState(null);
+
+  const loadSellerApp = async () => {
+    try {
+      const res = await api.mySellerApplications();
+      const apps = res.items ?? [];
+      setSellerApp(apps.find((a) => a.status === 'pending' || a.status === 'approved') ?? null);
+    } catch {
+      // Non-fatal: the customer can still open the application modal.
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await api.mySellerApplications();
+        const apps = res.items ?? [];
+        const current =
+          apps.find((a) => a.status === 'pending' || a.status === 'approved') ?? null;
+        if (active) setSellerApp(current);
+      } catch {
+        // Non-fatal: the customer can still open the application modal.
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const openSettings = (tab = 'profile') => {
     setSettingsTab(tab);
@@ -201,9 +232,41 @@ export default function UserProfile() {
           </div>
         </div>
 
+        {/* Become a Seller — 12 cols */}
+        <div className="lg:col-span-12 glass-panel p-6 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-5 transition-all duration-300">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-[#ff9933]/10 rounded-full border border-[#ff9933]/20 text-[#ff9933] shrink-0">
+              {sellerApp?.status === 'pending' ? <Clock size={26} /> : sellerApp?.status === 'approved' ? <CheckCircle size={26} /> : <Store size={26} />}
+            </div>
+            <div>
+              <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6]">Become a Seller</h2>
+              <p className="font-[Inter] text-sm text-[#cbb89d] mt-1 max-w-2xl">
+                {sellerApp?.status === 'pending'
+                  ? `Your application for "${sellerApp.storeName}" is under review by an admin.`
+                  : sellerApp?.status === 'approved'
+                    ? `Your storefront "${sellerApp.storeName}" is approved.`
+                    : 'Open your own storefront and start listing products on NovaMarket.'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSellerOpen(true)}
+            className="px-6 py-3 bg-gradient-to-r from-[#9c5214] to-[#ff9933] text-[#2e1800] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-lg hover:shadow-[0_0_9px_rgba(255,153,51,0.17)] transition-all duration-300 whitespace-nowrap self-start md:self-auto"
+          >
+            {sellerApp ? 'View Application' : 'Apply to Sell'}
+          </button>
+        </div>
+
       </section>
 
       <AccountSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} initialTab={settingsTab} />
+      {sellerOpen && (
+        <SellerApplicationModal
+          onClose={() => setSellerOpen(false)}
+          onChange={loadSellerApp}
+        />
+      )}
     </div>
   );
 }
