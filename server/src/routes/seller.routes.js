@@ -8,7 +8,12 @@ import {
   addProductImages,
 } from '../controllers/product.controller.js';
 import { listSellerOrders, updateSellerOrderStatus } from '../controllers/order.controller.js';
-import { getStore, updateStore } from '../controllers/seller.controller.js';
+import {
+  getStore,
+  updateStore,
+  getStoreReviews,
+  replyToStoreReview,
+} from '../controllers/seller.controller.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate, validateParams } from '../middleware/validate.js';
 import { createProductSchema, updateProductSchema } from '../validators/product.validators.js';
@@ -16,6 +21,7 @@ import { uuidParamSchema } from '../validators/catalog.validators.js';
 import {
   updateStoreSchema,
   updateOrderStatusSchema,
+  replyToReviewSchema,
 } from '../validators/seller.validators.js';
 
 const router = Router();
@@ -43,6 +49,15 @@ router.patch(
   requireRole('seller', 'admin'),
   validate(updateStoreSchema),
   updateStore
+);
+router.get('/seller/reviews', requireAuth, requireRole('seller', 'admin'), getStoreReviews);
+router.patch(
+  '/seller/reviews/:id/reply',
+  requireAuth,
+  requireRole('seller', 'admin'),
+  validateParams(uuidParamSchema),
+  validate(replyToReviewSchema),
+  replyToStoreReview
 );
 router.post(
   '/products',

@@ -187,16 +187,24 @@ create index if not exists idx_order_items_order_id on public.order_items(order_
 
 -- ---- reviews --------------------------------------------------------
 create table if not exists public.reviews (
-  id         uuid primary key default gen_random_uuid(),
-  product_id uuid not null references public.products(id) on delete cascade,
-  user_id    uuid not null references public.profiles(id) on delete cascade,
-  rating     int not null check (rating between 1 and 5),
-  comment    text,
-  created_at timestamptz not null default now(),
+  id                uuid primary key default gen_random_uuid(),
+  product_id        uuid not null references public.products(id) on delete cascade,
+  user_id           uuid not null references public.profiles(id) on delete cascade,
+  rating            int not null check (rating between 1 and 5),
+  comment           text,
+  is_hidden         boolean not null default false,
+  seller_reply      text,
+  seller_replied_at timestamptz,
+  created_at        timestamptz not null default now(),
   unique (product_id, user_id)
 );
 
 create index if not exists idx_reviews_product_id on public.reviews(product_id);
+
+-- Keep existing installs in sync (moderation + seller reply columns).
+alter table public.reviews add column if not exists is_hidden boolean not null default false;
+alter table public.reviews add column if not exists seller_reply text;
+alter table public.reviews add column if not exists seller_replied_at timestamptz;
 
 -- ---- contact_messages -------------------------------------------------
 create table if not exists public.contact_messages (

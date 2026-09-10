@@ -25,3 +25,9 @@ export const updateStoreSchema = z.object({
 export const updateOrderStatusSchema = z.object({
   status: z.enum(['shipped', 'delivered', 'cancelled']),
 });
+
+// PATCH /seller/reviews/:id/reply body — the public reply a seller leaves on a
+// review. An empty string clears an existing reply.
+export const replyToReviewSchema = z.object({
+  reply: z.string().trim().max(2000, 'Reply must be 2000 characters or fewer'),
+});

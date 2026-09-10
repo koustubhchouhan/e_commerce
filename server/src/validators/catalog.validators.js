@@ -22,3 +22,8 @@ export const createReviewSchema = z.object({
   rating: z.number().int().min(1).max(5),
   comment: z.string().trim().max(2000).optional().default(''),
 });
+
+// PATCH /admin/reviews/:id body — moderate a review on/off the storefront.
+export const updateReviewVisibilitySchema = z.object({
+  is_hidden: z.boolean(),
+});
