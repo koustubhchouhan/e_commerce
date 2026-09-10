@@ -16,3 +16,11 @@ export const getStore = asyncHandler(async (req, res) => {
 export const updateStore = asyncHandler(async (req, res) => {
   res.json(await sellerService.updateStore(req.user.id, req.body));
 });
+
+export const getStoreReviews = asyncHandler(async (req, res) => {
+  res.json({ items: await sellerService.listStoreReviews(req.user.id) });
+});
+
+export const replyToStoreReview = asyncHandler(async (req, res) => {
+  res.json(await sellerService.replyToReview(req.user.id, req.params.id, req.body.reply));
+});

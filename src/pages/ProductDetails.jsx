@@ -19,6 +19,7 @@ export default function ProductDetails() {
   const [notFound, setNotFound] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [reviewLoading, setReviewLoading] = useState(true);
+  const [reviewError, setReviewError] = useState('');
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -32,11 +33,12 @@ export default function ProductDetails() {
     let cancelled = false;
     (async () => {
       setReviewLoading(true);
+      setReviewError('');
       try {
         const res = await api.productReviews(id);
         if (!cancelled) setReviews(res.items ?? []);
-      } catch {
-        // reviews are optional; non-fatal
+      } catch (err) {
+        if (!cancelled) setReviewError(err?.message || 'Could not load reviews.');
       } finally {
         if (!cancelled) setReviewLoading(false);
       }
@@ -230,7 +232,8 @@ export default function ProductDetails() {
         {/* Write a review */}
         {isLoggedIn ? (
           <GlassCard className="p-6 mb-8" hover={false}>
-            <h3 className="font-[Outfit] text-xl font-semibold text-[#f1e7d7] mb-4">Write a Review</h3>
+            <h3 className="font-[Outfit] text-xl font-semibold text-[#f1e7d7] mb-1">Write a Review</h3>
+            <p className="text-[#9e8c73] text-xs mb-4">Only verified buyers who received this product can leave a review.</p>
             <form onSubmit={handleSubmitReview} className="flex flex-col gap-4">
               <div>
                 <span className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Your Rating</span>
@@ -277,6 +280,10 @@ export default function ProductDetails() {
 
         {reviewLoading ? (
           <div className="flex items-center justify-center h-32 text-[#cbb89d]">Loading reviews...</div>
+        ) : reviewError ? (
+          <div className="bg-[#690005]/20 p-8 rounded-lg border border-[#ffb4ab]/30 text-center text-[#ffdad6] text-sm">
+            {reviewError}
+          </div>
         ) : reviews.length === 0 ? (
           <div className="bg-[#34250f]/30 p-8 rounded-lg border border-dashed border-white/10 text-center text-[#9e8c73] text-sm">
             No reviews yet — be the first to review this product.
@@ -291,6 +298,7 @@ export default function ProductDetails() {
                 role={r.createdAt ? `Reviewed ${new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : 'Verified Buyer'}
                 text={r.comment || 'This customer did not leave a written comment.'}
                 stars={r.rating}
+                sellerReply={r.sellerReply}
               />
             ))}
           </div>
@@ -314,7 +322,7 @@ function StarRating({ value }) {
   );
 }
 
-function ReviewCard({ initials, name, role, text, stars }) {
+function ReviewCard({ initials, name, role, text, stars, sellerReply }) {
   const fullStars = Math.floor(stars);
   const hasHalfStar = stars % 1 !== 0;
   return (
@@ -333,6 +341,14 @@ function ReviewCard({ initials, name, role, text, stars }) {
         </div>
       </div>
       <p className="text-[#cbb89d] text-sm leading-relaxed">{text}</p>
+      {sellerReply && (
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <div className="flex items-center gap-2 text-[#ff9933] text-xs font-semibold uppercase tracking-wider mb-2">
+            <MessageCircle size={14} /> Store Reply
+          </div>
+          <p className="text-[#cbb89d] text-sm leading-relaxed">{sellerReply}</p>
+        </div>
+      )}
     </GlassCard>
   );
 }

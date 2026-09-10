@@ -11,12 +11,16 @@ import {
   deleteCategory,
   deleteProduct,
   getPlatformLedger,
+  listReviews,
+  updateReviewVisibility,
+  deleteReview,
 } from '../controllers/admin.controller.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate, validateQuery, validateParams } from '../middleware/validate.js';
 import {
   uuidParamSchema,
   createCategorySchema,
+  updateReviewVisibilitySchema,
 } from '../validators/catalog.validators.js';
 import {
   listApplicationsQuerySchema,
@@ -81,5 +85,22 @@ router.delete(
   deleteProduct
 );
 router.get('/admin/ledger', requireAuth, requireRole('admin'), getPlatformLedger);
+
+router.get('/admin/reviews', requireAuth, requireRole('admin'), listReviews);
+router.patch(
+  '/admin/reviews/:id',
+  requireAuth,
+  requireRole('admin'),
+  validateParams(uuidParamSchema),
+  validate(updateReviewVisibilitySchema),
+  updateReviewVisibility
+);
+router.delete(
+  '/admin/reviews/:id',
+  requireAuth,
+  requireRole('admin'),
+  validateParams(uuidParamSchema),
+  deleteReview
+);
 
 export default router;

@@ -1,4 +1,4 @@
-import { Package, TrendingUp, IndianRupee, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, Clock, Check, UploadCloud, Truck, X, Eye, EyeOff } from 'lucide-react';
+import { Package, TrendingUp, IndianRupee, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, Clock, Check, UploadCloud, Truck, X, Eye, EyeOff, Star } from 'lucide-react';
 import { inr } from '../lib/money';
 import { useEffect, useState, useRef } from 'react';
 import GlassCard from '../components/GlassCard';
@@ -49,6 +49,12 @@ export default function SellerHub() {
   const [messagesLoading, setMessagesLoading] = useState(true);
   const [messagesError, setMessagesError] = useState('');
   const [togglingId, setTogglingId] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewsError, setReviewsError] = useState('');
+  const [replyingId, setReplyingId] = useState(null);
+  const [replyDraft, setReplyDraft] = useState('');
+  const [savingReply, setSavingReply] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -102,7 +108,50 @@ export default function SellerHub() {
     };
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await api.sellerReviews();
+        if (!active) return;
+        setReviews(res.items ?? []);
+      } catch (err) {
+        if (active) setReviewsError(err.message || 'Failed to load reviews.');
+      } finally {
+        if (active) setReviewsLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const unreadMessages = messages.filter((m) => !m.isRead).length;
+
+  const startReply = (review) => {
+    setReplyingId(review.id);
+    setReplyDraft(review.sellerReply ?? '');
+  };
+
+  const cancelReply = () => {
+    setReplyingId(null);
+    setReplyDraft('');
+  };
+
+  const handleSaveReply = async (review) => {
+    if (savingReply) return;
+    setSavingReply(true);
+    try {
+      const saved = await api.sellerReplyReview(review.id, replyDraft.trim());
+      setReviews((prev) => prev.map((r) => (r.id === review.id ? { ...r, ...saved } : r)));
+      addToast(saved.sellerReply ? 'Reply published.' : 'Reply removed.', 'success');
+      cancelReply();
+    } catch (err) {
+      addToast(err.message || 'Failed to save reply.', 'error');
+    } finally {
+      setSavingReply(false);
+    }
+  };
 
   const handleToggleMessageRead = async (msg) => {
     if (togglingId) return;
@@ -249,6 +298,7 @@ export default function SellerHub() {
           <SidebarLink icon={<LayoutDashboard size={20} />} label="Store Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
           <SidebarLink icon={<BarChart3 size={20} />} label="Analytics" active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} />
           <SidebarLink icon={<MessageSquareWarning size={20} />} label="Messages & Complaints" badge={unreadMessages} active={activeTab === 'messages'} onClick={() => setActiveTab('messages')} />
+          <SidebarLink icon={<Star size={20} />} label="Reviews" badge={reviews.filter((r) => !r.sellerReply).length} active={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')} />
         </nav>
       </aside>
 
@@ -479,6 +529,96 @@ export default function SellerHub() {
               </div>
               )}
             </GlassCard>
+          </div>
+        )}
+
+        {activeTab === 'reviews' && (
+          <div className="animate-fade-in-up">
+            <header className="mb-10">
+              <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Customer Reviews</h1>
+              <p className="text-[#cbb89d]">Reviews left on your products. Reply publicly to build trust with shoppers.</p>
+            </header>
+
+            {reviewsLoading && (
+              <GlassCard className="p-6 lg:p-8">
+                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading reviews...</div>
+              </GlassCard>
+            )}
+            {!reviewsLoading && reviewsError && (
+              <GlassCard className="p-6 lg:p-8">
+                <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{reviewsError}</div>
+              </GlassCard>
+            )}
+            {!reviewsLoading && !reviewsError && reviews.length === 0 && (
+              <div className="bg-[#34250f]/30 p-8 rounded-lg border border-dashed border-white/10 text-center text-[#9e8c73] text-sm">
+                No reviews on your products yet.
+              </div>
+            )}
+            {!reviewsLoading && !reviewsError && reviews.length > 0 && (
+              <div className="flex flex-col gap-4">
+                {reviews.map((review) => (
+                  <GlassCard key={review.id} className="p-6">
+                    <div className="flex flex-wrap justify-between items-start gap-4 mb-3">
+                      <div>
+                        <p className="text-[#ff9933] text-xs font-bold uppercase tracking-wider">{review.productName ?? 'Product'}</p>
+                        <p className="text-[#f1e7d7] font-semibold">{review.author}</p>
+                        <p className="text-[#9e8c73] text-xs">{formatDate(review.createdAt)}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[#ff9933] font-semibold whitespace-nowrap">
+                          {review.rating}<Star size={14} className="inline mb-0.5 ml-0.5" fill="currentColor" />
+                        </span>
+                        {review.isHidden && (
+                          <span className="px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border bg-[#ffb4ab]/20 text-[#ffb4ab] border-[#ffb4ab]/30">
+                            Hidden by admin
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-[#cbb89d] text-sm leading-relaxed mb-4">{review.comment || 'No written comment.'}</p>
+
+                    {review.sellerReply && replyingId !== review.id && (
+                      <div className="mb-4 pl-4 border-l-2 border-[#ff9933]/40">
+                        <p className="text-[#ff9933] text-xs font-semibold uppercase tracking-wider mb-1">Your reply</p>
+                        <p className="text-[#cbb89d] text-sm">{review.sellerReply}</p>
+                      </div>
+                    )}
+
+                    {replyingId === review.id ? (
+                      <div className="flex flex-col gap-3">
+                        <textarea
+                          rows={3}
+                          value={replyDraft}
+                          onChange={(e) => setReplyDraft(e.target.value)}
+                          placeholder={`Reply to ${review.author}...`}
+                          className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all resize-none placeholder:text-[#6f6048]"
+                        />
+                        <div className="flex items-center justify-end gap-3">
+                          <button onClick={cancelReply} className="px-4 py-2 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors">
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => handleSaveReply(review)}
+                            disabled={savingReply}
+                            className="px-4 py-2 rounded-lg bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] text-sm font-bold transition-all disabled:opacity-50"
+                          >
+                            {savingReply ? 'Saving...' : 'Save Reply'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => startReply(review)}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#ff9933]/10 text-[#ffbf66] text-sm font-semibold hover:bg-[#ff9933]/20 transition-colors"
+                      >
+                        <MessageSquareWarning size={16} /> {review.sellerReply ? 'Edit Reply' : 'Reply'}
+                      </button>
+                    )}
+                  </GlassCard>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

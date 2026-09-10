@@ -53,3 +53,16 @@ export const revokeSeller = asyncHandler(async (req, res) => {
 export const getPlatformLedger = asyncHandler(async (req, res) => {
   res.json(await adminService.getPlatformLedger());
 });
+
+export const listReviews = asyncHandler(async (req, res) => {
+  res.json({ items: await adminService.listReviews() });
+});
+
+export const updateReviewVisibility = asyncHandler(async (req, res) => {
+  res.json(await adminService.setReviewHidden(req.params.id, req.body.is_hidden));
+});
+
+export const deleteReview = asyncHandler(async (req, res) => {
+  await adminService.deleteReview(req.params.id);
+  res.status(204).end();
+});

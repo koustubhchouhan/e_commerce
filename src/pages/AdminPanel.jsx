@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp, MessageSquare } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProductGrid } from './Home';
@@ -45,11 +45,13 @@ export default function AdminPanel() {
   const [sellerRequests, setSellerRequests] = useState([]);
   const [orders, setOrders] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(true);
+  const [loadingReviews, setLoadingReviews] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [ledger, setLedger] = useState(null);
   const [loadingLedger, setLoadingLedger] = useState(true);
@@ -148,6 +150,23 @@ export default function AdminPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const loadReviews = async (spinner = true) => {
+    if (spinner) setLoadingReviews(true);
+    try {
+      const res = await api.adminReviews();
+      setReviews(res.items ?? []);
+    } catch {
+      addToast('Failed to load reviews.', 'error');
+    } finally {
+      if (spinner) setLoadingReviews(false);
+    }
+  };
+
+  useEffect(() => {
+    loadReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const loadLedger = async (spinner = true) => {
     if (spinner) setLoadingLedger(true);
     try {
@@ -183,6 +202,32 @@ export default function AdminPanel() {
       addToast(`Message from ${msg.name} deleted.`, 'error');
     } catch (err) {
       addToast(err.message || 'Failed to delete message.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleToggleReviewHidden = async (review) => {
+    setBusy(true);
+    try {
+      const updated = await api.adminSetReviewHidden(review.id, !review.isHidden);
+      setReviews((prev) => prev.map((r) => (r.id === review.id ? { ...r, ...updated } : r)));
+      addToast(updated.isHidden ? 'Review hidden from the storefront.' : 'Review restored.', 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to update review.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDeleteReview = async (review) => {
+    setBusy(true);
+    try {
+      await api.adminDeleteReview(review.id);
+      setReviews((prev) => prev.filter((r) => r.id !== review.id));
+      addToast(`Review for "${review.productName ?? 'product'}" deleted.`, 'error');
+    } catch (err) {
+      addToast(err.message || 'Failed to delete review.', 'error');
     } finally {
       setBusy(false);
     }
@@ -307,6 +352,7 @@ export default function AdminPanel() {
           <SidebarLink icon={<UserCheck size={20} />} label="Seller Approvals" active={activeTab === 'seller-requests'} onClick={() => setActiveTab('seller-requests')} />
           <SidebarLink icon={<ShoppingBag size={20} />} label="Orders" active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} />
           <SidebarLink icon={<Inbox size={20} />} label="Messages" badge={messages.filter((m) => !m.isRead).length} active={activeTab === 'messages'} onClick={() => setActiveTab('messages')} />
+          <SidebarLink icon={<MessageSquare size={20} />} label="Reviews" active={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')} />
           <SidebarLink icon={<Star size={20} />} label="Featured Products" active={activeTab === 'featured'} onClick={() => setActiveTab('featured')} />
           <SidebarLink icon={<LayoutDashboard size={20} />} label="Categories" active={activeTab === 'categories'} onClick={() => setActiveTab('categories')} />
           <SidebarLink icon={<CreditCard size={20} />} label="Payments" active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} />
@@ -520,6 +566,94 @@ export default function AdminPanel() {
                       <tr>
                         <td colSpan={5} className="py-16 text-center text-[#9e8c73] text-sm">
                           No messages yet — submissions from the Contact page will show up here.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              )}
+            </GlassCard>
+          </div>
+        )}
+
+        {/* REVIEWS TAB (Moderation) */}
+        {activeTab === 'reviews' && (
+          <div className="animate-fade-in-up">
+            <div className="flex justify-between items-center mb-10">
+              <div>
+                <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Review Moderation</h1>
+                <p className="text-[#cbb89d]">Hide abusive reviews from the storefront or remove them permanently.</p>
+              </div>
+            </div>
+
+            <GlassCard className="p-6 lg:p-8">
+              {loadingReviews && (
+                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading reviews...</div>
+              )}
+              {!loadingReviews && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                      <th className="py-4 px-4 font-semibold">Product</th>
+                      <th className="py-4 px-4 font-semibold">Reviewer</th>
+                      <th className="py-4 px-4 font-semibold text-center">Rating</th>
+                      <th className="py-4 px-4 font-semibold">Review</th>
+                      <th className="py-4 px-4 font-semibold text-center">Status</th>
+                      <th className="py-4 px-4 font-semibold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reviews.map((review) => (
+                      <tr key={review.id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${review.isHidden ? 'opacity-60' : ''}`}>
+                        <td className="py-4 px-4">
+                          <p className="text-[#f1e7d7] font-semibold">{review.productName ?? '—'}</p>
+                          {review.storeName && <p className="text-[#9e8c73] text-xs">{review.storeName}</p>}
+                        </td>
+                        <td className="py-4 px-4 text-[#cbb89d] text-sm">{review.author}</td>
+                        <td className="py-4 px-4 text-center">
+                          <span className="text-[#ff9933] font-semibold whitespace-nowrap">
+                            {review.rating}<Star size={13} className="inline mb-0.5 ml-0.5" fill="currentColor" />
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 max-w-md">
+                          <p className="text-[#9e8c73] text-sm line-clamp-2">{review.comment || 'No written comment.'}</p>
+                          {review.sellerReply && (
+                            <p className="text-[#cbb89d] text-xs mt-1 line-clamp-1">Reply: {review.sellerReply}</p>
+                          )}
+                        </td>
+                        <td className="py-4 px-4 text-center">
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${review.isHidden ? 'bg-[#ffb4ab]/20 text-[#ffb4ab] border-[#ffb4ab]/30' : 'bg-[#ff9933]/20 text-[#ffd27a] border-[#ff9933]/30'}`}>
+                            {review.isHidden ? 'Hidden' : 'Visible'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleToggleReviewHidden(review)}
+                              disabled={busy}
+                              title={review.isHidden ? 'Unhide review' : 'Hide review'}
+                              className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ffbf66] hover:bg-[#ff9933]/20 transition-colors disabled:opacity-50"
+                            >
+                              {review.isHidden ? <Eye size={16} /> : <EyeOff size={16} />}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteReview(review)}
+                              disabled={busy}
+                              title="Delete"
+                              className="p-2 rounded-lg bg-[#ffb4ab]/10 text-[#ffb4ab] hover:bg-[#ffb4ab]/20 transition-colors disabled:opacity-50"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {reviews.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="py-16 text-center text-[#9e8c73] text-sm">
+                          No reviews have been submitted yet.
                         </td>
                       </tr>
                     )}
@@ -792,7 +926,7 @@ export default function AdminPanel() {
         )}
 
         {/* Placeholder for remaining tabs */}
-        {activeTab !== 'products' && activeTab !== 'featured' && activeTab !== 'seller-requests' && activeTab !== 'categories' && activeTab !== 'payments' && activeTab !== 'orders' && activeTab !== 'messages' && (
+        {activeTab !== 'products' && activeTab !== 'featured' && activeTab !== 'seller-requests' && activeTab !== 'categories' && activeTab !== 'payments' && activeTab !== 'orders' && activeTab !== 'messages' && activeTab !== 'reviews' && (
           <div className="h-[600px] flex flex-col items-center justify-center animate-fade-in-up opacity-70">
             <h2 className="font-[Outfit] text-3xl font-bold text-[#fff4e6] mb-2 capitalize">{activeTab.replace('-', ' ')}</h2>
             <p className="text-[#cbb89d]">This admin module is currently under construction.</p>

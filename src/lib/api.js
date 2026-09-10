@@ -209,11 +209,20 @@ export const api = {
   deleteCategory: (id) => request(`/admin/categories/${id}`, { method: 'DELETE', auth: true }),
   adminDeleteProduct: (id) => request(`/admin/products/${id}`, { method: 'DELETE', auth: true }),
   adminLedger: () => request('/admin/ledger', { auth: true }),
+  adminReviews: () => request('/admin/reviews', { auth: true }),
+  adminSetReviewHidden: (id, isHidden) =>
+    request(`/admin/reviews/${id}`, { method: 'PATCH', body: { is_hidden: isHidden }, auth: true }),
+  adminDeleteReview: (id) => request(`/admin/reviews/${id}`, { method: 'DELETE', auth: true }),
 
   // ---- Seller orders ----
   sellerOrders: () => request('/seller/orders', { auth: true }),
   updateSellerOrderStatus: (id, status) =>
     request(`/seller/orders/${id}/status`, { method: 'PATCH', body: { status }, auth: true }),
+
+  // ---- Seller reviews ----
+  sellerReviews: () => request('/seller/reviews', { auth: true }),
+  sellerReplyReview: (id, reply) =>
+    request(`/seller/reviews/${id}/reply`, { method: 'PATCH', body: { reply }, auth: true }),
 
   // ---- Orders ----
   createOrder: (items, shippingAddress) =>

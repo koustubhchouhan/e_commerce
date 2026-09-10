@@ -1,6 +1,7 @@
 import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
 import { removeProductImage } from './storage.service.js';
+import { serializeReview } from './review.service.js';
 
 // Applications are loaded without an embedded profile relation, because the
 // table has two FKs to profiles (user_id and reviewed_by) and embed hints tied
@@ -227,6 +228,72 @@ export async function revokeSeller(sellerId) {
     .update({ role: 'customer' })
     .eq('id', sellerId);
   if (demoteErr) throw new AppError(500, `Could not revoke seller role: ${demoteErr.message}`);
+}
+
+// =====================================================================
+// Reviews moderation
+// =====================================================================
+
+const ADMIN_REVIEW_SELECT =
+  'id, product_id, user_id, rating, comment, is_hidden, seller_reply, seller_replied_at, created_at, profiles(full_name), products(name, stores(name))';
+
+function serializeAdminReview(r) {
+  return {
+    ...serializeReview(r),
+    productName: r.products?.name ?? null,
+    storeName: r.products?.stores?.name ?? null,
+  };
+}
+
+// GET /admin/reviews — every review on the platform, newest first, including
+// hidden ones so admins can restore them.
+export async function listReviews() {
+  const { data, error } = await db
+    .from('reviews')
+    .select(ADMIN_REVIEW_SELECT)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new AppError(500, `Could not load reviews: ${error.message}`);
+  return (data ?? []).map(serializeAdminReview);
+}
+
+// PATCH /admin/reviews/:id — hide (or unhide) a review from the storefront.
+export async function setReviewHidden(reviewId, isHidden) {
+  const { data: existing, error: findErr } = await db
+    .from('reviews')
+    .select('id')
+    .eq('id', reviewId)
+    .maybeSingle();
+  if (findErr) throw new AppError(500, `Could not load review: ${findErr.message}`);
+  if (!existing) throw new AppError(404, 'Review not found');
+
+  const { error } = await db
+    .from('reviews')
+    .update({ is_hidden: isHidden })
+    .eq('id', reviewId);
+  if (error) throw new AppError(400, `Could not update review: ${error.message}`);
+
+  const { data, error: readErr } = await db
+    .from('reviews')
+    .select(ADMIN_REVIEW_SELECT)
+    .eq('id', reviewId)
+    .single();
+  if (readErr) throw new AppError(500, `Could not load review: ${readErr.message}`);
+  return serializeAdminReview(data);
+}
+
+// DELETE /admin/reviews/:id — permanent removal.
+export async function deleteReview(reviewId) {
+  const { data: existing, error: findErr } = await db
+    .from('reviews')
+    .select('id')
+    .eq('id', reviewId)
+    .maybeSingle();
+  if (findErr) throw new AppError(500, `Could not load review: ${findErr.message}`);
+  if (!existing) throw new AppError(404, 'Review not found');
+
+  const { error } = await db.from('reviews').delete().eq('id', reviewId);
+  if (error) throw new AppError(400, `Could not delete review: ${error.message}`);
 }
 
 // =====================================================================
