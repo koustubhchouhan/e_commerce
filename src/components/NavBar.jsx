@@ -142,20 +142,8 @@ export default function NavBar() {
               <button onClick={() => setMobileOpen(false)} className="text-[#cbb89d] hover:text-[#fff4e6] p-1"><X size={22} /></button>
             </div>
 
-            {/* Search (mobile) */}
-            {userRole === 'customer' && (
-              <div className="relative mb-2">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#cbb89d]" size={16} />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  onKeyDown={handleSearch}
-                  placeholder="Search products..."
-                  className="w-full bg-[#1a1307]/70 border border-white/10 rounded-full py-2 pl-9 pr-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all"
-                />
-              </div>
-            )}
+            {/* Search lives in the main content on mobile (see Home) so it is
+                always reachable without opening this drawer. */}
 
             <nav className="flex flex-col gap-1 flex-1">
               {links.map(l => <NavItem key={l.to} to={l.to} label={l.label} mobile />)}

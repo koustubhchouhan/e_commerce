@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { ShoppingCart, CheckCircle } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { ShoppingCart, CheckCircle, Search } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import GlassCard from '../components/GlassCard';
 import { useCartStore } from '../store/cartStore';
 import { inr } from '../lib/money';
@@ -84,7 +84,16 @@ function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor,
 
 export default function Home() {
   const sliderRef = useRef(null);
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
+  };
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState(['All']);
@@ -160,6 +169,21 @@ export default function Home() {
 
   return (
     <div className="flex flex-col animate-fade-in-up overflow-hidden">
+      {/* ══ Mobile Search ══ */}
+      <section className="px-6 pt-6 md:hidden">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#cbb89d]" size={18} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearch}
+            placeholder="Search products..."
+            className="w-full bg-[#1a1307]/70 border border-white/10 rounded-full py-3 pl-11 pr-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+          />
+        </div>
+      </section>
+
       {/* ══ Slider Section ══ */}
       <section className="w-full pt-10 px-8 pb-12">
         <div ref={sliderRef} className="flex gap-6 overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-6 scroll-smooth">

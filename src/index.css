@@ -44,6 +44,10 @@
 }
 
 @layer base {
+  html {
+    overflow-x: hidden;
+  }
+
   *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
