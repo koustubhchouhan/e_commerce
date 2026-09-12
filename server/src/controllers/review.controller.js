@@ -8,3 +8,7 @@ export const listReviews = asyncHandler(async (req, res) => {
 export const createReview = asyncHandler(async (req, res) => {
   res.status(201).json(await reviewService.createReview(req.user.id, req.params.id, req.body));
 });
+
+export const getReviewEligibility = asyncHandler(async (req, res) => {
+  res.json({ canReview: await reviewService.canUserReview(req.user.id, req.params.id) });
+});

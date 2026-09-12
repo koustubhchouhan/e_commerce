@@ -4,7 +4,7 @@ import {
   listProducts,
   getProduct,
 } from '../controllers/catalog.controller.js';
-import { listReviews, createReview } from '../controllers/review.controller.js';
+import { listReviews, createReview, getReviewEligibility } from '../controllers/review.controller.js';
 import { requireAuth } from '../middleware/auth.js';
 import {
   validate,
@@ -22,6 +22,12 @@ const router = Router();
 router.get('/categories', listCategories);
 router.get('/products', validateQuery(listProductsQuerySchema), listProducts);
 router.get('/products/:id/reviews', validateParams(uuidParamSchema), listReviews);
+router.get(
+  '/products/:id/reviews/eligibility',
+  requireAuth,
+  validateParams(uuidParamSchema),
+  getReviewEligibility
+);
 router.post(
   '/products/:id/reviews',
   requireAuth,

@@ -21,7 +21,7 @@ export function serializeReview(r) {
 }
 
 // Only customers with a delivered order containing this product may review it.
-async function isVerifiedBuyer(userId, productId) {
+export async function canUserReview(userId, productId) {
   const { data: orders, error: orderErr } = await db
     .from('orders')
     .select('id')
@@ -78,7 +78,7 @@ export async function createReview(userId, productId, { rating, comment }) {
   if (prodErr) throw new AppError(500, `Could not load product: ${prodErr.message}`);
   if (!product) throw new AppError(404, 'Product not found');
 
-  if (!(await isVerifiedBuyer(userId, productId))) {
+  if (!(await canUserReview(userId, productId))) {
     throw new AppError(403, 'Only verified buyers can review this product');
   }
 
