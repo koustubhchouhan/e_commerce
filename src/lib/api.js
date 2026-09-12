@@ -164,6 +164,7 @@ export const api = {
   },
   product: (id) => request(`/products/${id}`),
   productReviews: (id) => request(`/products/${id}/reviews`),
+  reviewEligibility: (id) => request(`/products/${id}/reviews/eligibility`, { auth: true }),
   createProductReview: (id, { rating, comment }) =>
     request(`/products/${id}/reviews`, { method: 'POST', body: { rating, comment }, auth: true }),
 

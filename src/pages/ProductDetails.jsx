@@ -20,6 +20,7 @@ export default function ProductDetails() {
   const [reviews, setReviews] = useState([]);
   const [reviewLoading, setReviewLoading] = useState(true);
   const [reviewError, setReviewError] = useState('');
+  const [canReview, setCanReview] = useState(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -47,6 +48,22 @@ export default function ProductDetails() {
       cancelled = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.reviewEligibility(id);
+        if (!cancelled) setCanReview(Boolean(res.canReview));
+      } catch {
+        if (!cancelled) setCanReview(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, isLoggedIn]);
 
   useEffect(() => {
     let cancelled = false;
@@ -229,11 +246,21 @@ export default function ProductDetails() {
       <div>
         <h2 className="font-[Outfit] text-3xl font-bold text-[#fff4e6] mb-8">Customer Reviews</h2>
 
-        {/* Write a review */}
-        {isLoggedIn ? (
+        {/* Write a review — the form is only shown to verified buyers */}
+        {!isLoggedIn ? (
+          <p className="text-[#cbb89d] text-sm mb-8">
+            <Link to="/login" className="text-[#ff9933] font-semibold hover:underline">Sign in</Link> to leave a review.
+          </p>
+        ) : canReview === null ? (
+          <p className="text-[#cbb89d] text-sm mb-8">Checking your review eligibility...</p>
+        ) : !canReview ? (
+          <div className="bg-[#34250f]/30 p-6 rounded-lg border border-dashed border-white/10 text-sm text-[#cbb89d] mb-8">
+            Only verified buyers can review this product. Once your order is delivered, you'll be able to share your experience here.
+          </div>
+        ) : (
           <GlassCard className="p-6 mb-8" hover={false}>
             <h3 className="font-[Outfit] text-xl font-semibold text-[#f1e7d7] mb-1">Write a Review</h3>
-            <p className="text-[#9e8c73] text-xs mb-4">Only verified buyers who received this product can leave a review.</p>
+            <p className="text-[#9e8c73] text-xs mb-4">You purchased this product — share your experience.</p>
             <form onSubmit={handleSubmitReview} className="flex flex-col gap-4">
               <div>
                 <span className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Your Rating</span>
@@ -272,10 +299,6 @@ export default function ProductDetails() {
               </div>
             </form>
           </GlassCard>
-        ) : (
-          <p className="text-[#cbb89d] text-sm mb-8">
-            <Link to="/login" className="text-[#ff9933] font-semibold hover:underline">Sign in</Link> to leave a review.
-          </p>
         )}
 
         {reviewLoading ? (
