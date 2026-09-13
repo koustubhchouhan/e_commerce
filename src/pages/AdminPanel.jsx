@@ -57,6 +57,7 @@ export default function AdminPanel() {
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(true);
+  const [messagesError, setMessagesError] = useState('');
   const [loadingReviews, setLoadingReviews] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [ledger, setLedger] = useState(null);
@@ -144,10 +145,12 @@ export default function AdminPanel() {
 
   const loadMessages = async (spinner = true) => {
     if (spinner) setLoadingMessages(true);
+    setMessagesError('');
     try {
       const res = await api.adminContactMessages();
       setMessages(res.items ?? []);
-    } catch {
+    } catch (err) {
+      setMessagesError(err?.message || 'Failed to load messages.');
       addToast('Failed to load messages.', 'error');
     } finally {
       if (spinner) setLoadingMessages(false);
@@ -208,7 +211,7 @@ export default function AdminPanel() {
     try {
       await api.adminDeleteContactMessage(msg.id);
       setMessages((prev) => prev.filter((m) => m.id !== msg.id));
-      addToast(`Message from ${msg.name} deleted.`, 'error');
+      addToast(`Message from ${msg.name} deleted.`, 'success');
     } catch (err) {
       addToast(err.message || 'Failed to delete message.', 'error');
     } finally {
@@ -559,7 +562,22 @@ export default function AdminPanel() {
               {loadingMessages && (
                 <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading messages...</div>
               )}
-              {!loadingMessages && (
+              {!loadingMessages && messagesError && (
+                <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+                  <Inbox className="text-[#ffb4ab]" size={40} />
+                  <div>
+                    <p className="text-[#ffdad6] font-semibold">Could not load support messages</p>
+                    <p className="text-[#9e8c73] text-sm mt-1 break-words max-w-md">{messagesError}</p>
+                  </div>
+                  <button
+                    onClick={() => loadMessages()}
+                    className="px-5 py-2.5 rounded-lg font-[Outfit] text-sm font-bold bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] transition-all"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+              {!loadingMessages && !messagesError && (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
