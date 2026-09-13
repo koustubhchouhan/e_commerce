@@ -17,3 +17,8 @@ export const createContactMessageSchema = z.object({
 export const updateContactMessageSchema = z.object({
   is_read: z.boolean(),
 });
+
+// POST /{admin,seller}/contact-messages/:id/reply body.
+export const replyContactMessageSchema = z.object({
+  reply: z.string().trim().min(1, 'A reply is required').max(5000),
+});

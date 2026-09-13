@@ -197,9 +197,10 @@ export async function deleteAnyProduct(productId) {
   await Promise.all((images ?? []).map((i) => removeProductImage(i.url)));
 }
 
-// DELETE /admin/sellers/:id — revoke: demote back to customer and draft their
-// products so nothing is immediately delisted from the storefront.
-export async function revokeSeller(sellerId) {
+// DELETE /admin/sellers/:id — revoke: demote back to customer, draft their
+// products so nothing is immediately delisted from the storefront, and reset
+// their approved application so they can apply to sell again.
+export async function revokeSeller(adminId, sellerId) {
   const { data: profile, error } = await db
     .from('profiles')
     .select('id, role')
@@ -228,6 +229,15 @@ export async function revokeSeller(sellerId) {
     .update({ role: 'customer' })
     .eq('id', sellerId);
   if (demoteErr) throw new AppError(500, `Could not revoke seller role: ${demoteErr.message}`);
+
+  // Clear the approved application; otherwise the demoted customer's profile
+  // still reports a live storefront and blocks a fresh application.
+  const { error: appErr } = await db
+    .from('seller_applications')
+    .update({ status: 'rejected', reviewed_at: new Date().toISOString(), reviewed_by: adminId })
+    .eq('user_id', sellerId)
+    .eq('status', 'approved');
+  if (appErr) throw new AppError(500, `Could not reset seller application: ${appErr.message}`);
 }
 
 // =====================================================================

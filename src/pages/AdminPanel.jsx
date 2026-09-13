@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp, MessageSquare, Menu } from 'lucide-react';
+import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp, MessageSquare, Menu, Reply } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProductGrid } from './Home';
@@ -65,6 +65,9 @@ export default function AdminPanel() {
   const [updating, setUpdating] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryModal, setCategoryModal] = useState(false);
+  const [messageModal, setMessageModal] = useState(null);
+  const [replyText, setReplyText] = useState('');
+  const [replying, setReplying] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const addToast = useToastStore((s) => s.addToast);
 
@@ -210,6 +213,28 @@ export default function AdminPanel() {
       addToast(err.message || 'Failed to delete message.', 'error');
     } finally {
       setBusy(false);
+    }
+  };
+
+  const openMessage = (msg) => {
+    setMessageModal(msg);
+    setReplyText(msg.reply ?? '');
+  };
+
+  const handleSendReply = async (e) => {
+    e.preventDefault();
+    const text = replyText.trim();
+    if (!text || replying) return;
+    setReplying(true);
+    try {
+      const updated = await api.adminReplyContactMessage(messageModal.id, text);
+      setMessages((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)));
+      setMessageModal((prev) => (prev ? { ...prev, ...updated } : prev));
+      addToast(`Reply sent to ${messageModal.name}.`, 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to send reply.', 'error');
+    } finally {
+      setReplying(false);
     }
   };
 
@@ -548,10 +573,14 @@ export default function AdminPanel() {
                   </thead>
                   <tbody>
                     {messages.map(msg => (
-                      <tr key={msg.id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${msg.isRead ? 'opacity-60' : ''}`}>
+                      <tr
+                        key={msg.id}
+                        onClick={() => openMessage(msg)}
+                        className={`border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${msg.isRead && !msg.reply ? 'opacity-60' : ''}`}
+                      >
                         <td className="py-4 px-4">
                           <p className="text-[#f1e7d7] font-semibold">{msg.name}</p>
-                          <a href={`mailto:${msg.email}`} className="text-[#cbb89d] text-xs hover:text-[#ff9933] transition-colors">{msg.email}</a>
+                          <a href={`mailto:${msg.email}`} onClick={(e) => e.stopPropagation()} className="text-[#cbb89d] text-xs hover:text-[#ff9933] transition-colors">{msg.email}</a>
                         </td>
                         <td className="py-4 px-4 max-w-md">
                           <p className="text-[#fff4e6] font-semibold text-sm">{msg.subject}</p>
@@ -559,21 +588,34 @@ export default function AdminPanel() {
                         </td>
                         <td className="py-4 px-4 text-[#cbb89d] text-sm whitespace-nowrap">{formatDate(msg.createdAt)}</td>
                         <td className="py-4 px-4 text-center">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${msg.isRead ? 'bg-white/10 text-[#cbb89d] border-white/10' : 'bg-[#ff9933]/20 text-[#ffd27a] border-[#ff9933]/30'}`}>
-                            {msg.isRead ? 'Read' : 'New'}
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
+                            msg.reply
+                              ? 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30'
+                              : msg.isRead
+                                ? 'bg-white/10 text-[#cbb89d] border-white/10'
+                                : 'bg-[#ff9933]/20 text-[#ffd27a] border-[#ff9933]/30'
+                          }`}>
+                            {msg.reply ? 'Replied' : msg.isRead ? 'Read' : 'New'}
                           </span>
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center justify-end gap-2">
                             <button
-                              onClick={() => handleToggleMessageRead(msg)}
+                              onClick={(e) => { e.stopPropagation(); openMessage(msg); }}
+                              title={msg.reply ? 'View / edit reply' : 'Reply'}
+                              className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ff9933] hover:bg-[#ff9933]/20 transition-colors"
+                            >
+                              <Reply size={16} />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleToggleMessageRead(msg); }}
                               title={msg.isRead ? 'Mark as unread' : 'Mark as read'}
                               className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ffbf66] hover:bg-[#ff9933]/20 transition-colors"
                             >
                               {msg.isRead ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
                             <button
-                              onClick={() => handleDeleteMessage(msg)}
+                              onClick={(e) => { e.stopPropagation(); handleDeleteMessage(msg); }}
                               disabled={busy}
                               title="Delete"
                               className="p-2 rounded-lg bg-[#ffb4ab]/10 text-[#ffb4ab] hover:bg-[#ffb4ab]/20 transition-colors disabled:opacity-50"
@@ -989,6 +1031,58 @@ export default function AdminPanel() {
                 </button>
                 <button type="submit" disabled={!newCategory.trim() || busy} className="px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] disabled:bg-[#34250f]/50 disabled:text-[#6f6048] disabled:cursor-not-allowed">
                   <PlusCircle size={18} /> {busy ? 'Creating...' : 'Create Category'}
+                </button>
+              </div>
+            </form>
+          </GlassCard>
+        </div>
+      )}
+
+      {messageModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in" onMouseDown={() => setMessageModal(null)} role="dialog" aria-modal="true" aria-label="Support message">
+          <GlassCard hover={false} className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto animate-scale-in">
+            <form onSubmit={handleSendReply} onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8 flex flex-col gap-5">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <h2 className="font-[Outfit] text-xl sm:text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
+                    <Inbox className="text-[#ff9933] shrink-0" size={22} /> <span className="truncate">{messageModal.subject}</span>
+                  </h2>
+                  <p className="text-[#cbb89d] text-xs mt-1 break-all">{messageModal.name} · {messageModal.email}</p>
+                </div>
+                <button type="button" onClick={() => setMessageModal(null)} className="p-2 -mr-2 rounded-lg text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/5 transition-colors shrink-0" aria-label="Close">
+                  <X size={22} />
+                </button>
+              </div>
+
+              <div className="rounded-lg border border-white/10 bg-[#1a1307]/60 p-4">
+                <p className="text-[#9e8c73] text-xs font-semibold uppercase tracking-wider mb-2">{formatDate(messageModal.createdAt)}</p>
+                <p className="text-[#f1e7d7] text-sm whitespace-pre-wrap">{messageModal.message}</p>
+                {messageModal.productName && <p className="text-[#9e8c73] text-xs mt-3">About product: {messageModal.productName}</p>}
+                {messageModal.storeName && <p className="text-[#9e8c73] text-xs mt-1">Store: {messageModal.storeName}</p>}
+              </div>
+
+              <div>
+                <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">
+                  {messageModal.reply ? 'Your Reply' : 'Reply'}
+                </label>
+                <textarea
+                  rows={4}
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder="Type your response to the customer..."
+                  className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all resize-none placeholder:text-[#6f6048]"
+                />
+                {messageModal.repliedAt && (
+                  <p className="text-[#9e8c73] text-xs mt-2">Last replied {formatDate(messageModal.repliedAt)} — sending again updates it.</p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-white/10">
+                <button type="button" onClick={() => setMessageModal(null)} className="px-6 py-2.5 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors">
+                  Close
+                </button>
+                <button type="submit" disabled={!replyText.trim() || replying} className="px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] disabled:bg-[#34250f]/50 disabled:text-[#6f6048] disabled:cursor-not-allowed">
+                  <Reply size={18} /> {replying ? 'Sending...' : messageModal.reply ? 'Update Reply' : 'Send Reply'}
                 </button>
               </div>
             </form>

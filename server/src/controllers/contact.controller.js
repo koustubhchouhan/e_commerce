@@ -21,6 +21,16 @@ export const updateSellerContactMessage = asyncHandler(async (req, res) => {
   res.json(await contactService.updateSellerContactMessage(req.user.id, req.params.id, req.body));
 });
 
+export const replyContactMessage = asyncHandler(async (req, res) => {
+  res.json(await contactService.replyContactMessage(req.params.id, req.body.reply, req.user.id));
+});
+
+export const replySellerContactMessage = asyncHandler(async (req, res) => {
+  res.json(
+    await contactService.replySellerContactMessage(req.user.id, req.params.id, req.body.reply, req.user.id)
+  );
+});
+
 export const deleteContactMessage = asyncHandler(async (req, res) => {
   await contactService.deleteContactMessage(req.params.id);
   res.status(204).end();

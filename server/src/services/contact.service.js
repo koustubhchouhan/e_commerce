@@ -2,7 +2,7 @@ import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
 
 const MESSAGE_SELECT =
-  'id, first_name, last_name, email, subject, message, is_read, store_id, product_id, created_at, stores(name), products(name)';
+  'id, first_name, last_name, email, subject, message, is_read, reply, replied_at, replied_by, store_id, product_id, created_at, stores(name), products(name)';
 
 const mapMessage = (m) => ({
   id: m.id,
@@ -13,6 +13,9 @@ const mapMessage = (m) => ({
   subject: m.subject,
   message: m.message,
   isRead: m.is_read,
+  reply: m.reply ?? null,
+  repliedAt: m.replied_at ?? null,
+  repliedBy: m.replied_by ?? null,
   storeId: m.store_id ?? null,
   productId: m.product_id ?? null,
   storeName: m.stores?.name ?? null,
@@ -111,9 +114,8 @@ export async function updateContactMessage(messageId, { is_read }) {
   return applyReadUpdate(messageId, is_read);
 }
 
-// PATCH /seller/contact-messages/:id — sellers may toggle read state, but only
-// for messages actually addressed to a store they own.
-export async function updateSellerContactMessage(sellerId, messageId, { is_read }) {
+// A seller may only act on messages addressed to a store they own.
+async function requireSellerMessage(sellerId, messageId) {
   const { data: message, error } = await db
     .from('contact_messages')
     .select('id, store_id')
@@ -133,7 +135,45 @@ export async function updateSellerContactMessage(sellerId, messageId, { is_read 
   if (storeErr) throw new AppError(500, `Could not load store: ${storeErr.message}`);
   if (!store) throw new AppError(403, 'This message was not addressed to your store');
 
+  return message;
+}
+
+// PATCH /seller/contact-messages/:id — sellers may toggle read state, but only
+// for messages actually addressed to a store they own.
+export async function updateSellerContactMessage(sellerId, messageId, { is_read }) {
+  await requireSellerMessage(sellerId, messageId);
   return applyReadUpdate(messageId, is_read);
+}
+
+async function applyReply(messageId, reply, repliedBy) {
+  const { data, error } = await db
+    .from('contact_messages')
+    .update({
+      reply,
+      replied_at: new Date().toISOString(),
+      replied_by: repliedBy ?? null,
+      is_read: true,
+    })
+    .eq('id', messageId)
+    .select(MESSAGE_SELECT)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') throw new AppError(404, 'Message not found');
+    throw new AppError(500, `Could not save reply: ${error.message}`);
+  }
+  return mapMessage(data);
+}
+
+// POST /admin/contact-messages/:id/reply — record a reply and mark it read.
+export async function replyContactMessage(messageId, reply, repliedBy) {
+  return applyReply(messageId, reply, repliedBy);
+}
+
+// POST /seller/contact-messages/:id/reply — same, for the owning seller.
+export async function replySellerContactMessage(sellerId, messageId, reply, repliedBy) {
+  await requireSellerMessage(sellerId, messageId);
+  return applyReply(messageId, reply, repliedBy);
 }
 
 // DELETE /admin/contact-messages/:id

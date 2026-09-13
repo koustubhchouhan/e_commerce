@@ -3,8 +3,10 @@ import {
   createContactMessage,
   listContactMessages,
   updateContactMessage,
+  replyContactMessage,
   listSellerContactMessages,
   updateSellerContactMessage,
+  replySellerContactMessage,
   deleteContactMessage,
 } from '../controllers/contact.controller.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
@@ -13,6 +15,7 @@ import { uuidParamSchema } from '../validators/catalog.validators.js';
 import {
   createContactMessageSchema,
   updateContactMessageSchema,
+  replyContactMessageSchema,
 } from '../validators/contact.validators.js';
 
 const router = Router();
@@ -35,6 +38,14 @@ router.patch(
   validate(updateContactMessageSchema),
   updateSellerContactMessage
 );
+router.post(
+  '/seller/contact-messages/:id/reply',
+  requireAuth,
+  requireRole('seller', 'admin'),
+  validateParams(uuidParamSchema),
+  validate(replyContactMessageSchema),
+  replySellerContactMessage
+);
 
 // Admin inbox (sees everything, including seller-bound messages)
 router.get('/admin/contact-messages', requireAuth, requireRole('admin'), listContactMessages);
@@ -45,6 +56,14 @@ router.patch(
   validateParams(uuidParamSchema),
   validate(updateContactMessageSchema),
   updateContactMessage
+);
+router.post(
+  '/admin/contact-messages/:id/reply',
+  requireAuth,
+  requireRole('admin'),
+  validateParams(uuidParamSchema),
+  validate(replyContactMessageSchema),
+  replyContactMessage
 );
 router.delete(
   '/admin/contact-messages/:id',

@@ -46,7 +46,7 @@ export const listSellers = asyncHandler(async (req, res) => {
 });
 
 export const revokeSeller = asyncHandler(async (req, res) => {
-  await adminService.revokeSeller(req.params.id);
+  await adminService.revokeSeller(req.user.id, req.params.id);
   res.status(204).end();
 });
 

@@ -223,6 +223,9 @@ create table if not exists public.contact_messages (
 -- Keep existing installs in sync (columns were added after the initial table).
 alter table public.contact_messages add column if not exists store_id uuid references public.stores(id) on delete set null;
 alter table public.contact_messages add column if not exists product_id uuid references public.products(id) on delete set null;
+alter table public.contact_messages add column if not exists reply text;
+alter table public.contact_messages add column if not exists replied_at timestamptz;
+alter table public.contact_messages add column if not exists replied_by uuid references public.profiles(id) on delete set null;
 
 create index if not exists idx_contact_messages_created_at on public.contact_messages(created_at);
 create index if not exists idx_contact_messages_store_id on public.contact_messages(store_id);

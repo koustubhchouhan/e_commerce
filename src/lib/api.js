@@ -241,6 +241,8 @@ export const api = {
   adminContactMessages: () => request('/admin/contact-messages', { auth: true }),
   adminUpdateContactMessage: (id, isRead) =>
     request(`/admin/contact-messages/${id}`, { method: 'PATCH', body: { is_read: isRead }, auth: true }),
+  adminReplyContactMessage: (id, reply) =>
+    request(`/admin/contact-messages/${id}/reply`, { method: 'POST', body: { reply }, auth: true }),
   adminDeleteContactMessage: (id) =>
     request(`/admin/contact-messages/${id}`, { method: 'DELETE', auth: true }),
 
@@ -248,4 +250,6 @@ export const api = {
   sellerContactMessages: () => request('/seller/contact-messages', { auth: true }),
   updateSellerContactMessage: (id, isRead) =>
     request(`/seller/contact-messages/${id}`, { method: 'PATCH', body: { is_read: isRead }, auth: true }),
+  replyToSellerContactMessage: (id, reply) =>
+    request(`/seller/contact-messages/${id}/reply`, { method: 'POST', body: { reply }, auth: true }),
 };
