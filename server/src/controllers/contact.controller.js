@@ -2,11 +2,17 @@ import { asyncHandler } from '../middleware/asyncHandler.js';
 import * as contactService from '../services/contact.service.js';
 
 export const createContactMessage = asyncHandler(async (req, res) => {
-  res.status(201).json(await contactService.createContactMessage(req.body));
+  res.status(201).json(
+    await contactService.createContactMessage({ ...req.body, userId: req.user?.id ?? null })
+  );
 });
 
 export const listContactMessages = asyncHandler(async (req, res) => {
   res.json(await contactService.listContactMessages());
+});
+
+export const listMyContactMessages = asyncHandler(async (req, res) => {
+  res.json(await contactService.listMyContactMessages(req.user.id, req.user.email));
 });
 
 export const updateContactMessage = asyncHandler(async (req, res) => {

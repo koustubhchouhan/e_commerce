@@ -17,6 +17,7 @@ import AdminProfile from "./pages/AdminProfile";
 import Categories from "./pages/Categories";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import MyMessages from "./pages/MyMessages";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
@@ -107,6 +108,15 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["customer"]}>
                   <Contact />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/messages"
+              element={
+                <ProtectedRoute allowedRoles={["customer"]}>
+                  <MyMessages />
                 </ProtectedRoute>
               }
             />

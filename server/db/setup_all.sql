@@ -227,6 +227,7 @@ create table if not exists public.contact_messages (
   subject    text not null,
   message    text not null,
   is_read    boolean not null default false,
+  user_id    uuid references public.profiles(id) on delete set null,
   store_id   uuid references public.stores(id)   on delete set null,
   product_id uuid references public.products(id) on delete set null,
   created_at timestamptz not null default now()
@@ -235,6 +236,7 @@ create table if not exists public.contact_messages (
 -- Keep existing installs in sync (columns were added after the initial table).
 alter table public.contact_messages add column if not exists store_id uuid references public.stores(id) on delete set null;
 alter table public.contact_messages add column if not exists product_id uuid references public.products(id) on delete set null;
+alter table public.contact_messages add column if not exists user_id uuid references public.profiles(id) on delete set null;
 alter table public.contact_messages add column if not exists reply text;
 alter table public.contact_messages add column if not exists replied_at timestamptz;
 alter table public.contact_messages add column if not exists replied_by uuid references public.profiles(id) on delete set null;
@@ -242,6 +244,7 @@ alter table public.contact_messages add column if not exists replied_by uuid ref
 create index if not exists idx_contact_messages_created_at on public.contact_messages(created_at);
 create index if not exists idx_contact_messages_store_id on public.contact_messages(store_id);
 create index if not exists idx_contact_messages_product_id on public.contact_messages(product_id);
+create index if not exists idx_contact_messages_user_id on public.contact_messages(user_id);
 
 -- =====================================================================
 -- Row Level Security: enable on every table (default-deny).

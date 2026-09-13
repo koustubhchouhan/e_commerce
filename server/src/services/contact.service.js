@@ -26,7 +26,7 @@ const mapMessage = (m) => ({
 // POST /contact — public. Anyone (logged in or not) can send a support message.
 // A product_id tags the message to that product's seller; a bare store_id tags
 // it to the given store. Messages with neither go to the platform inbox.
-export async function createContactMessage({ first_name, last_name, email, subject, message, store_id, product_id }) {
+export async function createContactMessage({ first_name, last_name, email, subject, message, store_id, product_id, userId }) {
   let resolvedStoreId = store_id ?? null;
 
   if (product_id) {
@@ -54,7 +54,7 @@ export async function createContactMessage({ first_name, last_name, email, subje
 
   const { data, error } = await db
     .from('contact_messages')
-    .insert({ first_name, last_name, email, subject, message, store_id: resolvedStoreId, product_id: product_id ?? null })
+    .insert({ first_name, last_name, email, subject, message, store_id: resolvedStoreId, product_id: product_id ?? null, user_id: userId ?? null })
     .select(MESSAGE_SELECT)
     .single();
 
@@ -67,6 +67,24 @@ export async function listContactMessages() {
   const { data, error } = await db
     .from('contact_messages')
     .select(MESSAGE_SELECT)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new AppError(500, `Could not load messages: ${error.message}`);
+  return { items: (data ?? []).map(mapMessage) };
+}
+
+// GET /contact-messages/mine — a signed-in customer's own support threads,
+// including any seller/admin reply. Matches by account id, and also by the
+// account's verified email so messages sent before signing in still appear.
+export async function listMyContactMessages(userId, email) {
+  const filter = email
+    ? `user_id.eq.${userId},email.eq.${JSON.stringify(email)}`
+    : `user_id.eq.${userId}`;
+
+  const { data, error } = await db
+    .from('contact_messages')
+    .select(MESSAGE_SELECT)
+    .or(filter)
     .order('created_at', { ascending: false });
 
   if (error) throw new AppError(500, `Could not load messages: ${error.message}`);
