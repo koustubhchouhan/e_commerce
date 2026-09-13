@@ -45,6 +45,7 @@ export default function NavBar() {
     { to: '/categories', label: 'Categories' },
     { to: '/about', label: 'About Us' },
     { to: '/contact', label: 'Contact Us' },
+    { to: '/messages', label: 'My Messages' },
   ];
   const sellerLinks = [
     { to: '/seller', label: 'Dashboard' },

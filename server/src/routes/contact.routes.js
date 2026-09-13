@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createContactMessage,
   listContactMessages,
+  listMyContactMessages,
   updateContactMessage,
   replyContactMessage,
   listSellerContactMessages,
@@ -9,7 +10,7 @@ import {
   replySellerContactMessage,
   deleteContactMessage,
 } from '../controllers/contact.controller.js';
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { requireAuth, requireRole, optionalAuth } from '../middleware/auth.js';
 import { validate, validateParams } from '../middleware/validate.js';
 import { uuidParamSchema } from '../validators/catalog.validators.js';
 import {
@@ -20,8 +21,11 @@ import {
 
 const router = Router();
 
-// Public
-router.post('/contact', validate(createContactMessageSchema), createContactMessage);
+// Public — optionalAuth links the message to the account when signed in.
+router.post('/contact', optionalAuth, validate(createContactMessageSchema), createContactMessage);
+
+// Customer inbox — the caller's own messages and any replies from support/sellers.
+router.get('/contact-messages/mine', requireAuth, listMyContactMessages);
 
 // Seller inbox — messages customers sent about the seller's products/store.
 router.get(

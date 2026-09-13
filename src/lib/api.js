@@ -237,7 +237,8 @@ export const api = {
   cancelOrder: (id) => request(`/orders/${id}/cancel`, { method: 'PATCH', auth: true }),
 
   // ---- Contact ----
-  submitContactMessage: (data) => request('/contact', { method: 'POST', body: data }),
+  submitContactMessage: (data) => request('/contact', { method: 'POST', body: data, auth: true }),
+  myContactMessages: () => request('/contact-messages/mine', { auth: true }),
   adminContactMessages: () => request('/admin/contact-messages', { auth: true }),
   adminUpdateContactMessage: (id, isRead) =>
     request(`/admin/contact-messages/${id}`, { method: 'PATCH', body: { is_read: isRead }, auth: true }),

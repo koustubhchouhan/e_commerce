@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Mail, Phone, MapPin, Send, Loader2 } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
 import { useToastStore } from '../store/toastStore';
@@ -105,9 +105,9 @@ export default function Contact() {
             <div>
               <h3 className="font-[Outfit] text-xl font-bold text-[#fff4e6] mb-1">{context ? 'Replies' : 'Email Support'}</h3>
               <p className="text-[#cbb89d] text-sm mb-1">
-                {context ? 'Replies arrive by email within 24 hours.' : 'Our team replies within 24 hours.'}
+                {context ? 'Replies arrive in your My Messages inbox.' : 'Our team replies within 24 hours — check My Messages.'}
               </p>
-              <a href="mailto:support@novamarket.com" className="text-[#ff9933] font-semibold hover:underline">support@novamarket.com</a>
+              <Link to="/messages" className="text-[#ff9933] font-semibold hover:underline">View My Messages</Link>
             </div>
           </GlassCard>
 
@@ -179,6 +179,10 @@ export default function Contact() {
               {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />}
               {sending ? 'Sending...' : context ? `Send to ${context.storeName}` : 'Send Transmission'}
             </button>
+            <p className="text-[#9e8c73] text-xs text-center">
+              We reply here on the platform — follow up in{' '}
+              <Link to="/messages" className="text-[#ff9933] font-semibold hover:underline">My Messages</Link>.
+            </p>
           </form>
         </GlassCard>
       </div>
