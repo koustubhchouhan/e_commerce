@@ -121,7 +121,7 @@ export default function AdminProfile() {
         </div>
         <div className="flex-grow">
           <div className="flex items-center gap-3">
-            <h1 className="font-[Outfit] text-4xl md:text-5xl font-bold text-[#fff4e6] tracking-tight">System Administrator</h1>
+            <h1 className="font-[Outfit] text-3xl md:text-5xl font-bold text-[#fff4e6] tracking-tight">System Administrator</h1>
             <span className="px-3 py-1 bg-[#ffb4ab]/20 text-[#ffb4ab] text-xs font-bold uppercase tracking-wider rounded-full border border-[#ffb4ab]/30">Level 5 Access</span>
           </div>
           <p className="font-[Inter] text-lg text-[#cbb89d] mt-1">Global Platform Settings & Security</p>

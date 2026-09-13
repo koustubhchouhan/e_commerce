@@ -75,7 +75,7 @@ export default function SellerRequests() {
   return (
     <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-12 animate-fade-in-up flex flex-col gap-8">
       <header>
-        <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">My Seller Applications</h1>
+        <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">My Seller Applications</h1>
         <p className="text-[#cbb89d]">Track the status of your requests to open a storefront.</p>
       </header>
 

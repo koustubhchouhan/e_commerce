@@ -158,7 +158,7 @@ export default function SellerInventory() {
     <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-12 animate-fade-in-up">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
         <div>
-          <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Inventory Management</h1>
+          <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Inventory Management</h1>
           <p className="text-[#cbb89d]">Manage your product listings, update stock levels, and add new items.</p>
         </div>
       <button

@@ -1,4 +1,4 @@
-import { Package, TrendingUp, IndianRupee, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, Clock, Check, UploadCloud, Truck, X, Eye, EyeOff, Star } from 'lucide-react';
+import { Package, TrendingUp, IndianRupee, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, Clock, Check, UploadCloud, Truck, X, Eye, EyeOff, Star, Menu } from 'lucide-react';
 import { inr } from '../lib/money';
 import { useEffect, useState, useRef } from 'react';
 import GlassCard from '../components/GlassCard';
@@ -37,6 +37,12 @@ export default function SellerHub() {
   const { user } = useAuth();
   const addToast = useToastStore((s) => s.addToast);
   const [activeTab, setActiveTab] = useState('overview');
+  const [navOpen, setNavOpen] = useState(false);
+
+  const selectTab = (tab) => {
+    setActiveTab(tab);
+    setNavOpen(false);
+  };
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [ordersError, setOrdersError] = useState('');
@@ -270,9 +276,16 @@ export default function SellerHub() {
 
   return (
     <div className="flex min-h-[calc(100vh-80px)] animate-fade-in-up">
+      {/* Drawer backdrop (mobile) */}
+      {navOpen && (
+        <div
+          className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setNavOpen(false)}
+        />
+      )}
       
-      {/* ═══ Left Sidebar ═══ */}
-      <aside className="w-[280px] bg-[#221708]/90 backdrop-blur-xl border-r border-white/5 p-6 flex flex-col shrink-0 sticky top-[80px] h-[calc(100vh-80px)] overflow-y-auto">
+      {/* ═══ Left Sidebar — slide-in drawer on mobile, static column on desktop ═══ */}
+      <aside className={`fixed inset-y-0 left-0 z-[100] w-[280px] max-w-[80vw] bg-[#221708] backdrop-blur-xl border-r border-white/5 p-6 flex flex-col shrink-0 overflow-y-auto transition-transform duration-300 lg:sticky lg:top-[80px] lg:h-[calc(100vh-80px)] lg:max-w-none lg:bg-[#221708]/90 lg:translate-x-0 ${navOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         
         {/* Profile Info */}
         <div className="flex flex-col items-center mb-10 text-center">
@@ -294,21 +307,29 @@ export default function SellerHub() {
         
         {/* Navigation Options */}
         <nav className="flex flex-col gap-2 flex-1">
-          <SidebarLink icon={<ShoppingBag size={20} />} label="Orders" active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} />
-          <SidebarLink icon={<LayoutDashboard size={20} />} label="Store Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
-          <SidebarLink icon={<BarChart3 size={20} />} label="Analytics" active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} />
-          <SidebarLink icon={<MessageSquareWarning size={20} />} label="Messages & Complaints" badge={unreadMessages} active={activeTab === 'messages'} onClick={() => setActiveTab('messages')} />
-          <SidebarLink icon={<Star size={20} />} label="Reviews" badge={reviews.filter((r) => !r.sellerReply).length} active={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')} />
+          <SidebarLink icon={<ShoppingBag size={20} />} label="Orders" active={activeTab === 'orders'} onClick={() => selectTab('orders')} />
+          <SidebarLink icon={<LayoutDashboard size={20} />} label="Store Overview" active={activeTab === 'overview'} onClick={() => selectTab('overview')} />
+          <SidebarLink icon={<BarChart3 size={20} />} label="Analytics" active={activeTab === 'analytics'} onClick={() => selectTab('analytics')} />
+          <SidebarLink icon={<MessageSquareWarning size={20} />} label="Messages & Complaints" badge={unreadMessages} active={activeTab === 'messages'} onClick={() => selectTab('messages')} />
+          <SidebarLink icon={<Star size={20} />} label="Reviews" badge={reviews.filter((r) => !r.sellerReply).length} active={activeTab === 'reviews'} onClick={() => selectTab('reviews')} />
         </nav>
       </aside>
 
       {/* ═══ Main Content Area ═══ */}
-      <main className="flex-1 p-8 lg:p-12 overflow-y-auto h-[calc(100vh-80px)]">
+      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-12 lg:overflow-y-auto lg:h-[calc(100vh-80px)]">
+        <button
+          type="button"
+          onClick={() => setNavOpen(true)}
+          className="lg:hidden flex items-center gap-2 mb-6 px-4 py-2.5 rounded-lg border border-white/10 bg-[#221708]/70 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors"
+          aria-label="Open seller navigation"
+        >
+          <Menu size={18} /> Menu
+        </button>
         
         {activeTab === 'overview' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Store Overview</h1>
+              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Store Overview</h1>
               <p className="text-[#cbb89d]">Monitor your recent analytics, add new products, and track inventory.</p>
             </header>
 
@@ -380,7 +401,7 @@ export default function SellerHub() {
         {activeTab === 'orders' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Store Orders</h1>
+              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Store Orders</h1>
               <p className="text-[#cbb89d]">Products ordered from your store by customers.</p>
             </header>
             
@@ -457,7 +478,7 @@ export default function SellerHub() {
         {activeTab === 'messages' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Messages & Complaints</h1>
+              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Messages & Complaints</h1>
               <p className="text-[#cbb89d]">
                 {unreadMessages > 0
                   ? `${unreadMessages} unread message${unreadMessages === 1 ? '' : 's'} from customers.`
@@ -535,7 +556,7 @@ export default function SellerHub() {
         {activeTab === 'reviews' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Customer Reviews</h1>
+              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Customer Reviews</h1>
               <p className="text-[#cbb89d]">Reviews left on your products. Reply publicly to build trust with shoppers.</p>
             </header>
 
@@ -625,7 +646,7 @@ export default function SellerHub() {
         {activeTab === 'analytics' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Store Analytics</h1>
+              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Store Analytics</h1>
               <p className="text-[#cbb89d]">Performance metrics computed from your store's live order data.</p>
             </header>
 

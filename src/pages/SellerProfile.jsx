@@ -88,7 +88,7 @@ export default function SellerProfile() {
         </div>
         <div className="flex-grow">
           <div className="flex items-center gap-3">
-            <h1 className="font-[Outfit] text-4xl md:text-5xl font-bold text-[#fff4e6] tracking-tight">
+            <h1 className="font-[Outfit] text-3xl md:text-5xl font-bold text-[#fff4e6] tracking-tight">
               {user?.fullName || 'Seller'}
             </h1>
             <CheckCircle className="text-[#ff9933]" size={24} />

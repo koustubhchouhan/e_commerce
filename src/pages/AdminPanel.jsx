@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp, MessageSquare, Menu } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProductGrid } from './Home';
@@ -39,6 +39,12 @@ const ORDER_STATUS_TABS = ['all', 'pending', 'paid', 'shipped', 'delivered', 'ca
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('products');
+  const [navOpen, setNavOpen] = useState(false);
+
+  const selectTab = (tab) => {
+    setActiveTab(tab);
+    setNavOpen(false);
+  };
 
   const [approvedProducts, setApprovedProducts] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
@@ -343,31 +349,47 @@ export default function AdminPanel() {
 
   return (
     <div className="flex min-h-[calc(100vh-80px)] animate-fade-in-up">
-      {/* Sidebar Navigation */}
-      <aside className="w-[280px] bg-[#221708]/90 backdrop-blur-xl border-r border-white/5 p-6 flex flex-col shrink-0 sticky top-[80px] h-[calc(100vh-80px)] overflow-y-auto">
+      {/* Drawer backdrop (mobile) */}
+      {navOpen && (
+        <div
+          className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setNavOpen(false)}
+        />
+      )}
+
+      {/* Sidebar Navigation — slide-in drawer on mobile, static column on desktop */}
+      <aside className={`fixed inset-y-0 left-0 z-[100] w-[280px] max-w-[80vw] bg-[#221708] backdrop-blur-xl border-r border-white/5 p-6 flex flex-col shrink-0 overflow-y-auto transition-transform duration-300 lg:sticky lg:top-[80px] lg:h-[calc(100vh-80px)] lg:max-w-none lg:bg-[#221708]/90 lg:translate-x-0 ${navOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <h2 className="font-[Outfit] text-2xl font-bold text-[#ff9933] mb-8 px-4">Admin Dashboard</h2>
         
         <nav className="flex flex-col gap-2 flex-1">
-          <SidebarLink icon={<Grid size={20} />} label="Products" active={activeTab === 'products'} onClick={() => setActiveTab('products')} />
-          <SidebarLink icon={<UserCheck size={20} />} label="Seller Approvals" active={activeTab === 'seller-requests'} onClick={() => setActiveTab('seller-requests')} />
-          <SidebarLink icon={<ShoppingBag size={20} />} label="Orders" active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} />
-          <SidebarLink icon={<Inbox size={20} />} label="Messages" badge={messages.filter((m) => !m.isRead).length} active={activeTab === 'messages'} onClick={() => setActiveTab('messages')} />
-          <SidebarLink icon={<MessageSquare size={20} />} label="Reviews" active={activeTab === 'reviews'} onClick={() => setActiveTab('reviews')} />
-          <SidebarLink icon={<Star size={20} />} label="Featured Products" active={activeTab === 'featured'} onClick={() => setActiveTab('featured')} />
-          <SidebarLink icon={<LayoutDashboard size={20} />} label="Categories" active={activeTab === 'categories'} onClick={() => setActiveTab('categories')} />
-          <SidebarLink icon={<CreditCard size={20} />} label="Payments" active={activeTab === 'payments'} onClick={() => setActiveTab('payments')} />
+          <SidebarLink icon={<Grid size={20} />} label="Products" active={activeTab === 'products'} onClick={() => selectTab('products')} />
+          <SidebarLink icon={<UserCheck size={20} />} label="Seller Approvals" active={activeTab === 'seller-requests'} onClick={() => selectTab('seller-requests')} />
+          <SidebarLink icon={<ShoppingBag size={20} />} label="Orders" active={activeTab === 'orders'} onClick={() => selectTab('orders')} />
+          <SidebarLink icon={<Inbox size={20} />} label="Messages" badge={messages.filter((m) => !m.isRead).length} active={activeTab === 'messages'} onClick={() => selectTab('messages')} />
+          <SidebarLink icon={<MessageSquare size={20} />} label="Reviews" active={activeTab === 'reviews'} onClick={() => selectTab('reviews')} />
+          <SidebarLink icon={<Star size={20} />} label="Featured Products" active={activeTab === 'featured'} onClick={() => selectTab('featured')} />
+          <SidebarLink icon={<LayoutDashboard size={20} />} label="Categories" active={activeTab === 'categories'} onClick={() => selectTab('categories')} />
+          <SidebarLink icon={<CreditCard size={20} />} label="Payments" active={activeTab === 'payments'} onClick={() => selectTab('payments')} />
         </nav>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8 lg:p-12 overflow-x-hidden">
+      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-12 overflow-x-hidden">
+        <button
+          type="button"
+          onClick={() => setNavOpen(true)}
+          className="lg:hidden flex items-center gap-2 mb-6 px-4 py-2.5 rounded-lg border border-white/10 bg-[#221708]/70 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors"
+          aria-label="Open admin navigation"
+        >
+          <Menu size={18} /> Menu
+        </button>
         
         {/* PRODUCTS TAB (All Approved Products) */}
         {activeTab === 'products' && (
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-center mb-10">
               <div>
-                <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">All Approved Products</h1>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">All Approved Products</h1>
                 <p className="text-[#cbb89d]">Complete catalog of all approved products listed by sellers across the platform.</p>
               </div>
             </div>
@@ -381,7 +403,7 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-center mb-10">
               <div>
-                <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Featured Products</h1>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Featured Products</h1>
                 <p className="text-[#cbb89d]">These products are currently being showcased on the customer homescreen.</p>
               </div>
             </div>
@@ -395,7 +417,7 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-center mb-10">
               <div>
-                <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Global Order Tracking</h1>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Global Order Tracking</h1>
                 <p className="text-[#cbb89d]">Monitor and manage all customer orders placed across every seller storefront.</p>
               </div>
             </div>
@@ -503,7 +525,7 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-center mb-10">
               <div>
-                <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Support Inbox</h1>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Support Inbox</h1>
                 <p className="text-[#cbb89d]">Messages submitted through the public Contact page.</p>
               </div>
             </div>
@@ -582,7 +604,7 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-center mb-10">
               <div>
-                <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Review Moderation</h1>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Review Moderation</h1>
                 <p className="text-[#cbb89d]">Hide abusive reviews from the storefront or remove them permanently.</p>
               </div>
             </div>
@@ -670,7 +692,7 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up max-w-5xl">
             <div className="flex justify-between items-center mb-10">
               <div>
-                <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Seller Approvals</h1>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Seller Approvals</h1>
                 <p className="text-[#cbb89d]">Review and approve users requesting to open a storefront.</p>
               </div>
             </div>
@@ -715,7 +737,7 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-end mb-10">
               <div>
-                <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Platform Categories</h1>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Platform Categories</h1>
                 <p className="text-[#cbb89d]">Manage the main product categories available across the platform.</p>
               </div>
               <button onClick={() => setCategoryModal(true)} className="py-3 px-6 rounded-lg bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] font-[Outfit] text-base font-semibold hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] transition-all flex items-center gap-2">
@@ -771,7 +793,7 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-center mb-10">
               <div>
-                <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Platform Payments & Ledger</h1>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Platform Payments & Ledger</h1>
                 <p className="text-[#cbb89d]">Gross sales, platform fees and seller payouts computed live from real order data.</p>
               </div>
             </div>
