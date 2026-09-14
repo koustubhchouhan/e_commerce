@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { api, tokenStore } from '../lib/api';
+import { setCartOwner } from '../store/cartStore';
 
 const AuthContext = createContext();
 
@@ -15,14 +16,21 @@ export function AuthProvider({ children }) {
     let active = true;
     async function restore() {
       if (!tokenStore.access) {
+        setCartOwner(null);
         setLoading(false);
         return;
       }
       try {
         const me = await api.me();
-        if (active) setUser(me);
+        if (active) {
+          setCartOwner(me.id);
+          setUser(me);
+        }
       } catch {
-        if (active) setUser(null);
+        if (active) {
+          setCartOwner(null);
+          setUser(null);
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -35,12 +43,14 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const u = await api.login(email, password);
+    setCartOwner(u.id);
     setUser(u);
     return u;
   };
 
   const register = async ({ email, password, fullName, role }) => {
     const data = await api.register({ email, password, fullName, role });
+    setCartOwner(data.user.id);
     setUser(data.user);
     return data;
   };
@@ -49,12 +59,14 @@ export function AuthProvider({ children }) {
   // the Supabase session; we swap it for our shaped app session via the backend.
   const loginWithGoogle = async (session, { mode, role }) => {
     const data = await api.oauthSession(session, { mode, role });
+    setCartOwner(data.user.id);
     setUser(data.user);
     return data;
   };
 
   const logout = () => {
     api.logout();
+    setCartOwner(null);
     setUser(null);
   };
 
