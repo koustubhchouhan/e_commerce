@@ -8,6 +8,26 @@ export async function listCategories() {
   return data ?? [];
 }
 
+// Escapes a user-supplied search term for safe use inside a PostgREST `.or()`
+// filter. The value is wrapped in double quotes so reserved filter characters
+// (`,`, `(`, `)`, `.`, `:` ...) are treated literally; embedded backslashes and
+// double quotes are escaped and control characters stripped so the term cannot
+// break or manipulate the filter expression.
+function stripControlChars(value) {
+  let out = '';
+  for (const ch of value) {
+    const code = ch.codePointAt(0);
+    out += code < 32 || code === 127 ? ' ' : ch;
+  }
+  return out;
+}
+
+function escapePostgrestTerm(term) {
+  return stripControlChars(term)
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"');
+}
+
 // GET /products — public catalog listing. Filters by search term and/or
 // category slug, paginates, and includes each product's cover image + sale price.
 export async function listProducts({ search, category, page, limit }) {
@@ -20,8 +40,10 @@ export async function listProducts({ search, category, page, limit }) {
     .eq('status', 'active');
 
   if (search) {
-    const term = search.trim();
-    query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%`);
+    const term = escapePostgrestTerm(search.trim());
+    if (term) {
+      query = query.or(`name.ilike."%${term}%",description.ilike."%${term}%"`);
+    }
   }
   if (category) {
     query = query.eq('categories.slug', category);
