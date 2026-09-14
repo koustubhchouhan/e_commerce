@@ -4,6 +4,7 @@ import {
   register,
   login,
   refresh,
+  logout,
   me,
   oauthSession,
   updateProfile,
@@ -34,6 +35,7 @@ const upload = multer({
 router.post('/register', validate(registerSchema), register);
 router.post('/login', validate(loginSchema), login);
 router.post('/refresh', validate(refreshSchema), refresh);
+router.post('/logout', logout);
 router.post('/oauth/session', validate(oauthSessionSchema), oauthSession);
 router.get('/me', requireAuth, me);
 router.patch('/profile', requireAuth, validate(updateProfileSchema), updateProfile);

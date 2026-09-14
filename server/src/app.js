@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { env } from './config/env.js';
 import healthRoutes from './routes/health.routes.js';
 import authRoutes from './routes/auth.routes.js';
@@ -16,6 +18,28 @@ export function createApp() {
   const app = express();
 
   app.use(cors({ origin: env.clientOrigin, credentials: true }));
+  app.use(
+    helmet({
+      // The API only ever returns JSON, so a strict policy is safe. The SPA's
+      // own host must send an equivalent header for the HTML document.
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+          connectSrc: ["'self'", 'https:'],
+          fontSrc: ["'self'", 'data:'],
+          objectSrc: ["'none'"],
+          baseUri: ["'self'"],
+          frameAncestors: ["'none'"],
+        },
+      },
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      crossOriginEmbedderPolicy: false,
+    })
+  );
+  app.use(cookieParser());
   app.use(express.json());
   if (env.nodeEnv !== 'test') app.use(morgan('dev'));
 

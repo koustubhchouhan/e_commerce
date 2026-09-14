@@ -14,9 +14,14 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-export const refreshSchema = z.object({
-  refreshToken: z.string().min(1, 'refreshToken is required'),
-});
+// The refresh token normally arrives in the HttpOnly cookie; the body field is
+// kept optional for non-browser API clients. Tolerates an empty/absent body.
+export const refreshSchema = z
+  .object({
+    refreshToken: z.string().min(1, 'refreshToken is required').optional(),
+  })
+  .optional()
+  .transform((value) => value ?? {});
 
 // POST /auth/oauth/session — browser-side OAuth (Google) hands its Supabase
 // session to the backend, which validates it and shapes our own response.

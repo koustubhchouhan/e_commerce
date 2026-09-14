@@ -2,6 +2,13 @@ import { db, authClient } from '../config/supabase.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import { AppError } from '../middleware/error.js';
 import { removeProductImage, uploadProductImage } from '../services/storage.service.js';
+import {
+  CSRF_COOKIE,
+  REFRESH_COOKIE,
+  clearSessionCookies,
+  issueCsrfToken,
+  setSessionCookies,
+} from '../services/session-cookies.js';
 
 // Maps a `profiles` row to the user object every auth endpoint returns.
 // Roles come from our table only, never from client input.
@@ -39,9 +46,16 @@ async function readProfileUser(userId, fallbackEmail) {
   return toUser(profile, fallbackEmail);
 }
 
-// Shapes a Supabase session + our profile into the response the frontend expects.
-async function buildAuthResponse(user, session) {
+// Shapes a Supabase session + our profile into the response the frontend
+// expects, and writes the session out as HttpOnly cookies. A fresh CSRF token
+// is issued unless the caller already has one we want to keep (e.g. refresh).
+async function buildAuthResponse(res, user, session, { csrfToken } = {}) {
   const shapedUser = await readProfileUser(user.id, user.email);
+  setSessionCookies(
+    res,
+    { accessToken: session.access_token, refreshToken: session.refresh_token },
+    { csrfToken: csrfToken ?? issueCsrfToken() }
+  );
   return {
     user: shapedUser,
     session: {
@@ -145,7 +159,7 @@ export const register = asyncHandler(async (req, res) => {
       : null;
 
   res.status(201).json({
-    ...(await buildAuthResponse(signIn.user, signIn.session)),
+    ...(await buildAuthResponse(res, signIn.user, signIn.session)),
     sellerApplication,
   });
 });
@@ -157,17 +171,32 @@ export const login = asyncHandler(async (req, res) => {
   const { data, error } = await authClient.auth.signInWithPassword({ email, password });
   if (error || !data?.session) throw new AppError(401, 'Invalid email or password');
 
-  res.json(await buildAuthResponse(data.user, data.session));
+  res.json(await buildAuthResponse(res, data.user, data.session));
 });
 
-// POST /auth/refresh
+// POST /auth/refresh — reads the refresh token from the HttpOnly cookie
+// (falling back to the request body for non-browser clients) and rotates the
+// session cookies. A pre-existing CSRF token is preserved.
 export const refresh = asyncHandler(async (req, res) => {
-  const { refreshToken } = req.body;
+  const refreshToken = req.body?.refreshToken || req.cookies?.[REFRESH_COOKIE];
+  if (!refreshToken) throw new AppError(401, 'Could not refresh session');
 
   const { data, error } = await authClient.auth.refreshSession({ refresh_token: refreshToken });
   if (error || !data?.session) throw new AppError(401, 'Could not refresh session');
 
-  res.json(await buildAuthResponse(data.user, data.session));
+  res.json(
+    await buildAuthResponse(res, data.user, data.session, {
+      csrfToken: req.cookies?.[CSRF_COOKIE],
+    })
+  );
+});
+
+// POST /auth/logout — clears the session cookies so the browser stops sending
+// them. (Supabase refresh tokens remain valid server-side until they expire or
+// are rotated, which is acceptable for this prototype.)
+export const logout = asyncHandler(async (req, res) => {
+  clearSessionCookies(res);
+  res.json({ message: 'Signed out' });
 });
 
 // GET /auth/me  (requireAuth already resolved the profile)
@@ -225,13 +254,13 @@ export const oauthSession = asyncHandler(async (req, res) => {
         supabaseUser.email
       );
       res.status(201).json({
-        ...(await buildAuthResponse(supabaseUser, browserSession)),
+        ...(await buildAuthResponse(res, supabaseUser, browserSession)),
         sellerApplication,
       });
       return;
     }
 
-    res.status(201).json(await buildAuthResponse(supabaseUser, browserSession));
+    res.status(201).json(await buildAuthResponse(res, supabaseUser, browserSession));
     return;
   }
 
@@ -257,7 +286,7 @@ export const oauthSession = asyncHandler(async (req, res) => {
   }
 
   await backfillProfileFromProvider(profile.id, profile, supabaseUser.user_metadata);
-  res.json(await buildAuthResponse(supabaseUser, browserSession));
+  res.json(await buildAuthResponse(res, supabaseUser, browserSession));
 });
 
 // PATCH /auth/profile — updates the caller's own profile row. Every role can

@@ -1,32 +1,32 @@
 // NovaMarket API client.
-// Thin wrapper around fetch that talks to the Express backend. It owns token
-// storage and transparently refreshes an expired access token once per request.
+// Thin wrapper around fetch that talks to the Express backend. Session tokens
+// live in HttpOnly cookies the browser manages; this client never reads or
+// stores them. It transparently refreshes an expired session once per request.
 //
 // The backend base URL comes from Vite env (set VITE_API_URL in a root .env),
 // falling back to the local dev server.
 
 const BASE_URL = import.meta.env?.VITE_API_URL || '/api';
 
-const ACCESS_KEY = 'novamarket-access-token';
-const REFRESH_KEY = 'novamarket-refresh-token';
+// Older builds kept the session tokens in localStorage; purge any leftovers so
+// a stale copy cannot be replayed.
+try {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem('novamarket-access-token');
+    localStorage.removeItem('novamarket-refresh-token');
+  }
+} catch {
+  // Storage can be unavailable (e.g. private mode); nothing to clean up.
+}
 
-export const tokenStore = {
-  get access() {
-    return localStorage.getItem(ACCESS_KEY);
-  },
-  get refresh() {
-    return localStorage.getItem(REFRESH_KEY);
-  },
-  set(session) {
-    if (!session) return;
-    if (session.accessToken) localStorage.setItem(ACCESS_KEY, session.accessToken);
-    if (session.refreshToken) localStorage.setItem(REFRESH_KEY, session.refreshToken);
-  },
-  clear() {
-    localStorage.removeItem(ACCESS_KEY);
-    localStorage.removeItem(REFRESH_KEY);
-  },
-};
+// Non-HttpOnly CSRF cookie set alongside the session cookies. Read it and echo
+// it back in a header so the backend can verify same-site intent (double
+// submit). JavaScript cannot touch the access/refresh tokens themselves.
+function readCsrfToken() {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|;\s*)nm_csrf=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
 
 export class ApiError extends Error {
   constructor(status, message, details) {
@@ -39,7 +39,10 @@ export class ApiError extends Error {
 
 async function request(path, { method = 'GET', body, auth = false, formData = false, _retry = false } = {}) {
   const headers = {};
-  if (auth && tokenStore.access) headers.Authorization = `Bearer ${tokenStore.access}`;
+  if (auth) {
+    const csrf = readCsrfToken();
+    if (csrf) headers['X-CSRF-Token'] = csrf;
+  }
 
   let payload;
   if (formData) {
@@ -53,16 +56,25 @@ async function request(path, { method = 'GET', body, auth = false, formData = fa
     method,
     headers,
     body: payload,
+    credentials: 'include',
   });
 
-  // Access token likely expired — try one silent refresh, then replay.
-  if (res.status === 401 && auth && !_retry && tokenStore.refresh) {
+  // Session likely expired — try one silent cookie-based refresh, then replay.
+  if (res.status === 401 && auth && !_retry) {
     const ok = await tryRefresh();
     if (ok) return request(path, { method, body, auth, formData, _retry: true });
   }
 
   const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
+  let data = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // Non-JSON response (e.g. a proxy/network error page) — leave data null.
+      data = null;
+    }
+  }
 
   if (!res.ok) {
     throw new ApiError(res.status, data?.error || res.statusText, data?.details);
@@ -70,16 +82,13 @@ async function request(path, { method = 'GET', body, auth = false, formData = fa
   return data;
 }
 
+// The refresh token rides in an HttpOnly cookie, so no body is needed. Returns
+// false (rather than throwing) so callers can fall back to a logged-out state.
 async function tryRefresh() {
   try {
-    const data = await request('/auth/refresh', {
-      method: 'POST',
-      body: { refreshToken: tokenStore.refresh },
-    });
-    tokenStore.set(data.session);
+    await request('/auth/refresh', { method: 'POST' });
     return true;
   } catch {
-    tokenStore.clear();
     return false;
   }
 }
@@ -91,7 +100,6 @@ export const api = {
       method: 'POST',
       body: { email, password, fullName, role },
     });
-    tokenStore.set(data.session);
     return data;
   },
   async login(email, password) {
@@ -99,7 +107,6 @@ export const api = {
       method: 'POST',
       body: { email, password },
     });
-    tokenStore.set(data.session);
     return data.user;
   },
   // Exchange a browser-side OAuth (Google) session for our shaped session.
@@ -109,15 +116,18 @@ export const api = {
       method: 'POST',
       body: { session, mode, role },
     });
-    tokenStore.set(data.session);
     return data;
   },
   async me() {
     const data = await request('/auth/me', { auth: true });
     return data.user;
   },
-  logout() {
-    tokenStore.clear();
+  async logout() {
+    try {
+      await request('/auth/logout', { method: 'POST', auth: true });
+    } catch {
+      // The local UI signs out regardless of whether the server was reachable.
+    }
   },
 
   // ---- Account / profile ----

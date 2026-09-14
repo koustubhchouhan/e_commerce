@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { api, tokenStore } from '../lib/api';
+import { api } from '../lib/api';
 import { setCartOwner } from '../store/cartStore';
 
 const AuthContext = createContext();
@@ -15,11 +15,8 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let active = true;
     async function restore() {
-      if (!tokenStore.access) {
-        setCartOwner(null);
-        setLoading(false);
-        return;
-      }
+      // Session tokens live in HttpOnly cookies, so there is nothing for the
+      // client to inspect. Ask the API instead; a 401 means "signed out".
       try {
         const me = await api.me();
         if (active) {
@@ -64,10 +61,12 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const logout = () => {
-    api.logout();
+  const logout = async () => {
+    // Clear the UI immediately; notifying the server (cookie clear) is
+    // best-effort so a slow/unreachable API never blocks signing out.
     setCartOwner(null);
     setUser(null);
+    await api.logout();
   };
 
   // Merge freshly saved profile fields (name/avatar/phone/email...) into the

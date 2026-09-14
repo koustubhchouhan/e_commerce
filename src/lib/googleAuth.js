@@ -78,5 +78,18 @@ export async function finishGoogleOAuth() {
 
   // Don't leave the access token / code sitting in the address bar.
   window.history.replaceState({}, document.title, window.location.pathname);
-  return { intent, session: data?.session ?? null, error: null };
+
+  const session = data?.session ?? null;
+  if (session) {
+    // We already hold the tokens for the backend hand-off, so drop the Supabase
+    // client's own copy from localStorage. Our backend owns the session from
+    // here on via HttpOnly cookies. Best-effort: never block the sign-in.
+    try {
+      await client.auth.signOut({ scope: 'local' });
+    } catch {
+      // Non-fatal.
+    }
+  }
+
+  return { intent, session, error: null };
 }

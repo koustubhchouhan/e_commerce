@@ -5,7 +5,7 @@ import GlassCard from '../components/GlassCard';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
 import { useAuth } from '../context/AuthContext';
-import { api, tokenStore } from '../lib/api';
+import { api } from '../lib/api';
 import { toProductCard } from '../lib/productShape';
 import { inr } from '../lib/money';
 
@@ -27,8 +27,8 @@ export default function ProductDetails() {
   const addItem = useCartStore(s => s.addItem);
   const addToast = useToastStore(s => s.addToast);
   const navigate = useNavigate();
-  const { userRole } = useAuth();
-  const isLoggedIn = Boolean(tokenStore.access);
+  const { user, userRole } = useAuth();
+  const isLoggedIn = Boolean(user);
 
   useEffect(() => {
     let cancelled = false;
