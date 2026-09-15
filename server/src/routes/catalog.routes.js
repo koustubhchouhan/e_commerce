@@ -5,6 +5,7 @@ import {
   getProduct,
 } from '../controllers/catalog.controller.js';
 import { listReviews, createReview, getReviewEligibility } from '../controllers/review.controller.js';
+import { listSlides } from '../controllers/hero.controller.js';
 import { requireAuth } from '../middleware/auth.js';
 import {
   validate,
@@ -20,6 +21,7 @@ import {
 const router = Router();
 
 router.get('/categories', listCategories);
+router.get('/hero-slides', listSlides);
 router.get('/products', validateQuery(listProductsQuerySchema), listProducts);
 router.get('/products/:id/reviews', validateParams(uuidParamSchema), listReviews);
 router.get(

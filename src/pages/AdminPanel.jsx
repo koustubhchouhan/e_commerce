@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp, MessageSquare, Menu, Reply } from 'lucide-react';
+import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp, MessageSquare, Menu, Reply, Image as ImageIcon, Pencil } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProductGrid } from './Home';
@@ -37,6 +37,19 @@ const ORDER_STATUS_STYLES = {
 
 const ORDER_STATUS_TABS = ['all', 'pending', 'paid', 'shipped', 'delivered', 'cancelled'];
 
+// Blank hero slide used when the admin opens the "add slide" form.
+const EMPTY_SLIDE = {
+  eyebrow: '',
+  title: '',
+  description: '',
+  imageUrl: '',
+  buttonLabel: 'Shop Now',
+  buttonLink: '/',
+  theme: 'orange',
+  position: 0,
+  isActive: true,
+};
+
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('products');
   const [navOpen, setNavOpen] = useState(false);
@@ -70,6 +83,11 @@ export default function AdminPanel() {
   const [replyText, setReplyText] = useState('');
   const [replying, setReplying] = useState(false);
   const [newCategory, setNewCategory] = useState('');
+  const [slides, setSlides] = useState([]);
+  const [loadingSlides, setLoadingSlides] = useState(true);
+  const [slideModal, setSlideModal] = useState(null);
+  const [slideImageFile, setSlideImageFile] = useState(null);
+  const [savingSlide, setSavingSlide] = useState(false);
   const addToast = useToastStore((s) => s.addToast);
 
   useEffect(() => {
@@ -140,6 +158,18 @@ export default function AdminPanel() {
       addToast('Failed to load categories.', 'error');
     } finally {
       setLoadingCategories(false);
+    }
+  };
+
+  const loadSlides = async (spinner = true) => {
+    if (spinner) setLoadingSlides(true);
+    try {
+      const res = await api.adminHeroSlides();
+      setSlides(res.items ?? []);
+    } catch (err) {
+      addToast(`Failed to load hero slides: ${err?.message ?? 'unknown error'}`, 'error');
+    } finally {
+      if (spinner) setLoadingSlides(false);
     }
   };
 
@@ -269,6 +299,7 @@ export default function AdminPanel() {
 
   useEffect(() => {
     loadCategories();
+    loadSlides();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -340,6 +371,92 @@ export default function AdminPanel() {
     }
   };
 
+  const openCreateSlide = () => {
+    setSlideImageFile(null);
+    setSlideModal({ ...EMPTY_SLIDE });
+  };
+
+  const openEditSlide = (slide) => {
+    setSlideImageFile(null);
+    setSlideModal({ ...slide });
+  };
+
+  const closeSlideModal = () => {
+    if (savingSlide) return;
+    setSlideModal(null);
+    setSlideImageFile(null);
+  };
+
+  const handleSaveSlide = async (e) => {
+    e.preventDefault();
+    if (!slideModal || savingSlide) return;
+    const title = (slideModal.title ?? '').trim();
+    if (!title) return;
+    if (!slideImageFile && !(slideModal.imageUrl ?? '').trim()) {
+      addToast('Upload an image or paste an image URL.', 'error');
+      return;
+    }
+    setSavingSlide(true);
+    try {
+      let imageUrl = (slideModal.imageUrl ?? '').trim();
+      if (slideImageFile) {
+        const uploaded = await api.uploadHeroSlideImage(slideImageFile);
+        imageUrl = uploaded.url;
+      }
+      const payload = {
+        eyebrow: (slideModal.eyebrow ?? '').trim(),
+        title,
+        description: (slideModal.description ?? '').trim(),
+        imageUrl,
+        buttonLabel: (slideModal.buttonLabel ?? '').trim() || 'Shop Now',
+        buttonLink: (slideModal.buttonLink ?? '').trim() || '/',
+        theme: slideModal.theme,
+        position: Number(slideModal.position) || 0,
+        isActive: !!slideModal.isActive,
+      };
+      if (slideModal.id) {
+        await api.updateHeroSlide(slideModal.id, payload);
+        addToast('Hero slide updated.', 'success');
+      } else {
+        await api.createHeroSlide(payload);
+        addToast('Hero slide added.', 'success');
+      }
+      setSlideModal(null);
+      setSlideImageFile(null);
+      await loadSlides(false);
+    } catch (err) {
+      addToast(err.message || 'Failed to save hero slide.', 'error');
+    } finally {
+      setSavingSlide(false);
+    }
+  };
+
+  const handleDeleteSlide = async (slide) => {
+    setBusy(true);
+    try {
+      await api.deleteHeroSlide(slide.id);
+      setSlides((prev) => prev.filter((s) => s.id !== slide.id));
+      addToast(`"${slide.title}" slide deleted.`, 'error');
+    } catch (err) {
+      addToast(err.message || 'Failed to delete hero slide.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleToggleSlideActive = async (slide) => {
+    setBusy(true);
+    try {
+      const updated = await api.updateHeroSlide(slide.id, { isActive: !slide.isActive });
+      setSlides((prev) => prev.map((s) => (s.id === slide.id ? { ...s, ...updated } : s)));
+      addToast(updated.isActive ? 'Slide is now visible on the homepage.' : 'Slide hidden.', 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to update hero slide.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const orderActions = (order) => {
     if (order.status === 'pending' || order.status === 'paid') {
       return [
@@ -396,6 +513,7 @@ export default function AdminPanel() {
           <SidebarLink icon={<Inbox size={20} />} label="Messages" badge={messages.filter((m) => !m.isRead).length} active={activeTab === 'messages'} onClick={() => selectTab('messages')} />
           <SidebarLink icon={<MessageSquare size={20} />} label="Reviews" active={activeTab === 'reviews'} onClick={() => selectTab('reviews')} />
           <SidebarLink icon={<Star size={20} />} label="Featured Products" active={activeTab === 'featured'} onClick={() => selectTab('featured')} />
+          <SidebarLink icon={<ImageIcon size={20} />} label="Hero Slides" active={activeTab === 'hero'} onClick={() => selectTab('hero')} />
           <SidebarLink icon={<LayoutDashboard size={20} />} label="Categories" active={activeTab === 'categories'} onClick={() => selectTab('categories')} />
           <SidebarLink icon={<CreditCard size={20} />} label="Payments" active={activeTab === 'payments'} onClick={() => selectTab('payments')} />
         </nav>
@@ -848,6 +966,68 @@ export default function AdminPanel() {
           </div>
         )}
 
+        {/* HERO SLIDES TAB */}
+        {activeTab === 'hero' && (
+          <div className="animate-fade-in-up">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-10">
+              <div>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Homepage Hero Slides</h1>
+                <p className="text-[#cbb89d]">Add as many slides as you like; they rotate in the homepage carousel. Lower position numbers appear first.</p>
+              </div>
+              <button onClick={openCreateSlide} className="py-3 px-6 rounded-lg bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] font-[Outfit] text-base font-semibold hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] transition-all flex items-center gap-2 w-fit">
+                <PlusCircle size={20} /> Add Slide
+              </button>
+            </div>
+
+            {loadingSlides && (
+              <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading slides...</div>
+            )}
+
+            {!loadingSlides && slides.length === 0 && (
+              <GlassCard className="p-6 lg:p-8">
+                <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                  <ImageIcon size={40} className="text-[#34250f]" />
+                  <p className="text-[#f1e7d7] font-[Outfit] text-lg font-semibold">No hero slides yet</p>
+                  <p className="text-[#cbb89d] text-sm max-w-md">Add your first slide to populate the homepage carousel.</p>
+                </div>
+              </GlassCard>
+            )}
+
+            {!loadingSlides && slides.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {slides.map((slide) => (
+                  <GlassCard key={slide.id} className="overflow-hidden flex flex-col">
+                    <div className="relative h-44">
+                      <img src={slide.imageUrl} alt={slide.title} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#100901]/90 to-transparent" />
+                      <span className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${slide.isActive ? 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30' : 'bg-black/50 text-[#cbb89d] border-white/10'}`}>
+                        {slide.isActive ? 'Visible' : 'Hidden'}
+                      </span>
+                      <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black/50 text-[#f1e7d7] border border-white/10">#{slide.position}</span>
+                    </div>
+                    <div className="p-5 flex flex-col flex-1">
+                      {slide.eyebrow && <p className="text-[#ff9933] text-[10px] font-bold uppercase tracking-widest mb-1">{slide.eyebrow}</p>}
+                      <h3 className="font-[Outfit] text-lg font-semibold text-[#f1e7d7] mb-1 line-clamp-1">{slide.title}</h3>
+                      {slide.description && <p className="text-[#cbb89d] text-xs leading-relaxed line-clamp-2 mb-4 flex-1">{slide.description}</p>}
+                      <div className="flex items-center gap-2 mt-auto pt-3">
+                        <button onClick={() => openEditSlide(slide)} className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-white/5 border border-white/10 text-[#f1e7d7] text-xs font-semibold hover:bg-white/10 transition-colors">
+                          <Pencil size={14} /> Edit
+                        </button>
+                        <button onClick={() => handleToggleSlideActive(slide)} disabled={busy} className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/10 transition-colors disabled:opacity-50" title={slide.isActive ? 'Hide slide' : 'Show slide'}>
+                          {slide.isActive ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                        <button onClick={() => handleDeleteSlide(slide)} disabled={busy} className="px-3 py-2 rounded-lg bg-[#ffb4ab]/10 text-[#ffb4ab] hover:bg-[#ffb4ab]/20 transition-colors disabled:opacity-50" title="Delete slide">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </GlassCard>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* PAYMENTS TAB */}
         {activeTab === 'payments' && (
           <div className="animate-fade-in-up">
@@ -1008,7 +1188,7 @@ export default function AdminPanel() {
         )}
 
         {/* Placeholder for remaining tabs */}
-        {activeTab !== 'products' && activeTab !== 'featured' && activeTab !== 'seller-requests' && activeTab !== 'categories' && activeTab !== 'payments' && activeTab !== 'orders' && activeTab !== 'messages' && activeTab !== 'reviews' && (
+        {activeTab !== 'products' && activeTab !== 'featured' && activeTab !== 'hero' && activeTab !== 'seller-requests' && activeTab !== 'categories' && activeTab !== 'payments' && activeTab !== 'orders' && activeTab !== 'messages' && activeTab !== 'reviews' && (
           <div className="h-[600px] flex flex-col items-center justify-center animate-fade-in-up opacity-70">
             <h2 className="font-[Outfit] text-3xl font-bold text-[#fff4e6] mb-2 capitalize">{activeTab.replace('-', ' ')}</h2>
             <p className="text-[#cbb89d]">This admin module is currently under construction.</p>
@@ -1049,6 +1229,149 @@ export default function AdminPanel() {
                 </button>
                 <button type="submit" disabled={!newCategory.trim() || busy} className="px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] disabled:bg-[#34250f]/50 disabled:text-[#6f6048] disabled:cursor-not-allowed">
                   <PlusCircle size={18} /> {busy ? 'Creating...' : 'Create Category'}
+                </button>
+              </div>
+            </form>
+          </GlassCard>
+        </div>
+      )}
+
+      {slideModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in" onMouseDown={closeSlideModal} role="dialog" aria-modal="true" aria-label={slideModal.id ? 'Edit hero slide' : 'Add hero slide'}>
+          <GlassCard hover={false} className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
+            <form onSubmit={handleSaveSlide} onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8 flex flex-col gap-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="font-[Outfit] text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
+                    <ImageIcon className="text-[#ff9933]" size={24} /> {slideModal.id ? 'Edit Hero Slide' : 'Add Hero Slide'}
+                  </h2>
+                  <p className="text-[#cbb89d] text-xs mt-1">This slide appears in the homepage carousel.</p>
+                </div>
+                <button type="button" onClick={closeSlideModal} className="p-2 -mr-2 rounded-lg text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/5 transition-colors" aria-label="Close">
+                  <X size={22} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Eyebrow</label>
+                  <input
+                    type="text"
+                    value={slideModal.eyebrow ?? ''}
+                    onChange={(e) => setSlideModal({ ...slideModal, eyebrow: e.target.value })}
+                    placeholder="e.g. New Arrivals"
+                    className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Theme</label>
+                  <select
+                    value={slideModal.theme ?? 'orange'}
+                    onChange={(e) => setSlideModal({ ...slideModal, theme: e.target.value })}
+                    className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all"
+                  >
+                    <option value="orange">Orange</option>
+                    <option value="gold">Gold</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Title *</label>
+                <input
+                  type="text"
+                  value={slideModal.title ?? ''}
+                  onChange={(e) => setSlideModal({ ...slideModal, title: e.target.value })}
+                  placeholder="e.g. Dominate Your Arena"
+                  autoFocus
+                  className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Description</label>
+                <textarea
+                  rows={3}
+                  value={slideModal.description ?? ''}
+                  onChange={(e) => setSlideModal({ ...slideModal, description: e.target.value })}
+                  placeholder="A short supporting line shown under the title."
+                  className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048] resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Image *</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setSlideImageFile(e.target.files?.[0] ?? null)}
+                  className="w-full text-xs text-[#cbb89d] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#34250f] file:text-[#f1e7d7] file:text-xs file:font-semibold hover:file:bg-[#3f2c11] file:cursor-pointer"
+                />
+                <input
+                  type="url"
+                  value={slideModal.imageUrl ?? ''}
+                  onChange={(e) => setSlideModal({ ...slideModal, imageUrl: e.target.value })}
+                  placeholder="...or paste an image URL"
+                  className="w-full mt-3 bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                />
+                {slideImageFile ? (
+                  <p className="text-[#cbb89d] text-xs mt-2">Selected: {slideImageFile.name}</p>
+                ) : slideModal.imageUrl ? (
+                  <img src={slideModal.imageUrl} alt="Slide preview" className="mt-3 w-full h-32 object-cover rounded-lg border border-white/10" />
+                ) : null}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Button Label</label>
+                  <input
+                    type="text"
+                    value={slideModal.buttonLabel ?? ''}
+                    onChange={(e) => setSlideModal({ ...slideModal, buttonLabel: e.target.value })}
+                    placeholder="Shop Now"
+                    className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Button Link</label>
+                  <input
+                    type="text"
+                    value={slideModal.buttonLink ?? ''}
+                    onChange={(e) => setSlideModal({ ...slideModal, buttonLink: e.target.value })}
+                    placeholder="/search?q=keyboard or https://..."
+                    className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:items-end">
+                <div>
+                  <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Position</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={slideModal.position ?? 0}
+                    onChange={(e) => setSlideModal({ ...slideModal, position: e.target.value })}
+                    className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all"
+                  />
+                </div>
+                <label className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/5 border border-white/10 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!slideModal.isActive}
+                    onChange={(e) => setSlideModal({ ...slideModal, isActive: e.target.checked })}
+                    className="w-4 h-4 accent-[#ff9933]"
+                  />
+                  <span className="text-[#f1e7d7] text-sm font-semibold">Visible on homepage</span>
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-white/10">
+                <button type="button" onClick={closeSlideModal} className="px-6 py-2.5 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" disabled={savingSlide || !(slideModal.title ?? '').trim()} className="px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] disabled:bg-[#34250f]/50 disabled:text-[#6f6048] disabled:cursor-not-allowed">
+                  <PlusCircle size={18} /> {savingSlide ? 'Saving...' : slideModal.id ? 'Save Changes' : 'Add Slide'}
                 </button>
               </div>
             </form>

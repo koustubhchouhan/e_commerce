@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import {
   listApplications,
   reviewApplication,
@@ -18,6 +19,17 @@ import {
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate, validateQuery, validateParams } from '../middleware/validate.js';
 import {
+  adminListSlides,
+  createSlide,
+  updateSlide,
+  deleteSlide,
+  uploadSlideImage,
+} from '../controllers/hero.controller.js';
+import {
+  createHeroSlideSchema,
+  updateHeroSlideSchema,
+} from '../validators/hero.validators.js';
+import {
   uuidParamSchema,
   createCategorySchema,
   updateReviewVisibilitySchema,
@@ -29,6 +41,12 @@ import {
 } from '../validators/seller.validators.js';
 
 const router = Router();
+
+// In-memory multipart parsing for hero slide image uploads (lands in req.file).
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
 
 router.get(
   '/admin/seller-applications',
@@ -101,6 +119,37 @@ router.delete(
   requireRole('admin'),
   validateParams(uuidParamSchema),
   deleteReview
+);
+
+router.get('/admin/hero-slides', requireAuth, requireRole('admin'), adminListSlides);
+router.post(
+  '/admin/hero-slides',
+  requireAuth,
+  requireRole('admin'),
+  validate(createHeroSlideSchema),
+  createSlide
+);
+router.post(
+  '/admin/hero-slides/image',
+  requireAuth,
+  requireRole('admin'),
+  upload.single('image'),
+  uploadSlideImage
+);
+router.patch(
+  '/admin/hero-slides/:id',
+  requireAuth,
+  requireRole('admin'),
+  validateParams(uuidParamSchema),
+  validate(updateHeroSlideSchema),
+  updateSlide
+);
+router.delete(
+  '/admin/hero-slides/:id',
+  requireAuth,
+  requireRole('admin'),
+  validateParams(uuidParamSchema),
+  deleteSlide
 );
 
 export default router;

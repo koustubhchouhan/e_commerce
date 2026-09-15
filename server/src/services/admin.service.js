@@ -1,6 +1,6 @@
 import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
-import { removeProductImage } from './storage.service.js';
+import { removeImage } from './storage.service.js';
 import { serializeReview } from './review.service.js';
 
 // Applications are loaded without an embedded profile relation, because the
@@ -194,7 +194,7 @@ export async function deleteAnyProduct(productId) {
   const { error } = await db.from('products').delete().eq('id', productId);
   if (error) throw new AppError(400, `Could not delete product: ${error.message}`);
 
-  await Promise.all((images ?? []).map((i) => removeProductImage(i.url)));
+  await Promise.all((images ?? []).map((i) => removeImage(i.url)));
 }
 
 // DELETE /admin/sellers/:id — revoke: demote back to customer, draft their

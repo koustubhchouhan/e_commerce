@@ -1,7 +1,7 @@
 import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
 import { loadImagesByProduct, pickCover, serializeProduct } from './product-data.js';
-import { uploadProductImage, removeProductImage } from './storage.service.js';
+import { uploadImage, removeImage } from './storage.service.js';
 
 const PRODUCT_SELECT = '*, categories(id, name, slug), stores(id, name)';
 
@@ -121,7 +121,7 @@ export async function deleteProduct(userId, productId) {
   const { error } = await db.from('products').delete().eq('id', productId);
   if (error) throw new AppError(400, `Could not delete product: ${error.message}`);
 
-  await Promise.all((images ?? []).map((i) => removeProductImage(i.url)));
+  await Promise.all((images ?? []).map((i) => removeImage(i.url)));
 }
 
 // POST /products/:id/images — multipart upload. First image becomes the cover
@@ -142,7 +142,7 @@ export async function addProductImages(userId, productId, files) {
   const saved = [];
   try {
     for (const [i, file] of files.entries()) {
-      const { url } = await uploadProductImage({
+      const { url } = await uploadImage({
         file,
         folder: `products/${productId}`,
       });
@@ -163,7 +163,7 @@ export async function addProductImages(userId, productId, files) {
     }
   } catch (err) {
     // Roll back storage objects for anything we uploaded before the failure.
-    await Promise.all(saved.map((s) => removeProductImage(s.url)));
+    await Promise.all(saved.map((s) => removeImage(s.url)));
     throw err;
   }
 

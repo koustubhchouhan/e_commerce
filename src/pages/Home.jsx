@@ -8,6 +8,18 @@ import { useToastStore } from '../store/toastStore';
 import { api } from '../lib/api';
 import { toProductCardList } from '../lib/productShape';
 
+// Built-in color treatments an admin can pick for a hero slide.
+const SLIDE_THEMES = {
+  orange: {
+    accent: 'text-[#ff9933]',
+    button: 'bg-[#ff9933] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)]',
+  },
+  gold: {
+    accent: 'text-[#ffd27a]',
+    button: 'bg-[#ffd27a] text-[#5c3f05] hover:shadow-[0_0_9px_rgba(255,210,122,0.22)]',
+  },
+};
+
 export function ProductGrid({ items, adminMode = false, adminOnDelete }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -96,6 +108,7 @@ export default function Home() {
   };
 
   const [products, setProducts] = useState([]);
+  const [slides, setSlides] = useState([]);
   const [categories, setCategories] = useState(['All']);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -121,6 +134,23 @@ export default function Home() {
         if (!cancelled) setError(err.message || 'Failed to load products.');
       } finally {
         if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Hero slides are optional storefront content; load them separately so a
+  // missing or failing slides endpoint never blocks the product catalog.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.heroSlides();
+        if (!cancelled) setSlides(res.items ?? []);
+      } catch {
+        if (!cancelled) setSlides([]);
       }
     })();
     return () => {
@@ -185,32 +215,37 @@ export default function Home() {
       </section>
 
       {/* ══ Slider Section ══ */}
-      <section className="w-full pt-10 px-8 pb-12">
-        <div ref={sliderRef} className="flex gap-6 overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-6 scroll-smooth">
-          
-          <div className="shrink-0 w-[85vw] md:w-[60vw] h-[350px] snap-center rounded-3xl relative overflow-hidden group">
-            <img src="https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&q=80&w=1600" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" alt="Audio" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#100901]/90 via-[#100901]/50 to-transparent" />
-            <div className="absolute inset-0 p-12 flex flex-col justify-center">
-              <span className="text-[#ff9933] font-bold tracking-widest text-xs uppercase mb-4">New Arrivals</span>
-              <h2 className="text-glow font-[Outfit] text-5xl font-bold text-white mb-4 max-w-lg">Next-Gen Audio Experience</h2>
-              <p className="text-[#cbb89d] max-w-md mb-8">Discover our new line of quantum-processed wireless earbuds.</p>
-              <button className="w-fit bg-[#ff9933] text-[#2e1800] px-8 py-3 rounded-full font-bold hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] transition-shadow">Shop Now</button>
-            </div>
+      {slides.length > 0 && (
+        <section className="w-full pt-10 px-8 pb-12">
+          <div ref={sliderRef} className="flex gap-6 overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-6 scroll-smooth">
+            {slides.map((slide) => {
+              const theme = SLIDE_THEMES[slide.theme] ?? SLIDE_THEMES.orange;
+              const isExternal = /^https?:\/\//i.test(slide.buttonLink || '');
+              const buttonClass = `w-fit ${theme.button} px-8 py-3 rounded-full font-bold transition-shadow`;
+              return (
+                <div key={slide.id} className="shrink-0 w-[85vw] md:w-[60vw] h-[350px] snap-center rounded-3xl relative overflow-hidden group">
+                  <img src={slide.imageUrl} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" alt={slide.title} />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#100901]/90 via-[#100901]/50 to-transparent" />
+                  <div className="absolute inset-0 p-12 flex flex-col justify-center">
+                    {slide.eyebrow && (
+                      <span className={`${theme.accent} font-bold tracking-widest text-xs uppercase mb-4`}>{slide.eyebrow}</span>
+                    )}
+                    <h2 className="text-glow font-[Outfit] text-5xl font-bold text-white mb-4 max-w-lg">{slide.title}</h2>
+                    {slide.description && <p className="text-[#cbb89d] max-w-md mb-8">{slide.description}</p>}
+                    {slide.buttonLabel && (
+                      isExternal ? (
+                        <a href={slide.buttonLink} target="_blank" rel="noopener noreferrer" className={buttonClass}>{slide.buttonLabel}</a>
+                      ) : (
+                        <Link to={slide.buttonLink || '/'} className={buttonClass}>{slide.buttonLabel}</Link>
+                      )
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-
-          <div className="shrink-0 w-[85vw] md:w-[60vw] h-[350px] snap-center rounded-3xl relative overflow-hidden group">
-            <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1600" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" alt="Gaming" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#100901]/90 via-[#100901]/50 to-transparent" />
-            <div className="absolute inset-0 p-12 flex flex-col justify-center">
-              <span className="text-[#ffd27a] font-bold tracking-widest text-xs uppercase mb-4">Best Sellers</span>
-              <h2 className="text-glow font-[Outfit] text-5xl font-bold text-white mb-4 max-w-lg">Dominate Your Arena</h2>
-              <p className="text-[#cbb89d] max-w-md mb-8">Top-rated mechanical keyboards and ultra-lightweight mice.</p>
-              <button className="w-fit bg-[#ffd27a] text-[#5c3f05] px-8 py-3 rounded-full font-bold hover:shadow-[0_0_9px_rgba(255,210,122,0.22)] transition-shadow">Explore Gear</button>
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ══ Main Product Grid ══ */}
       <section className="flex-1 px-6 md:px-12 pb-24">
