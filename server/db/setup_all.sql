@@ -246,6 +246,35 @@ create index if not exists idx_contact_messages_store_id on public.contact_messa
 create index if not exists idx_contact_messages_product_id on public.contact_messages(product_id);
 create index if not exists idx_contact_messages_user_id on public.contact_messages(user_id);
 
+-- ---- hero_slides (admin-managed homepage carousel) -------------------
+-- Admins can add any number of slides; `position` controls display order
+-- (ties fall back to creation time) and `is_active` hides a slide without
+-- deleting it. `theme` selects one of the built-in color treatments.
+create table if not exists public.hero_slides (
+  id           uuid primary key default gen_random_uuid(),
+  eyebrow      text not null default '',
+  title        text not null,
+  description  text not null default '',
+  image_url    text not null,
+  button_label text not null default 'Shop Now',
+  button_link  text not null default '/',
+  theme        text not null default 'orange',
+  position     int not null default 0,
+  is_active    boolean not null default true,
+  created_at   timestamptz not null default now()
+);
+
+-- Keep existing installs in sync if the table predates a column.
+alter table public.hero_slides add column if not exists eyebrow text not null default '';
+alter table public.hero_slides add column if not exists description text not null default '';
+alter table public.hero_slides add column if not exists button_label text not null default 'Shop Now';
+alter table public.hero_slides add column if not exists button_link text not null default '/';
+alter table public.hero_slides add column if not exists theme text not null default 'orange';
+alter table public.hero_slides add column if not exists position int not null default 0;
+alter table public.hero_slides add column if not exists is_active boolean not null default true;
+
+create index if not exists idx_hero_slides_order on public.hero_slides(is_active, position, created_at);
+
 -- =====================================================================
 -- Row Level Security: enable on every table (default-deny).
 -- The Express API uses the service_role key, which BYPASSES RLS, and is
@@ -263,6 +292,7 @@ alter table public.orders              enable row level security;
 alter table public.order_items         enable row level security;
 alter table public.reviews             enable row level security;
 alter table public.contact_messages    enable row level security;
+alter table public.hero_slides         enable row level security;
 
 
 -- ###################### create_order.sql ######################
@@ -380,11 +410,24 @@ insert into public.categories (name, slug) values
   ('Festive Decor',       'festive-decor')
 on conflict (slug) do nothing;
 
+-- Seed the original homepage hero slides so the carousel is not empty on a
+-- fresh install. Only inserts when the table has no slides, so re-runs (and
+-- any admin-configured content) are never overwritten.
+insert into public.hero_slides (eyebrow, title, description, image_url, button_label, button_link, theme, position)
+select eyebrow, title, description, image_url, button_label, button_link, theme, position
+from (values
+  ('New Arrivals', 'Next-Gen Audio Experience', 'Discover our new line of quantum-processed wireless earbuds.',
+   'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&q=80&w=1600', 'Shop Now', '/', 'orange', 0),
+  ('Best Sellers', 'Dominate Your Arena', 'Top-rated mechanical keyboards and ultra-lightweight mice.',
+   'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1600', 'Explore Gear', '/', 'gold', 1)
+) as s(eyebrow, title, description, image_url, button_label, button_link, theme, position)
+where not exists (select 1 from public.hero_slides);
+
 
 -- Refresh the API schema cache so PostgREST sees the new tables
 -- immediately (otherwise you may get "table not found in schema cache").
 notify pgrst, 'reload schema';
 
--- Sanity check: should list all 10 tables.
+-- Sanity check: should list all 11 tables.
 select table_name from information_schema.tables
 where table_schema = 'public' order by table_name;

@@ -166,6 +166,7 @@ export const api = {
 
   // ---- Catalog ----
   categories: () => request('/categories'),
+  heroSlides: () => request('/hero-slides'),
   products: ({ search, category, page = 1, limit = 100 } = {}) => {
     const qs = new URLSearchParams({ page, limit });
     if (search) qs.set('search', search);
@@ -224,6 +225,23 @@ export const api = {
   adminSetReviewHidden: (id, isHidden) =>
     request(`/admin/reviews/${id}`, { method: 'PATCH', body: { is_hidden: isHidden }, auth: true }),
   adminDeleteReview: (id) => request(`/admin/reviews/${id}`, { method: 'DELETE', auth: true }),
+
+  // ---- Admin: homepage hero slides ----
+  adminHeroSlides: () => request('/admin/hero-slides', { auth: true }),
+  createHeroSlide: (data) => request('/admin/hero-slides', { method: 'POST', body: data, auth: true }),
+  updateHeroSlide: (id, data) =>
+    request(`/admin/hero-slides/${id}`, { method: 'PATCH', body: data, auth: true }),
+  deleteHeroSlide: (id) => request(`/admin/hero-slides/${id}`, { method: 'DELETE', auth: true }),
+  uploadHeroSlideImage: (file) => {
+    const form = new FormData();
+    form.append('image', file);
+    return request('/admin/hero-slides/image', {
+      method: 'POST',
+      body: form,
+      auth: true,
+      formData: true,
+    });
+  },
 
   // ---- Seller orders ----
   sellerOrders: () => request('/seller/orders', { auth: true }),

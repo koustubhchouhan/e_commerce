@@ -1,7 +1,7 @@
 import { db, authClient } from '../config/supabase.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import { AppError } from '../middleware/error.js';
-import { removeProductImage, uploadProductImage } from '../services/storage.service.js';
+import { removeImage, uploadImage } from '../services/storage.service.js';
 import {
   CSRF_COOKIE,
   REFRESH_COOKIE,
@@ -320,7 +320,7 @@ export const uploadAvatar = asyncHandler(async (req, res) => {
     throw new AppError(400, 'Avatar must be an image file (JPG, PNG, WebP...)');
   }
 
-  const { url } = await uploadProductImage({ file, folder: 'avatars' });
+  const { url } = await uploadImage({ file, folder: 'avatars' });
 
   const { data: current } = await db
     .from('profiles')
@@ -333,13 +333,13 @@ export const uploadAvatar = asyncHandler(async (req, res) => {
     .update({ avatar_url: url })
     .eq('id', req.user.id);
   if (error) {
-    await removeProductImage(url);
+    await removeImage(url);
     throw new AppError(500, `Could not save avatar: ${error.message}`);
   }
 
   // Clean up the old avatar object only after the new one is safely persisted.
   if (current?.avatar_url && current.avatar_url !== url) {
-    await removeProductImage(current.avatar_url);
+    await removeImage(current.avatar_url);
   }
 
   res.json({ user: await readProfileUser(req.user.id, req.user.email) });
