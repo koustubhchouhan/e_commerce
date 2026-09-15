@@ -81,13 +81,23 @@ export async function finishGoogleOAuth() {
 
   const session = data?.session ?? null;
   if (session) {
-    // We already hold the tokens for the backend hand-off, so drop the Supabase
-    // client's own copy from localStorage. Our backend owns the session from
-    // here on via HttpOnly cookies. Best-effort: never block the sign-in.
+    // The tokens are handed to our backend, which then owns the session via
+    // HttpOnly cookies. Do NOT call client.auth.signOut() here: even with
+    // { scope: 'local' } it still POSTs to /logout and revokes the session, so
+    // the backend's getUser() would reject the very token we just passed it.
+    // Instead, stop the browser client from rotating the refresh token and drop
+    // its local copy so a later page load cannot auto-refresh a dead session.
     try {
-      await client.auth.signOut({ scope: 'local' });
+      client.auth.stopAutoRefresh();
     } catch {
       // Non-fatal.
+    }
+    try {
+      const key = client.auth.storageKey;
+      await client.auth.storage.removeItem(key);
+      await client.auth.storage.removeItem(`${key}-user`);
+    } catch {
+      // Storage can be unavailable; the hand-off still works.
     }
   }
 
