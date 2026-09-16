@@ -334,6 +334,7 @@ export async function getPlatformLedger() {
   let unitsSold = 0;
   let sellers = [];
   let unattributedGross = 0;
+  let officialGross = 0;
 
   if (revenueIds.length > 0) {
     const { data: items, error: itemErr } = await db
@@ -357,11 +358,15 @@ export async function getPlatformLedger() {
       if (storeIds.length > 0) {
         const { data: stores, error: storeErr } = await db
           .from('stores')
-          .select('id, name, owner_id, profiles(full_name)')
+          .select('id, name, owner_id, is_official, profiles(full_name)')
           .in('id', storeIds);
         if (storeErr) throw new AppError(500, `Could not load stores: ${storeErr.message}`);
         for (const s of stores ?? []) {
-          pendingSellers.set(s.id, { name: s.name, sellerName: s.profiles?.[0]?.full_name ?? null });
+          pendingSellers.set(s.id, {
+            name: s.name,
+            sellerName: s.profiles?.[0]?.full_name ?? null,
+            isOfficial: s.is_official ?? false,
+          });
         }
       }
       for (const p of products ?? []) {
@@ -380,8 +385,14 @@ export async function getPlatformLedger() {
         unattributedGross += amt;
         continue;
       }
+      const meta = pendingSellers.get(storeId);
+      if (meta?.isOfficial) {
+        // The platform's own storefront. There is no seller to pay out, so it
+        // is reported separately instead of appearing as a payout row.
+        officialGross += amt;
+        continue;
+      }
       if (!acc.has(storeId)) {
-        const meta = pendingSellers.get(storeId);
         acc.set(storeId, {
           id: storeId,
           name: meta?.name ?? 'Unknown store',
@@ -434,6 +445,8 @@ export async function getPlatformLedger() {
       grossSales,
       platformFees,
       sellerPayouts,
+      // Sales from the platform's own store; not part of seller payouts.
+      officialSales: round2(officialGross),
       orders: revenueOrders.length,
       unitsSold,
       pendingOrders: all.filter((o) => o.status === 'pending').length,

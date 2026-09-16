@@ -10,11 +10,11 @@ export const getMyApplications = asyncHandler(async (req, res) => {
 });
 
 export const getStore = asyncHandler(async (req, res) => {
-  res.json(await sellerService.getStore(req.user.id));
+  res.json(await sellerService.getStore(req.user.id, req.user.role));
 });
 
 export const updateStore = asyncHandler(async (req, res) => {
-  res.json(await sellerService.updateStore(req.user.id, req.body));
+  res.json(await sellerService.updateStore(req.user.id, req.user.role, req.body));
 });
 
 export const getStoreReviews = asyncHandler(async (req, res) => {
