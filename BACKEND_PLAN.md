@@ -1,8 +1,32 @@
 # NovaMarket — Backend Build Plan
 
 **Architecture:** React SPA → **Node/Express REST API** → **Supabase** (Postgres + Auth + Storage)
-**Status:** Milestones 1–6 implemented (auth, catalog, seller onboarding, product writes, orders). Frontend wired to the API via `src/lib/api.js` (catalog, seller inventory, admin seller management, checkout → `POST /orders`).
 **Date:** 2026-08-26
+
+> **Historical document — do not treat as current.**
+>
+> This is the original design document, kept for background and rationale. The
+> authoritative, up-to-date documentation lives in:
+>
+> - repository root `README.md` — local setup, environment variables,
+>   migrations, payments, deployment and production security requirements;
+> - `server/README.md` — the current API reference, auth model and endpoints.
+>
+> Since this plan was written the implementation moved on. In particular:
+>
+> - The client no longer stores tokens in `localStorage`. It uses HttpOnly
+>   session cookies (`nm_at`, `nm_rt`) plus a double-submit CSRF cookie
+>   (`nm_csrf`). A `Bearer` header is still accepted for API clients.
+> - Auth grew refresh, logout, Google OAuth (`/auth/oauth/session`), profile
+>   updates, avatar upload, password change and email change.
+> - Added since: product reviews with moderation and seller replies, the
+>   contact-message inboxes (customer/seller/admin), admin-managed hero slides,
+>   and order cancellation.
+> - Payments are still **not** implemented. The "Stripe" note in §10 is
+>   illustrative only; `POST /orders` creates a `pending` order and status is
+>   moved manually.
+> - The endpoint names in §5 have been superseded by `server/README.md`.
+
 
 ---
 
