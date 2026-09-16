@@ -162,6 +162,7 @@ create index if not exists idx_product_images_product_id on public.product_image
 create table if not exists public.orders (
   id               uuid primary key default gen_random_uuid(),
   user_id          uuid not null references public.profiles(id) on delete restrict,
+  store_id         uuid references public.stores(id) on delete set null,
   status           order_status not null default 'pending',
   subtotal         numeric(12,2) not null default 0,
   total            numeric(12,2) not null default 0,
@@ -169,7 +170,12 @@ create table if not exists public.orders (
   created_at       timestamptz not null default now()
 );
 
+-- Keep existing installs in sync: orders belong to a single store (mixed carts
+-- are split into one order per seller at checkout).
+alter table public.orders add column if not exists store_id uuid references public.stores(id) on delete set null;
+
 create index if not exists idx_orders_user_id on public.orders(user_id);
+create index if not exists idx_orders_store_id on public.orders(store_id);
 
 -- ---- order_items ----------------------------------------------------
 create table if not exists public.order_items (
@@ -184,6 +190,18 @@ create table if not exists public.order_items (
 );
 
 create index if not exists idx_order_items_order_id on public.order_items(order_id);
+
+-- Backfill store_id for orders created before splitting existed. Every legacy
+-- order came from a single store because checkout rejected mixed carts.
+update public.orders o
+set store_id = sub.store_id
+from (
+  select distinct on (oi.order_id) oi.order_id, p.store_id
+  from public.order_items oi
+  join public.products p on p.id = oi.product_id
+  order by oi.order_id
+) sub
+where sub.order_id = o.id and o.store_id is null;
 
 -- ---- reviews --------------------------------------------------------
 create table if not exists public.reviews (

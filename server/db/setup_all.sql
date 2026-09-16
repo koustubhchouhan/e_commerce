@@ -174,6 +174,7 @@ create index if not exists idx_product_images_product_id on public.product_image
 create table if not exists public.orders (
   id               uuid primary key default gen_random_uuid(),
   user_id          uuid not null references public.profiles(id) on delete restrict,
+  store_id         uuid references public.stores(id) on delete set null,
   status           order_status not null default 'pending',
   subtotal         numeric(12,2) not null default 0,
   total            numeric(12,2) not null default 0,
@@ -181,7 +182,12 @@ create table if not exists public.orders (
   created_at       timestamptz not null default now()
 );
 
+-- Keep existing installs in sync: orders belong to a single store (mixed carts
+-- are split into one order per seller at checkout).
+alter table public.orders add column if not exists store_id uuid references public.stores(id) on delete set null;
+
 create index if not exists idx_orders_user_id on public.orders(user_id);
+create index if not exists idx_orders_store_id on public.orders(store_id);
 
 -- ---- order_items ----------------------------------------------------
 create table if not exists public.order_items (
@@ -196,6 +202,18 @@ create table if not exists public.order_items (
 );
 
 create index if not exists idx_order_items_order_id on public.order_items(order_id);
+
+-- Backfill store_id for orders created before splitting existed. Every legacy
+-- order came from a single store because checkout rejected mixed carts.
+update public.orders o
+set store_id = sub.store_id
+from (
+  select distinct on (oi.order_id) oi.order_id, p.store_id
+  from public.order_items oi
+  join public.products p on p.id = oi.product_id
+  order by oi.order_id
+) sub
+where sub.order_id = o.id and o.store_id is null;
 
 -- ---- reviews --------------------------------------------------------
 create table if not exists public.reviews (
@@ -298,8 +316,10 @@ alter table public.hero_slides         enable row level security;
 -- ###################### create_order.sql ######################
 
 -- =====================================================================
--- create_order: atomic checkout.
--- Called from Express via db.rpc('create_order', { p_user_id, p_items, p_shipping }).
+-- Checkout functions: create_orders splits a multi-store cart into one order
+-- per seller (atomically) and create_order is the single-store primitive it
+-- calls.
+-- Called from Express via db.rpc('create_orders', { p_user_id, p_items, p_shipping }).
 --   p_items example: [{ "product_id": "uuid", "quantity": 2 }, ...]
 -- Prices are read from the products table INSIDE this function — the client
 -- never sends a price. Product rows are locked FOR UPDATE so two shoppers
@@ -361,8 +381,8 @@ begin
       raise exception 'Insufficient stock for product %', v_product_id;
     end if;
 
-    -- A single order belongs to one store so a seller can always fulfil it.
-    -- Mixed carts are rejected instead of dead-ending for every seller.
+    -- This primitive handles a single store. create_orders groups the cart by
+    -- store first, so a mixed cart never reaches here.
     if v_first_store is null then
       v_first_store := v_product.store_id;
     elsif v_product.store_id is distinct from v_first_store then
@@ -387,10 +407,67 @@ begin
 
   update public.orders
     set subtotal = v_subtotal,
-        total    = v_subtotal
+        total    = v_subtotal,
+        store_id = v_first_store
     where id = v_order_id;
 
   return v_order_id;
+end;
+$$;
+
+-- Splits the cart into one order per store, atomically (all orders succeed or
+-- none do), and returns a JSON array of { order_id, store_id, total }.
+create or replace function public.create_orders(
+  p_user_id  uuid,
+  p_items    jsonb,
+  p_shipping jsonb default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_result   jsonb := '[]'::jsonb;
+  v_store_id uuid;
+  v_group    jsonb;
+  v_order_id uuid;
+  v_total    numeric(12,2);
+begin
+  if p_items is null or jsonb_array_length(p_items) = 0 then
+    raise exception 'Order must contain at least one item';
+  end if;
+
+  -- Fail loudly on unknown products instead of silently dropping them from the
+  -- grouping join below.
+  if exists (
+    select 1
+    from jsonb_array_elements(p_items) e
+    where not exists (
+      select 1 from public.products p where p.id = (e->>'product_id')::uuid
+    )
+  ) then
+    raise exception 'One or more products were not found';
+  end if;
+
+  for v_store_id, v_group in
+    select p.store_id, jsonb_agg(t.elem order by t.ord)
+    from jsonb_array_elements(p_items) with ordinality as t(elem, ord)
+    join public.products p on p.id = (t.elem->>'product_id')::uuid
+    group by p.store_id
+    order by min(t.ord)
+  loop
+    v_order_id := public.create_order(p_user_id, v_group, p_shipping);
+    select total into v_total from public.orders where id = v_order_id;
+
+    v_result := v_result || jsonb_build_object(
+      'order_id', v_order_id,
+      'store_id', v_store_id,
+      'total',    v_total
+    );
+  end loop;
+
+  return v_result;
 end;
 $$;
 
