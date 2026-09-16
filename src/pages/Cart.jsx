@@ -34,8 +34,8 @@ export default function Cart() {
       </header>
 
       {mixedSellers && (
-        <div className="bg-[#c98a12]/10 border border-[#ffd27a]/30 rounded-xl px-5 py-4 text-sm text-[#ffd27a]">
-          Your cart contains items from {sellers.length} different sellers: {sellers.join(', ')}. Each store ships its own order — please place a separate checkout for each store.
+        <div className="bg-[#ff9933]/10 border border-[#ff9933]/30 rounded-xl px-5 py-4 text-sm text-[#ffd27a]">
+          Your cart has items from {sellers.length} sellers: {sellers.join(', ')}. No problem — checkout will automatically split this into one order per seller.
         </div>
       )}
 

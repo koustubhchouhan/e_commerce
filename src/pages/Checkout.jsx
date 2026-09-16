@@ -68,10 +68,18 @@ export default function Checkout() {
           phone: shipping_form.phone,
         },
       };
-      const { order_id, total: serverTotal } = await api.createOrder(payload.items, payload.shipping_address);
+      const res = await api.createOrder(payload.items, payload.shipping_address);
       clearCart();
-      addToast('Order placed successfully!', 'success');
-      navigate('/order-confirmation', { state: { orderId: order_id, total: serverTotal } });
+      const orderCount = res.orders?.length ?? 1;
+      addToast(
+        orderCount > 1
+          ? `Order placed — split into ${orderCount} store orders.`
+          : 'Order placed successfully!',
+        'success'
+      );
+      navigate('/order-confirmation', {
+        state: { orders: res.orders ?? [], orderId: res.order_id, total: res.total },
+      });
     } catch (err) {
       addToast(err.message || 'Failed to place order.', 'error');
     } finally {
@@ -137,8 +145,8 @@ export default function Checkout() {
               </div>
               <div className="flex gap-3 mt-4">
                 <button onClick={() => setStep(0)} className="py-3.5 px-6 rounded-xl border border-white/10 text-[#f1e7d7] font-[Outfit] font-bold hover:bg-white/5 transition-all">← Back</button>
-                <button onClick={handlePlaceOrder} disabled={placing || sellers.length > 1} className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-[#c98a12] to-[#ffb52e] text-white font-[Outfit] text-lg font-bold hover:shadow-[0_0_11px_rgba(201,138,18,0.22)] transition-all flex items-center justify-center gap-2 disabled:opacity-60">
-                  {placing ? 'Placing...' : sellers.length > 1 ? 'Check out one store at a time' : 'Place Order'} {!placing && <ArrowRight size={20} />}
+                <button onClick={handlePlaceOrder} disabled={placing} className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-[#c98a12] to-[#ffb52e] text-white font-[Outfit] text-lg font-bold hover:shadow-[0_0_11px_rgba(201,138,18,0.22)] transition-all flex items-center justify-center gap-2 disabled:opacity-60">
+                  {placing ? 'Placing...' : 'Place Order'} {!placing && <ArrowRight size={20} />}
                 </button>
               </div>
             </GlassCard>
@@ -151,8 +159,8 @@ export default function Checkout() {
             <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-5">Your Order</h2>
 
             {sellers.length > 1 && (
-              <div className="bg-[#c98a12]/10 border border-[#ffd27a]/30 rounded-lg p-3 mb-4 text-xs text-[#ffd27a] leading-relaxed">
-                Your cart spans {sellers.length} stores ({sellers.join(', ')}). Orders must be placed one store at a time — please check out each seller separately.
+              <div className="bg-[#ff9933]/10 border border-[#ff9933]/30 rounded-lg p-3 mb-4 text-xs text-[#ffd27a] leading-relaxed">
+                Your cart has items from {sellers.length} stores. We'll automatically split it into {sellers.length} orders — each seller ships their own.
               </div>
             )}
 

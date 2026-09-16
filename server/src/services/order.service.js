@@ -3,10 +3,11 @@ import { AppError } from '../middleware/error.js';
 import { loadImagesByProduct, pickCover } from './product-data.js';
 
 // POST /orders — server-authoritative checkout. Prices never come from the
-// client; the create_order Postgres function reads them, checks stock under a
-// row lock, and decrements atomically (see server/db/create_order.sql).
+// client; the create_orders Postgres function reads them, checks stock under a
+// row lock, decrements atomically, and splits a multi-store cart into one order
+// per seller (see server/db/create_order.sql).
 export async function createOrder(userId, { items, shipping_address }) {
-  const { data: orderId, error } = await db.rpc('create_order', {
+  const { data, error } = await db.rpc('create_orders', {
     p_user_id: userId,
     p_items: items,
     p_shipping: shipping_address ?? null,
@@ -14,14 +15,19 @@ export async function createOrder(userId, { items, shipping_address }) {
 
   if (error) throw new AppError(400, error.message);
 
-  const { data: order, error: orderErr } = await db
-    .from('orders')
-    .select('id, total')
-    .eq('id', orderId)
-    .single();
-  if (orderErr) throw new AppError(500, `Order created but could not be read: ${orderErr.message}`);
+  const orders = (data ?? []).map((o) => ({
+    orderId: o.order_id,
+    storeId: o.store_id,
+    total: Number(o.total),
+  }));
+  if (orders.length === 0) throw new AppError(400, 'No order was created');
 
-  return { order_id: order.id, total: Number(order.total) };
+  return {
+    orders,
+    // Backward-compatible single-order fields (first order + grand total).
+    order_id: orders[0].orderId,
+    total: orders.reduce((sum, o) => sum + o.total, 0),
+  };
 }
 
 const ORDER_SELECT = 'id, status, subtotal, total, shipping_address, created_at';
@@ -61,8 +67,10 @@ export async function listAllOrders() {
   };
 }
 
-// GET /seller/orders — orders that contain at least one of the seller's
-// products, newest first, with only that seller's line items attached.
+// GET /seller/orders — the seller's orders, newest first, with line items.
+// Every order belongs to exactly one store (checkout splits mixed carts), so
+// this filters on the indexed orders.store_id instead of fanning out through
+// products and back through order_items.
 export async function listSellerOrders(sellerId) {
   const { data: store, error: storeErr } = await db
     .from('stores')
@@ -72,69 +80,27 @@ export async function listSellerOrders(sellerId) {
   if (storeErr) throw new AppError(500, `Could not load store: ${storeErr.message}`);
   if (!store) return { items: [] };
 
-  const { data: products, error: prodErr } = await db
-    .from('products')
-    .select('id')
-    .eq('store_id', store.id);
-  if (prodErr) throw new AppError(500, `Could not load products: ${prodErr.message}`);
-  if (!products?.length) return { items: [] };
-
-  const { data: orderItems, error: itemErr } = await db
-    .from('order_items')
-    .select('id, order_id, product_id, product_name, unit_price, discount_percent, quantity, line_total')
-    .in('product_id', products.map((p) => p.id));
-  if (itemErr) throw new AppError(500, `Could not load order items: ${itemErr.message}`);
-  if (!orderItems?.length) return { items: [] };
-
-  const orderIds = [...new Set(orderItems.map((i) => i.order_id))];
-  const { data: orders, error: orderErr } = await db
+  const { data: orders, error } = await db
     .from('orders')
     .select('id, status, total, created_at, profiles(full_name)')
-    .in('id', orderIds);
-  if (orderErr) throw new AppError(500, `Could not load orders: ${orderErr.message}`);
+    .eq('store_id', store.id)
+    .order('created_at', { ascending: false });
+  if (error) throw new AppError(500, `Could not load orders: ${error.message}`);
 
-  // An order is fulfillable by this seller only when every line item belongs to
-  // their store (mixed carts span several sellers and must not be shipped by one).
-  const { data: allItems, error: allItemsErr } = await db
-    .from('order_items')
-    .select('order_id, product_id')
-    .in('order_id', orderIds);
-  if (allItemsErr) throw new AppError(500, `Could not load order items: ${allItemsErr.message}`);
-
-  const sellerProductIds = new Set(products.map((p) => p.id));
-  const itemsByOrder = new Map();
-  for (const item of allItems ?? []) {
-    if (!itemsByOrder.has(item.order_id)) itemsByOrder.set(item.order_id, []);
-    itemsByOrder.get(item.order_id).push(item);
-  }
-
-  const byOrder = new Map();
-  for (const item of orderItems) {
-    if (!byOrder.has(item.order_id)) byOrder.set(item.order_id, []);
-    byOrder.get(item.order_id).push(item);
-  }
+  const withItems = await attachItems(orders ?? []);
 
   return {
-    items: (orders ?? []).map((o) => {
-      const everyItemMine = (itemsByOrder.get(o.id) ?? []).every((it) => sellerProductIds.has(it.product_id));
-      return {
-        id: o.id,
-        status: o.status,
-        total: Number(o.total),
-        createdAt: o.created_at,
-        customerName: o.profiles?.full_name ?? null,
-        fulfillable: (itemsByOrder.get(o.id) ?? []).length > 0 && everyItemMine,
-        items: (byOrder.get(o.id) ?? []).map((it) => ({
-          id: it.id,
-          productId: it.product_id,
-          productName: it.product_name,
-          unitPrice: Number(it.unit_price),
-          discountPercent: it.discount_percent,
-          quantity: it.quantity,
-          lineTotal: Number(it.line_total),
-        })),
-      };
-    }),
+    items: withItems.map((o) => ({
+      id: o.id,
+      status: o.status,
+      total: Number(o.total),
+      createdAt: o.created_at,
+      customerName: o.profiles?.full_name ?? null,
+      // Orders are single-store by construction, so this is always the
+      // owning seller's to fulfil.
+      fulfillable: o.items.length > 0,
+      items: o.items,
+    })),
   };
 }
 
@@ -170,7 +136,7 @@ const STATUS_TRANSITIONS = {
 export async function updateOrderStatus(actorUserId, actorRole, orderId, nextStatus) {
   const { data: order, error } = await db
     .from('orders')
-    .select('id, status')
+    .select('id, status, store_id')
     .eq('id', orderId)
     .maybeSingle();
   if (error) throw new AppError(500, `Could not load order: ${error.message}`);
@@ -184,6 +150,8 @@ export async function updateOrderStatus(actorUserId, actorRole, orderId, nextSta
     );
   }
 
+  // Orders belong to a single store, so ownership is a direct comparison — no
+  // need to walk products and line items.
   if (actorRole !== 'admin') {
     const { data: store, error: storeErr } = await db
       .from('stores')
@@ -191,24 +159,8 @@ export async function updateOrderStatus(actorUserId, actorRole, orderId, nextSta
       .eq('owner_id', actorUserId)
       .maybeSingle();
     if (storeErr) throw new AppError(500, `Could not load store: ${storeErr.message}`);
-    if (!store) throw new AppError(403, 'No store found for this account');
-
-    const { data: myProducts, error: prodErr } = await db
-      .from('products')
-      .select('id')
-      .eq('store_id', store.id);
-    if (prodErr) throw new AppError(500, `Could not load products: ${prodErr.message}`);
-
-    const { data: orderItems, error: itemErr } = await db
-      .from('order_items')
-      .select('product_id')
-      .eq('order_id', orderId);
-    if (itemErr) throw new AppError(500, `Could not load order items: ${itemErr.message}`);
-
-    const myProductIds = new Set((myProducts ?? []).map((p) => p.id));
-    const allMine = (orderItems ?? []).length > 0 && (orderItems ?? []).every((i) => myProductIds.has(i.product_id));
-    if (!allMine) {
-      throw new AppError(403, 'This order is not fully yours to fulfil');
+    if (!store || order.store_id !== store.id) {
+      throw new AppError(403, 'This order belongs to another store');
     }
   }
 

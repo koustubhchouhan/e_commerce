@@ -5,8 +5,10 @@ import { inr } from '../lib/money';
 
 export default function OrderConfirmation() {
   const location = useLocation();
-  const orderId = location.state?.orderId || 'NV-XXXXXX';
+  const orders = Array.isArray(location.state?.orders) ? location.state.orders : [];
+  const orderId = location.state?.orderId || orders[0]?.orderId || 'NV-XXXXXX';
   const total = location.state?.total;
+  const multiple = orders.length > 1;
 
   return (
     <div className="max-w-[700px] mx-auto px-6 py-20 animate-fade-in-up flex flex-col items-center gap-8 text-center">
@@ -21,16 +23,40 @@ export default function OrderConfirmation() {
       </div>
 
       <div>
-        <h1 className="font-[Outfit] text-5xl font-bold text-[#fff4e6] mb-3 text-glow">Order Confirmed!</h1>
-        <p className="text-[#cbb89d] text-lg">Thank you for your purchase. Your order is being processed.</p>
+        <h1 className="font-[Outfit] text-5xl font-bold text-[#fff4e6] mb-3 text-glow">
+          {multiple ? 'Orders Confirmed!' : 'Order Confirmed!'}
+        </h1>
+        <p className="text-[#cbb89d] text-lg">
+          Thank you for your purchase. {multiple ? 'Your orders are' : 'Your order is'} being processed.
+        </p>
       </div>
 
       <GlassCard className="p-6 w-full border-t-4 border-t-[#ff9933]">
         <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-center py-3 border-b border-white/10">
-            <span className="text-[#cbb89d] text-sm">Order ID</span>
-            <span className="font-[Outfit] text-lg font-bold text-[#ff9933] uppercase">{orderId}</span>
-          </div>
+          {multiple ? (
+            <div className="flex flex-col gap-2">
+              <p className="text-[#cbb89d] text-sm text-left">
+                Your cart had items from {orders.length} stores, so it was split into {orders.length} orders:
+              </p>
+              {orders.map((order, index) => (
+                <div
+                  key={order.orderId}
+                  className="flex justify-between items-center py-3 border-b border-white/10 last:border-0"
+                >
+                  <span className="text-[#cbb89d] text-sm">Order {index + 1}</span>
+                  <div className="flex items-center gap-4">
+                    <span className="font-[Outfit] text-base font-bold text-[#ff9933] uppercase">{order.orderId}</span>
+                    {order.total != null && <span className="text-[#fff4e6] text-sm font-semibold">{inr(order.total)}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex justify-between items-center py-3 border-b border-white/10">
+              <span className="text-[#cbb89d] text-sm">Order ID</span>
+              <span className="font-[Outfit] text-lg font-bold text-[#ff9933] uppercase">{orderId}</span>
+            </div>
+          )}
           {total != null && (
             <div className="flex justify-between items-center py-3 border-b border-white/10">
               <span className="text-[#cbb89d] text-sm">Total Paid</span>
