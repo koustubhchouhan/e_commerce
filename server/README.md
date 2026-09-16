@@ -243,6 +243,10 @@ sets it.
 
 - `handle_new_user` (trigger on `auth.users`) creates the matching `profiles`
   row with the default `customer` role.
+- Admins can sell without applying as a seller: the first time an admin uses a
+  product or store endpoint, an official store (`stores.is_official = true`) is
+  created for them lazily. Official-store sales are excluded from seller payouts
+  in the admin ledger.
 - `create_order` (in `db/create_order.sql`) is the atomic checkout: it locks
   product rows `FOR UPDATE`, computes prices from `products`, enforces stock and
   single-store carts, and writes the order and items in one transaction.

@@ -2,22 +2,9 @@ import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
 import { loadImagesByProduct, pickCover, serializeProduct } from './product-data.js';
 import { uploadImage, removeImage } from './storage.service.js';
+import { ensureStore } from './store.service.js';
 
 const PRODUCT_SELECT = '*, categories(id, name, slug), stores(id, name)';
-
-// The caller's store row. A seller without a store (e.g. role upgraded before
-// approval flow finished) cannot manage products.
-async function requireStore(userId) {
-  const { data: store, error } = await db
-    .from('stores')
-    .select('id, name')
-    .eq('owner_id', userId)
-    .maybeSingle();
-
-  if (error) throw new AppError(500, `Could not load your store: ${error.message}`);
-  if (!store) throw new AppError(403, 'You need an approved store before managing products');
-  return store;
-}
 
 // Loads a product and asserts the caller owns it (via their store). Used by
 // every seller mutation so ownership lives in one place.
@@ -48,8 +35,8 @@ async function validateCategory(categoryId) {
 }
 
 // GET /seller/products — the caller's own products for the inventory page.
-export async function listSellerProducts(userId) {
-  const store = await requireStore(userId);
+export async function listSellerProducts(userId, role) {
+  const store = await ensureStore(userId, role);
 
   const { data, error } = await db
     .from('products')
@@ -74,8 +61,8 @@ export async function listSellerProducts(userId) {
 }
 
 // POST /products — creates a product attached to the caller's store.
-export async function createProduct(userId, input) {
-  const store = await requireStore(userId);
+export async function createProduct(userId, role, input) {
+  const store = await ensureStore(userId, role);
   await validateCategory(input.category_id);
 
   const { data, error } = await db

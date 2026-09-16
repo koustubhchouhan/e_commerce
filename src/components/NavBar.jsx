@@ -54,6 +54,7 @@ export default function NavBar() {
   ];
   const adminLinks = [
     { to: '/admin', label: 'Global Dashboard' },
+    { to: '/inventory', label: 'Sell Products' },
     { to: '/admin-profile', label: 'Platform Settings' },
   ];
 

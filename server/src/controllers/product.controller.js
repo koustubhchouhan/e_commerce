@@ -2,11 +2,11 @@ import { asyncHandler } from '../middleware/asyncHandler.js';
 import * as productService from '../services/product.service.js';
 
 export const listSellerProducts = asyncHandler(async (req, res) => {
-  res.json(await productService.listSellerProducts(req.user.id));
+  res.json(await productService.listSellerProducts(req.user.id, req.user.role));
 });
 
 export const createProduct = asyncHandler(async (req, res) => {
-  res.status(201).json(await productService.createProduct(req.user.id, req.body));
+  res.status(201).json(await productService.createProduct(req.user.id, req.user.role, req.body));
 });
 
 export const updateProduct = asyncHandler(async (req, res) => {

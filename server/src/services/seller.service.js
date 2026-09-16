@@ -1,6 +1,7 @@
 import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
 import { serializeReview } from './review.service.js';
+import { ensureStore } from './store.service.js';
 
 // POST /seller-applications — a customer asks to become a seller.
 // Rule: at most one active application per user (a rejected one may re-apply).
@@ -41,15 +42,8 @@ export async function getMyApplications(userId) {
 }
 
 // GET /seller/store — the caller's storefront (seller + admin only).
-export async function getStore(userId) {
-  const { data, error } = await db
-    .from('stores')
-    .select('id, name, description, created_at')
-    .eq('owner_id', userId)
-    .maybeSingle();
-
-  if (error) throw new AppError(500, `Could not load your store: ${error.message}`);
-  if (!data) throw new AppError(404, 'No store found for this account');
+export async function getStore(userId, role) {
+  const data = await ensureStore(userId, role);
 
   return {
     id: data.id,
@@ -60,11 +54,13 @@ export async function getStore(userId) {
 }
 
 // PATCH /seller/store — update the storefront name/description.
-export async function updateStore(userId, patch) {
+export async function updateStore(userId, role, patch) {
+  const store = await ensureStore(userId, role);
+
   const { data, error } = await db
     .from('stores')
     .update(patch)
-    .eq('owner_id', userId)
+    .eq('id', store.id)
     .select('id, name, description, created_at')
     .single();
 

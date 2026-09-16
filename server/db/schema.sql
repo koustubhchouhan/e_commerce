@@ -95,14 +95,21 @@ end;
 $$;
 
 -- ---- stores (one per seller for now) --------------------------------
+-- `is_official` marks the platform's own store, which an admin can sell from
+-- without going through the seller-application flow. It is excluded from
+-- seller payouts in the admin ledger.
 create table if not exists public.stores (
   id          uuid primary key default gen_random_uuid(),
   owner_id    uuid not null references public.profiles(id) on delete cascade,
   name        text not null,
   description text,
+  is_official boolean not null default false,
   created_at  timestamptz not null default now(),
   unique (owner_id)
 );
+
+-- Keep existing installs in sync.
+alter table public.stores add column if not exists is_official boolean not null default false;
 
 -- ---- seller_applications --------------------------------------------
 create table if not exists public.seller_applications (
