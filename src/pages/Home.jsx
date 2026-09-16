@@ -248,7 +248,7 @@ export default function Home() {
       )}
 
       {/* ══ Main Product Grid ══ */}
-      <section className="flex-1 px-6 md:px-12 pb-24">
+      <section className={`flex-1 px-6 md:px-12 pb-24 ${slides.length === 0 ? 'pt-8 md:pt-10' : ''}`}>
         <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-8">
           <div>
             <h2 className="font-[Outfit] text-2xl font-semibold text-[#fff4e6]">Discover Products</h2>
