@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp, MessageSquare, Menu, Reply, Image as ImageIcon, Pencil, ClipboardCheck } from 'lucide-react';
+import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp, MessageSquare, Menu, Reply, Image as ImageIcon, Pencil, ClipboardCheck, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProductGrid } from './Home';
@@ -60,6 +60,7 @@ export default function AdminPanel() {
   };
 
   const [approvedProducts, setApprovedProducts] = useState([]);
+  const [productSearch, setProductSearch] = useState('');
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [pendingProducts, setPendingProducts] = useState([]);
   const [loadingApprovals, setLoadingApprovals] = useState(true);
@@ -359,7 +360,16 @@ export default function AdminPanel() {
     }
   };
 
-  const allApprovedProducts = approvedProducts;
+  // Filter the loaded catalog client-side so admins can jump straight to a
+  // product by name, category, or seller without a round-trip per keystroke.
+  const productSearchTerm = productSearch.trim().toLowerCase();
+  const allApprovedProducts = productSearchTerm
+    ? approvedProducts.filter((p) =>
+        [p.title, p.category, p.storeName, p.desc]
+          .filter(Boolean)
+          .some((field) => String(field).toLowerCase().includes(productSearchTerm))
+      )
+    : approvedProducts;
 
   const handleRemoveProduct = async (id) => {
     const product = approvedProducts.find((p) => p.id === id);
@@ -571,14 +581,28 @@ export default function AdminPanel() {
         {/* PRODUCTS TAB (All Approved Products) */}
         {activeTab === 'products' && (
           <div className="animate-fade-in-up">
-            <div className="flex justify-between items-center mb-10">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-10">
               <div>
                 <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">All Approved Products</h1>
                 <p className="text-[#cbb89d]">Complete catalog of all approved products listed by sellers across the platform.</p>
               </div>
+              <div className="relative w-full sm:w-72 shrink-0">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6f6048] pointer-events-none" />
+                <input
+                  type="search"
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  placeholder="Search products..."
+                  aria-label="Search products by name, category, or seller"
+                  className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 pl-9 pr-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                />
+              </div>
             </div>
             <ProductGrid items={allApprovedProducts} adminMode={true} adminOnDelete={handleRemoveProduct} />
             {loadingProducts && <div className="text-center py-16 text-[#cbb89d]">Loading products...</div>}
+            {!loadingProducts && productSearchTerm && allApprovedProducts.length === 0 && (
+              <div className="text-center py-16 text-[#cbb89d]">No products match "{productSearch.trim()}".</div>
+            )}
           </div>
         )}
 
