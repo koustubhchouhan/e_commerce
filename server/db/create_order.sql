@@ -50,7 +50,7 @@ begin
     end if;
 
     -- Lock this product row until the transaction commits.
-    select id, name, price, discount_percent, stock, status, store_id
+    select id, name, price, discount_percent, stock, status, approval_status, store_id
       into v_product
       from public.products
       where id = v_product_id
@@ -60,6 +60,11 @@ begin
       raise exception 'Product % not found', v_product_id;
     end if;
     if v_product.status <> 'active' then
+      raise exception 'Product % is not available', v_product_id;
+    end if;
+    -- status is seller-controlled; approval_status is admin-controlled. Both
+    -- are required so a seller can't self-publish an unapproved listing.
+    if v_product.approval_status <> 'approved' then
       raise exception 'Product % is not available', v_product_id;
     end if;
     if v_product.stock < v_qty then

@@ -16,6 +16,12 @@ do $$ begin
   create type product_status as enum ('active', 'draft', 'out_of_stock');
 exception when duplicate_object then null; end $$;
 
+-- Admin-only gate over whether a seller listing is storefront-visible. Kept
+-- separate from product_status because sellers control product_status.
+do $$ begin
+  create type product_approval_status as enum ('pending', 'approved', 'rejected');
+exception when duplicate_object then null; end $$;
+
 do $$ begin
   create type order_status as enum ('pending', 'paid', 'shipped', 'delivered', 'cancelled');
 exception when duplicate_object then null; end $$;
@@ -141,13 +147,21 @@ create table if not exists public.products (
   discount_percent int not null default 0 check (discount_percent between 0 and 100),
   stock            int not null default 0 check (stock >= 0),
   status           product_status not null default 'active',
+  approval_status  product_approval_status not null default 'approved',
+  rejection_reason text,
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now()
 );
 
+-- Keep existing installs in sync: listings are storefront-visible only after an
+-- admin approves them. Existing rows default to approved (grandfathered in).
+alter table public.products add column if not exists approval_status product_approval_status not null default 'approved';
+alter table public.products add column if not exists rejection_reason text;
+
 create index if not exists idx_products_store_id    on public.products(store_id);
 create index if not exists idx_products_category_id  on public.products(category_id);
 create index if not exists idx_products_status       on public.products(status);
+create index if not exists idx_products_approval_status on public.products(approval_status);
 
 create or replace trigger products_set_updated_at
   before update on public.products
