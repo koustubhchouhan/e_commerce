@@ -10,5 +10,5 @@ export const listProducts = asyncHandler(async (req, res) => {
 });
 
 export const getProduct = asyncHandler(async (req, res) => {
-  res.json(await catalogService.getProduct(req.params.id));
+  res.json(await catalogService.getProduct(req.params.id, req.user));
 });

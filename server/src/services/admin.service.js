@@ -2,6 +2,7 @@ import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
 import { removeImage } from './storage.service.js';
 import { serializeReview } from './review.service.js';
+import { loadImagesByProduct, pickCover, serializeProduct } from './product-data.js';
 
 // Applications are loaded without an embedded profile relation, because the
 // table has two FKs to profiles (user_id and reviewed_by) and embed hints tied
@@ -195,6 +196,71 @@ export async function deleteAnyProduct(productId) {
   if (error) throw new AppError(400, `Could not delete product: ${error.message}`);
 
   await Promise.all((images ?? []).map((i) => removeImage(i.url)));
+}
+
+// =====================================================================
+// Product approvals
+// =====================================================================
+
+const ADMIN_PRODUCT_SELECT =
+  'id, name, description, price, discount_percent, stock, status, approval_status, rejection_reason, created_at, store_id, categories(id, name, slug), stores(id, name)';
+
+function shapeAdminProduct(row, coverUrl) {
+  return {
+    ...serializeProduct(row, coverUrl),
+    approvalStatus: row.approval_status,
+    rejectionReason: row.rejection_reason ?? null,
+    createdAt: row.created_at,
+  };
+}
+
+// GET /admin/products — moderation queue. Optionally filtered to one approval
+// state (the Approvals tab asks for pending); newest first.
+export async function listProductsForApproval({ approval_status, limit } = {}) {
+  let query = db.from('products').select(ADMIN_PRODUCT_SELECT);
+  if (approval_status) query = query.eq('approval_status', approval_status);
+
+  const { data, error } = await query
+    .order('created_at', { ascending: false })
+    .limit(limit ?? 100);
+
+  if (error) throw new AppError(500, `Could not load products: ${error.message}`);
+
+  const ids = (data ?? []).map((p) => p.id);
+  const imagesByProduct = await loadImagesByProduct(ids);
+
+  return {
+    items: (data ?? []).map((row) =>
+      shapeAdminProduct(row, pickCover(imagesByProduct.get(row.id)))
+    ),
+  };
+}
+
+// PATCH /admin/products/:id/approval — approve or reject a seller listing.
+export async function setProductApproval(productId, action, reason) {
+  const { data: existing, error: findErr } = await db
+    .from('products')
+    .select('id')
+    .eq('id', productId)
+    .maybeSingle();
+  if (findErr) throw new AppError(500, `Could not load product: ${findErr.message}`);
+  if (!existing) throw new AppError(404, 'Product not found');
+
+  const patch =
+    action === 'approve'
+      ? { approval_status: 'approved', rejection_reason: null }
+      : { approval_status: 'rejected', rejection_reason: reason?.trim() || null };
+
+  const { data, error } = await db
+    .from('products')
+    .update(patch)
+    .eq('id', productId)
+    .select(ADMIN_PRODUCT_SELECT)
+    .single();
+  if (error) throw new AppError(400, `Could not update approval: ${error.message}`);
+
+  const imagesByProduct = await loadImagesByProduct([data.id]);
+  return shapeAdminProduct(data, pickCover(imagesByProduct.get(data.id)));
 }
 
 // DELETE /admin/sellers/:id — revoke: demote back to customer, draft their

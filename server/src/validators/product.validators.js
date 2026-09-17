@@ -11,3 +11,15 @@ export const createProductSchema = z.object({
 });
 
 export const updateProductSchema = createProductSchema.partial();
+
+// PATCH /admin/products/:id/approval — admin decision on a seller listing.
+export const reviewProductApprovalSchema = z.object({
+  action: z.enum(['approve', 'reject']),
+  reason: z.string().trim().max(500).optional(),
+});
+
+// GET /admin/products — moderation queue filter.
+export const adminProductsQuerySchema = z.object({
+  approval_status: z.enum(['pending', 'approved', 'rejected']).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+});

@@ -32,6 +32,15 @@ export const deleteProduct = asyncHandler(async (req, res) => {
   res.status(204).end();
 });
 
+export const listAdminProducts = asyncHandler(async (req, res) => {
+  res.json(await adminService.listProductsForApproval(req.query));
+});
+
+export const setProductApproval = asyncHandler(async (req, res) => {
+  const { action, reason } = req.body;
+  res.json(await adminService.setProductApproval(req.params.id, action, reason));
+});
+
 export const reviewApplication = asyncHandler(async (req, res) => {
   const result = await adminService.reviewApplication(
     req.user.id,

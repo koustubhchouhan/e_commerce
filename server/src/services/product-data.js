@@ -42,6 +42,8 @@ export function serializeProduct(row, coverUrl) {
     discount_percent: row.discount_percent,
     stock: row.stock,
     status: row.status,
+    approvalStatus: row.approval_status ?? 'approved',
+    rejectionReason: row.rejection_reason ?? null,
     salePrice: salePrice(row.price, row.discount_percent),
     category: row.categories
       ? { id: row.categories.id, name: row.categories.name, slug: row.categories.slug }

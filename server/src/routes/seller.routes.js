@@ -5,6 +5,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  resubmitProduct,
   addProductImages,
 } from '../controllers/product.controller.js';
 import { listSellerOrders, updateSellerOrderStatus } from '../controllers/order.controller.js';
@@ -73,6 +74,13 @@ router.patch(
   validateParams(uuidParamSchema),
   validate(updateProductSchema),
   updateProduct
+);
+router.post(
+  '/products/:id/resubmit',
+  requireAuth,
+  requireRole('seller', 'admin'),
+  validateParams(uuidParamSchema),
+  resubmitProduct
 );
 router.delete(
   '/products/:id',

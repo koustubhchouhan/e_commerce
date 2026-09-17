@@ -13,6 +13,10 @@ export const updateProduct = asyncHandler(async (req, res) => {
   res.json(await productService.updateProduct(req.user.id, req.params.id, req.body));
 });
 
+export const resubmitProduct = asyncHandler(async (req, res) => {
+  res.json(await productService.resubmitProduct(req.user.id, req.params.id));
+});
+
 export const deleteProduct = asyncHandler(async (req, res) => {
   await productService.deleteProduct(req.user.id, req.params.id);
   res.status(204).end();

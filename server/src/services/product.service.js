@@ -60,18 +60,45 @@ export async function listSellerProducts(userId, role) {
   };
 }
 
-// POST /products — creates a product attached to the caller's store.
+// POST /products — creates a product attached to the caller's store. Sellers
+// always start pending admin approval (ignoring any client-supplied value);
+// an admin creating a product is the approver, so theirs is approved.
 export async function createProduct(userId, role, input) {
   const store = await ensureStore(userId, role);
   await validateCategory(input.category_id);
 
+  const approvalStatus = role === 'admin' ? 'approved' : 'pending';
+
   const { data, error } = await db
     .from('products')
-    .insert({ ...input, store_id: store.id })
+    .insert({
+      ...input,
+      store_id: store.id,
+      approval_status: approvalStatus,
+      rejection_reason: null,
+    })
     .select(PRODUCT_SELECT)
     .single();
 
   if (error) throw new AppError(400, `Could not create product: ${error.message}`);
+
+  const imagesByProduct = await loadImagesByProduct([data.id]);
+  return serializeProduct(data, pickCover(imagesByProduct.get(data.id)));
+}
+
+// POST /products/:id/resubmit — a seller asking for re-review after a rejection.
+// Only clears the rejection; it never approves.
+export async function resubmitProduct(userId, productId) {
+  await loadOwnedProduct(userId, productId);
+
+  const { data, error } = await db
+    .from('products')
+    .update({ approval_status: 'pending', rejection_reason: null })
+    .eq('id', productId)
+    .select(PRODUCT_SELECT)
+    .single();
+
+  if (error) throw new AppError(400, `Could not resubmit product: ${error.message}`);
 
   const imagesByProduct = await loadImagesByProduct([data.id]);
   return serializeProduct(data, pickCover(imagesByProduct.get(data.id)));

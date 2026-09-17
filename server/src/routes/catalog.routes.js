@@ -6,7 +6,7 @@ import {
 } from '../controllers/catalog.controller.js';
 import { listReviews, createReview, getReviewEligibility } from '../controllers/review.controller.js';
 import { listSlides } from '../controllers/hero.controller.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import {
   validate,
   validateQuery,
@@ -37,6 +37,6 @@ router.post(
   validate(createReviewSchema),
   createReview
 );
-router.get('/products/:id', validateParams(uuidParamSchema), getProduct);
+router.get('/products/:id', optionalAuth, validateParams(uuidParamSchema), getProduct);
 
 export default router;

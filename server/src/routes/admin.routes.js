@@ -11,6 +11,8 @@ import {
   createCategory,
   deleteCategory,
   deleteProduct,
+  listAdminProducts,
+  setProductApproval,
   getPlatformLedger,
   listReviews,
   updateReviewVisibility,
@@ -39,6 +41,10 @@ import {
   reviewApplicationSchema,
   updateOrderStatusSchema,
 } from '../validators/seller.validators.js';
+import {
+  adminProductsQuerySchema,
+  reviewProductApprovalSchema,
+} from '../validators/product.validators.js';
 
 const router = Router();
 
@@ -94,6 +100,21 @@ router.delete(
   requireRole('admin'),
   validateParams(uuidParamSchema),
   deleteCategory
+);
+router.get(
+  '/admin/products',
+  requireAuth,
+  requireRole('admin'),
+  validateQuery(adminProductsQuerySchema),
+  listAdminProducts
+);
+router.patch(
+  '/admin/products/:id/approval',
+  requireAuth,
+  requireRole('admin'),
+  validateParams(uuidParamSchema),
+  validate(reviewProductApprovalSchema),
+  setProductApproval
 );
 router.delete(
   '/admin/products/:id',

@@ -37,7 +37,8 @@ export async function listProducts({ search, category, page, limit }) {
   let query = db
     .from('products')
     .select('*, categories(id, name, slug), stores(id, name)', { count: 'exact' })
-    .eq('status', 'active');
+    .eq('status', 'active')
+    .eq('approval_status', 'approved');
 
   if (search) {
     const term = escapePostgrestTerm(search.trim());
@@ -68,16 +69,25 @@ export async function listProducts({ search, category, page, limit }) {
   };
 }
 
-// GET /products/:id — full product with images[] and store name.
-export async function getProduct(id) {
+// GET /products/:id — full product with images[] and store name. Listings that
+// are not live (unapproved or non-active) are hidden from the public; their
+// owner and admins may still fetch them.
+export async function getProduct(id, viewer) {
   const { data: row, error } = await db
     .from('products')
-    .select('*, categories(id, name, slug), stores(id, name)')
+    .select('*, categories(id, name, slug), stores(id, name, owner_id)')
     .eq('id', id)
     .maybeSingle();
 
   if (error) throw new AppError(500, `Could not load product: ${error.message}`);
   if (!row) throw new AppError(404, 'Product not found');
+
+  const live = row.status === 'active' && (row.approval_status ?? 'approved') === 'approved';
+  if (!live) {
+    const isAdmin = viewer?.role === 'admin';
+    const isOwner = Boolean(viewer?.id && row.stores?.owner_id === viewer.id);
+    if (!isAdmin && !isOwner) throw new AppError(404, 'Product not found');
+  }
 
   const { data: images, error: imgErr } = await db
     .from('product_images')
