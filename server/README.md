@@ -66,6 +66,22 @@ npm run dev
 The API listens on http://localhost:4000 and restarts on change (`node
 --watch`). `npm start` runs it once for production.
 
+## Tests
+
+```bash
+npm test
+```
+
+Runs the dependency-free suite (`node --test`). No database or `.env` is
+required — dummy Supabase config is injected by `test/helpers/env.js`.
+
+The important one is `test/route-guards.test.js`: it walks every mounted router
+and fails if an endpoint is neither in the public allow-list nor behind
+`requireAuth`, if `requireRole` runs before `requireAuth`, or if an `/admin`
+route is not admin-only. When you add a router, add its mount to `MOUNTS` in
+that file; when you add an intentionally public endpoint, add it to
+`PUBLIC_ROUTES`.
+
 ## Development accounts
 
 ```bash
@@ -260,6 +276,7 @@ sets it.
 server/
   db/                schema.sql, create_order.sql, seed.sql, setup_all.sql
   scripts/           seed-users.js (dev role accounts)
+  test/              route-guards.test.js (authz audit), auth-middleware.test.js, helpers/env.js
   src/
     config/          env.js (fail-fast), supabase.js (db + authClient)
     middleware/      auth.js (requireAuth/requireRole/optionalAuth + CSRF), validate.js, error.js, asyncHandler.js
