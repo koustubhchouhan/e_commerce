@@ -5,10 +5,10 @@ import { useToastStore } from '../store/toastStore';
 import { api } from '../lib/api';
 import { inr } from '../lib/money';
 
-const STATUSES = ['Active', 'Out of Stock', 'Pending Approval'];
+const STATUSES = ['Active', 'Out of Stock'];
 
-const STATUS_TO_API = { 'Active': 'active', 'Out of Stock': 'out_of_stock', 'Pending Approval': 'draft' };
-const API_TO_STATUS = { 'active': 'Active', 'out_of_stock': 'Out of Stock', 'draft': 'Pending Approval' };
+const STATUS_TO_API = { 'Active': 'active', 'Out of Stock': 'out_of_stock' };
+const API_TO_STATUS = { 'active': 'Active', 'out_of_stock': 'Out of Stock' };
 
 export default function SellerInventory() {
   const [inventory, setInventory] = useState([]);
@@ -19,6 +19,7 @@ export default function SellerInventory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [resubmittingId, setResubmittingId] = useState(null);
   const addToast = useToastStore((s) => s.addToast);
 
   const loadInventory = async () => {
@@ -31,7 +32,9 @@ export default function SellerInventory() {
         price: Number(p.price ?? 0),
         discount: Number(p.discount_percent ?? 0),
         stock: Number(p.stock ?? 0),
-        status: API_TO_STATUS[p.status] ?? 'Pending Approval',
+        status: API_TO_STATUS[p.status] ?? 'Active',
+        approvalStatus: p.approvalStatus ?? 'approved',
+        rejectionReason: p.rejectionReason ?? null,
         description: p.description || '',
         images: p.images?.map((i) => i.url) ?? [],
       })));
@@ -134,6 +137,20 @@ export default function SellerInventory() {
     }
   };
 
+  const handleResubmit = async (item) => {
+    if (resubmittingId) return;
+    setResubmittingId(item.id);
+    try {
+      await api.resubmitProduct(item.id);
+      addToast(`"${item.name}" resubmitted for approval.`, 'success');
+      await loadInventory();
+    } catch (err) {
+      addToast(err.message || 'Failed to resubmit product.', 'error');
+    } finally {
+      setResubmittingId(null);
+    }
+  };
+
   const q = query.trim().toLowerCase();
   const filtered = q
     ? inventory.filter(
@@ -141,16 +158,14 @@ export default function SellerInventory() {
       )
     : inventory;
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'Active':
-        return <span className="flex items-center gap-1.5 text-[#ffbf66] bg-[#ff9933]/10 border border-[#ff9933]/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"><CheckCircle size={12} /> Active</span>;
-      case 'Out of Stock':
-        return <span className="flex items-center gap-1.5 text-[#ffb4ab] bg-[#93000a]/20 border border-[#ffb4ab]/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"><XCircle size={12} /> Out of Stock</span>;
-      case 'Pending Approval':
-        return <span className="flex items-center gap-1.5 text-[#ffd27a] bg-[#c98a12]/20 border border-[#ffd27a]/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"><Clock size={12} /> Pending</span>;
+  const getApprovalBadge = (approval) => {
+    switch (approval) {
+      case 'approved':
+        return <span className="flex items-center gap-1.5 text-[#ffbf66] bg-[#ff9933]/10 border border-[#ff9933]/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"><CheckCircle size={12} /> Approved</span>;
+      case 'rejected':
+        return <span className="flex items-center gap-1.5 text-[#ffb4ab] bg-[#93000a]/20 border border-[#ffb4ab]/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"><XCircle size={12} /> Rejected</span>;
       default:
-        return <span>{status}</span>;
+        return <span className="flex items-center gap-1.5 text-[#ffd27a] bg-[#c98a12]/20 border border-[#ffd27a]/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"><Clock size={12} /> Pending</span>;
     }
   };
 
@@ -241,9 +256,29 @@ export default function SellerInventory() {
                     <td className="py-4 px-4 text-center">
                       <span className={item.stock === 0 ? 'text-[#ffb4ab] font-semibold' : 'text-[#fff4e6]'}>{item.stock}</span>
                     </td>
-                    <td className="py-4 px-4">{getStatusBadge(item.status)}</td>
+                    <td className="py-4 px-4">
+                      <div className="flex flex-col items-start gap-1.5">
+                        {getApprovalBadge(item.approvalStatus)}
+                        {item.status === 'Out of Stock' && (
+                          <span className="text-[10px] text-[#9e8c73] uppercase tracking-wider">Out of stock</span>
+                        )}
+                        {item.approvalStatus === 'rejected' && item.rejectionReason && (
+                          <span className="text-[10px] text-[#ffb4ab]/80 max-w-[220px]">{item.rejectionReason}</span>
+                        )}
+                      </div>
+                    </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                        {item.approvalStatus === 'rejected' && (
+                          <button
+                            onClick={() => handleResubmit(item)}
+                            disabled={resubmittingId === item.id}
+                            className="px-3 py-1.5 rounded-lg bg-[#ff9933]/10 text-[#ff9933] hover:bg-[#ff9933]/20 text-[10px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                            title="Resubmit for approval"
+                          >
+                            {resubmittingId === item.id ? '...' : 'Resubmit'}
+                          </button>
+                        )}
                         <button onClick={() => openModal(item)} className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ff9933] hover:bg-[#ff9933]/20 transition-colors" title="Edit Product">
                           <Edit size={16} />
                         </button>

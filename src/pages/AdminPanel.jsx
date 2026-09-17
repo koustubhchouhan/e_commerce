@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp, MessageSquare, Menu, Reply, Image as ImageIcon, Pencil } from 'lucide-react';
+import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp, MessageSquare, Menu, Reply, Image as ImageIcon, Pencil, ClipboardCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProductGrid } from './Home';
@@ -61,6 +61,11 @@ export default function AdminPanel() {
 
   const [approvedProducts, setApprovedProducts] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [pendingProducts, setPendingProducts] = useState([]);
+  const [loadingApprovals, setLoadingApprovals] = useState(true);
+  const [rejecting, setRejecting] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [savingApproval, setSavingApproval] = useState(false);
   const [sellerRequests, setSellerRequests] = useState([]);
   const [orders, setOrders] = useState([]);
   const [messages, setMessages] = useState([]);
@@ -90,6 +95,37 @@ export default function AdminPanel() {
   const [savingSlide, setSavingSlide] = useState(false);
   const addToast = useToastStore((s) => s.addToast);
 
+  const loadApprovals = async () => {
+    setLoadingApprovals(true);
+    try {
+      const res = await api.adminProducts('pending');
+      setPendingProducts(res.items ?? []);
+    } catch {
+      addToast('Failed to load pending products.', 'error');
+    } finally {
+      setLoadingApprovals(false);
+    }
+  };
+
+  const handleApproval = async (product, action, reason) => {
+    if (savingApproval) return;
+    setSavingApproval(true);
+    try {
+      await api.adminSetProductApproval(product.id, action, reason);
+      setPendingProducts((prev) => prev.filter((p) => p.id !== product.id));
+      addToast(
+        action === 'approve' ? `"${product.name}" approved.` : `"${product.name}" rejected.`,
+        action === 'approve' ? 'success' : 'error'
+      );
+      setRejecting(null);
+      setRejectReason('');
+    } catch (err) {
+      addToast(err.message || 'Failed to update approval.', 'error');
+    } finally {
+      setSavingApproval(false);
+    }
+  };
+
   useEffect(() => {
     (async () => {
       try {
@@ -103,6 +139,7 @@ export default function AdminPanel() {
         setLoadingProducts(false);
       }
     })();
+    loadApprovals();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -508,6 +545,7 @@ export default function AdminPanel() {
         
         <nav className="flex flex-col gap-2 flex-1">
           <SidebarLink icon={<Grid size={20} />} label="Products" active={activeTab === 'products'} onClick={() => selectTab('products')} />
+          <SidebarLink icon={<ClipboardCheck size={20} />} label="Product Approvals" badge={pendingProducts.length} active={activeTab === 'approvals'} onClick={() => selectTab('approvals')} />
           <SidebarLink icon={<UserCheck size={20} />} label="Seller Approvals" active={activeTab === 'seller-requests'} onClick={() => selectTab('seller-requests')} />
           <SidebarLink icon={<ShoppingBag size={20} />} label="Orders" active={activeTab === 'orders'} onClick={() => selectTab('orders')} />
           <SidebarLink icon={<Inbox size={20} />} label="Messages" badge={messages.filter((m) => !m.isRead).length} active={activeTab === 'messages'} onClick={() => selectTab('messages')} />
@@ -541,6 +579,76 @@ export default function AdminPanel() {
             </div>
             <ProductGrid items={allApprovedProducts} adminMode={true} adminOnDelete={handleRemoveProduct} />
             {loadingProducts && <div className="text-center py-16 text-[#cbb89d]">Loading products...</div>}
+          </div>
+        )}
+
+        {/* PRODUCT APPROVALS TAB (Pending Listings) */}
+        {activeTab === 'approvals' && (
+          <div className="animate-fade-in-up">
+            <header className="mb-10">
+              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Product Approvals</h1>
+              <p className="text-[#cbb89d]">Review new and resubmitted listings before they appear on the storefront.</p>
+            </header>
+
+            {loadingApprovals ? (
+              <div className="text-center py-16 text-[#cbb89d]">Loading pending products...</div>
+            ) : pendingProducts.length === 0 ? (
+              <GlassCard className="p-10 text-center">
+                <ClipboardCheck size={40} className="mx-auto text-[#4b3d2a] mb-3" />
+                <p className="text-[#cbb89d]">No products are waiting for approval.</p>
+              </GlassCard>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                      <th className="py-4 px-4 font-semibold">Product</th>
+                      <th className="py-4 px-4 font-semibold">Seller</th>
+                      <th className="py-4 px-4 font-semibold text-right">Price</th>
+                      <th className="py-4 px-4 font-semibold">Submitted</th>
+                      <th className="py-4 px-4 font-semibold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingProducts.map((product) => (
+                      <tr key={product.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-lg overflow-hidden bg-[#100901]/60 border border-white/10 flex items-center justify-center shrink-0">
+                              {product.coverImage
+                                ? <img src={product.coverImage} alt={product.name} className="w-full h-full object-cover" />
+                                : <ImageIcon size={18} className="text-[#4b3d2a]" />}
+                            </div>
+                            <span className="font-[Outfit] text-base font-semibold text-[#f1e7d7]">{product.name}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 text-sm text-[#cbb89d]">{product.storeName || '—'}</td>
+                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">{inr(product.price)}</td>
+                        <td className="py-4 px-4 text-sm text-[#9e8c73]">{timeAgo(product.createdAt)}</td>
+                        <td className="py-4 px-4 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              disabled={savingApproval}
+                              onClick={() => handleApproval(product, 'approve')}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border border-[#ff9933]/30 bg-[#ff9933]/10 text-[#ffbf66] hover:bg-[#ff9933]/20 transition-colors disabled:opacity-50"
+                            >
+                              <Check size={13} /> Approve
+                            </button>
+                            <button
+                              disabled={savingApproval}
+                              onClick={() => { setRejecting(product); setRejectReason(''); }}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border border-[#ffb4ab]/30 bg-[#93000a]/20 text-[#ffb4ab] hover:bg-[#93000a]/40 transition-colors disabled:opacity-50"
+                            >
+                              <X size={13} /> Reject
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
@@ -1188,7 +1296,7 @@ export default function AdminPanel() {
         )}
 
         {/* Placeholder for remaining tabs */}
-        {activeTab !== 'products' && activeTab !== 'featured' && activeTab !== 'hero' && activeTab !== 'seller-requests' && activeTab !== 'categories' && activeTab !== 'payments' && activeTab !== 'orders' && activeTab !== 'messages' && activeTab !== 'reviews' && (
+        {activeTab !== 'products' && activeTab !== 'approvals' && activeTab !== 'featured' && activeTab !== 'hero' && activeTab !== 'seller-requests' && activeTab !== 'categories' && activeTab !== 'payments' && activeTab !== 'orders' && activeTab !== 'messages' && activeTab !== 'reviews' && (
           <div className="h-[600px] flex flex-col items-center justify-center animate-fade-in-up opacity-70">
             <h2 className="font-[Outfit] text-3xl font-bold text-[#fff4e6] mb-2 capitalize">{activeTab.replace('-', ' ')}</h2>
             <p className="text-[#cbb89d]">This admin module is currently under construction.</p>
@@ -1196,6 +1304,54 @@ export default function AdminPanel() {
         )}
 
       </main>
+
+      {rejecting && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+          onMouseDown={() => { if (!savingApproval) { setRejecting(null); setRejectReason(''); } }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Reject product"
+        >
+          <GlassCard hover={false} className="relative w-full max-w-md p-6 md:p-8">
+            <div onMouseDown={(e) => e.stopPropagation()}>
+              <h2 className="font-[Outfit] text-2xl font-bold text-[#fff4e6] mb-2 flex items-center gap-2">
+                <X size={22} className="text-[#ffb4ab]" /> Reject Product
+              </h2>
+              <p className="text-[#cbb89d] text-sm mb-5">
+                Rejecting <span className="text-[#f1e7d7] font-semibold">{rejecting.name}</span>. The seller will see your reason and can resubmit.
+              </p>
+              <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Reason (optional)</label>
+              <textarea
+                rows={3}
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="e.g. Images are low quality or the description is misleading."
+                className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all resize-none"
+              />
+              <div className="flex items-center justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  disabled={savingApproval}
+                  onClick={() => { setRejecting(null); setRejectReason(''); }}
+                  className="px-5 py-2.5 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={savingApproval}
+                  onClick={() => handleApproval(rejecting, 'reject', rejectReason)}
+                  className="px-5 py-2.5 rounded-lg bg-[#93000a]/40 border border-[#ffb4ab]/40 text-[#ffb4ab] text-sm font-bold flex items-center gap-2 hover:bg-[#93000a]/60 transition-colors disabled:opacity-50"
+                >
+                  {savingApproval ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />}
+                  {savingApproval ? 'Rejecting...' : 'Reject Product'}
+                </button>
+              </div>
+            </div>
+          </GlassCard>
+        </div>
+      )}
 
       {categoryModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in" onMouseDown={() => setCategoryModal(false)} role="dialog" aria-modal="true" aria-label="Add category">

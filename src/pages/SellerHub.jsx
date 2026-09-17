@@ -51,6 +51,7 @@ export default function SellerHub() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [store, setStore] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  const [resubmittingId, setResubmittingId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(true);
   const [messagesError, setMessagesError] = useState('');
@@ -261,12 +262,34 @@ export default function SellerHub() {
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 8);
 
-  const productStatusLabel = (status) => {
+  const approvalLabel = (status) => {
     switch (status) {
-      case 'active': return 'Approved';
-      case 'out_of_stock': return 'Out of Stock';
-      case 'draft': return 'Pending';
+      case 'approved': return 'Approved';
+      case 'rejected': return 'Rejected';
       default: return 'Pending';
+    }
+  };
+
+  const approvalBadgeClass = (status) => {
+    switch (status) {
+      case 'approved': return 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30';
+      case 'rejected': return 'bg-[#ffb4ab]/20 text-[#ffb4ab] border-[#ffb4ab]/30';
+      default: return 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30';
+    }
+  };
+
+  const handleResubmit = async (product) => {
+    if (resubmittingId) return;
+    setResubmittingId(product.id);
+    try {
+      await api.resubmitProduct(product.id);
+      const res = await api.sellerProducts();
+      setProducts(res.items ?? []);
+      addToast(`"${product.name}" resubmitted for approval.`, 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to resubmit product.', 'error');
+    } finally {
+      setResubmittingId(null);
     }
   };
 
@@ -387,23 +410,41 @@ export default function SellerHub() {
                           <th className="py-4 px-4 font-semibold">Product</th>
                           <th className="py-4 px-4 font-semibold text-right">Price</th>
                           <th className="py-4 px-4 font-semibold text-center">Sales</th>
-                          <th className="py-4 px-4 font-semibold text-right">Status</th>
+                          <th className="py-4 px-4 font-semibold text-right">Approval</th>
                         </tr>
                       </thead>
                       <tbody>
                         {products.map((item) => {
-                          const status = productStatusLabel(item.status);
+                          const approval = item.approvalStatus ?? 'approved';
                           return (
                           <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                             <td className="py-4 px-4 font-[Outfit] text-lg font-semibold text-[#f1e7d7]">{item.name}</td>
                             <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">{inr(item.price)}</td>
                             <td className="py-4 px-4 text-center text-[#fff4e6]">{salesByProduct[item.id] ?? 0}</td>
                             <td className="py-4 px-4 text-right">
-                              <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
-                                status === 'Approved' ? 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30' : 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30'
-                              }`}>
-                                {status}
-                              </span>
+                              <div className="flex flex-col items-end gap-1.5">
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${approvalBadgeClass(approval)}`}>
+                                  {approvalLabel(approval)}
+                                </span>
+                                {approval === 'rejected' && (
+                                  <>
+                                    {item.rejectionReason && (
+                                      <span className="text-[10px] text-[#ffb4ab]/80 max-w-[220px] text-right">{item.rejectionReason}</span>
+                                    )}
+                                    <button
+                                      type="button"
+                                      disabled={resubmittingId === item.id}
+                                      onClick={() => handleResubmit(item)}
+                                      className="text-[10px] font-bold uppercase tracking-wider text-[#ff9933] hover:text-[#ffbf66] transition-colors disabled:opacity-50"
+                                    >
+                                      {resubmittingId === item.id ? 'Resubmitting...' : 'Resubmit'}
+                                    </button>
+                                  </>
+                                )}
+                                {item.status === 'out_of_stock' && (
+                                  <span className="text-[10px] text-[#9e8c73]">Out of stock</span>
+                                )}
+                              </div>
                             </td>
                           </tr>
                           );
@@ -933,7 +974,6 @@ function AddProductForm({ categories = [], onAdded }) {
         price: priceNum,
         discount_percent: 0,
         stock: 0,
-        status: 'draft',
         category_id: categoryId,
       });
       if (files.length) await api.uploadProductImages(created.id, files);

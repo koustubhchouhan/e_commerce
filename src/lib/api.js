@@ -183,6 +183,7 @@ export const api = {
   sellerProducts: () => request('/seller/products', { auth: true }),
   createProduct: (data) => request('/products', { method: 'POST', body: data, auth: true }),
   updateProduct: (id, data) => request(`/products/${id}`, { method: 'PATCH', body: data, auth: true }),
+  resubmitProduct: (id) => request(`/products/${id}/resubmit`, { method: 'POST', auth: true }),
   deleteProduct: (id) => request(`/products/${id}`, { method: 'DELETE', auth: true }),
   uploadProductImages: (id, files) => {
     const form = new FormData();
@@ -220,6 +221,16 @@ export const api = {
   createCategory: (name) => request('/admin/categories', { method: 'POST', body: { name }, auth: true }),
   deleteCategory: (id) => request(`/admin/categories/${id}`, { method: 'DELETE', auth: true }),
   adminDeleteProduct: (id) => request(`/admin/products/${id}`, { method: 'DELETE', auth: true }),
+  adminProducts: (approvalStatus) => {
+    const qs = approvalStatus ? `?approval_status=${encodeURIComponent(approvalStatus)}` : '';
+    return request(`/admin/products${qs}`, { auth: true });
+  },
+  adminSetProductApproval: (id, action, reason) =>
+    request(`/admin/products/${id}/approval`, {
+      method: 'PATCH',
+      body: reason ? { action, reason } : { action },
+      auth: true,
+    }),
   adminLedger: () => request('/admin/ledger', { auth: true }),
   adminReviews: () => request('/admin/reviews', { auth: true }),
   adminSetReviewHidden: (id, isHidden) =>
