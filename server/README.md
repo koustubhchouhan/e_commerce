@@ -66,6 +66,22 @@ npm run dev
 The API listens on http://localhost:4000 and restarts on change (`node
 --watch`). `npm start` runs it once for production.
 
+## Tests
+
+```bash
+npm test
+```
+
+Runs the dependency-free suite (`node --test`). No database or `.env` is
+required — dummy Supabase config is injected by `test/helpers/env.js`.
+
+The important one is `test/route-guards.test.js`: it walks every mounted router
+and fails if an endpoint is neither in the public allow-list nor behind
+`requireAuth`, if `requireRole` runs before `requireAuth`, or if an `/admin`
+route is not admin-only. When you add a router, add its mount to `MOUNTS` in
+that file; when you add an intentionally public endpoint, add it to
+`PUBLIC_ROUTES`.
+
 ## Development accounts
 
 ```bash
@@ -250,9 +266,14 @@ sets it.
 - `create_order` (in `db/create_order.sql`) is the atomic checkout: it locks
   product rows `FOR UPDATE`, computes prices from `products`, enforces stock and
   single-store carts, and writes the order and items in one transaction.
-- Row Level Security is enabled with **no policies** on every table. The API's
-  service_role key bypasses RLS, so this only blocks direct access with the
-  anon/authenticated keys — defense in depth.
+- Row Level Security is enabled on every table with explicit policies. The
+  API's `service_role` key bypasses RLS, so the policies are a second layer for
+  the `anon`/`authenticated` keys: public catalog reads plus a caller's own
+  rows, and writes only for user-authored content (reviews, contact messages,
+  seller applications). Product approval, roles, prices and order writes stay
+  on `service_role`, so sellers cannot self-approve or self-promote. Helper
+  functions (`is_admin`, `owns_store`, `can_view_product`, …) live alongside
+  the policies at the end of `db/schema.sql`.
 
 ## Layout
 
@@ -260,6 +281,7 @@ sets it.
 server/
   db/                schema.sql, create_order.sql, seed.sql, setup_all.sql
   scripts/           seed-users.js (dev role accounts)
+  test/              route-guards.test.js (authz audit), auth-middleware.test.js, helpers/env.js
   src/
     config/          env.js (fail-fast), supabase.js (db + authClient)
     middleware/      auth.js (requireAuth/requireRole/optionalAuth + CSRF), validate.js, error.js, asyncHandler.js

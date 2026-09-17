@@ -315,12 +315,29 @@ alter table public.hero_slides add column if not exists is_active boolean not nu
 create index if not exists idx_hero_slides_order on public.hero_slides(is_active, position, created_at);
 
 -- =====================================================================
--- Row Level Security: enable on every table (default-deny).
--- The Express API uses the service_role key, which BYPASSES RLS, and is
--- the single authorization layer. Enabling RLS with no policies means that
--- if the anon/authenticated keys ever hit these tables directly, they get
--- nothing. Defense in depth.
+-- Row Level Security
+--
+-- The Express API talks to Postgres with the service_role key, which
+-- BYPASSES RLS, so today it is unaffected by everything below. These
+-- policies are the second layer: they state what the anon/authenticated
+-- keys may see and do if they ever query the database directly, and they
+-- are what stage 3 will rely on when user-scoped reads move onto a
+-- per-request user client.
+--
+-- Posture:
+--   * Read policies cover the public catalog and a caller's own data.
+--   * Write policies exist only where a user creates their own content
+--     (reviews, contact messages, seller applications). Products, stores,
+--     orders, categories and hero slides are intentionally write-denied to
+--     anon/authenticated and stay on service_role, so a seller can never
+--     self-approve a listing or change their own role.
+--
+-- Known gap for stage 3: the public review list embeds
+-- profiles(full_name), but profiles is readable only by its owner and
+-- admins. A user-scoped reviews read needs a narrow public view of display
+-- names; until that exists that read stays on service_role.
 -- =====================================================================
+
 alter table public.profiles            enable row level security;
 alter table public.stores              enable row level security;
 alter table public.seller_applications enable row level security;
@@ -332,6 +349,213 @@ alter table public.order_items         enable row level security;
 alter table public.reviews             enable row level security;
 alter table public.contact_messages    enable row level security;
 alter table public.hero_slides         enable row level security;
+
+-- ---- RLS helper functions -------------------------------------------
+-- SECURITY DEFINER so they can read the base tables without re-triggering
+-- RLS (which would recurse), STABLE so the planner can cache them within a
+-- statement, and an empty search_path with fully-qualified names so they
+-- cannot be hijacked.
+
+create or replace function public.is_admin()
+returns boolean
+language sql stable security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'admin'
+  );
+$$;
+
+create or replace function public.current_user_role()
+returns public.user_role
+language sql stable security definer
+set search_path = ''
+as $$
+  select role from public.profiles where id = auth.uid();
+$$;
+
+create or replace function public.owns_store(p_store_id uuid)
+returns boolean
+language sql stable security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.stores
+    where id = p_store_id and owner_id = auth.uid()
+  );
+$$;
+
+create or replace function public.owns_product(p_product_id uuid)
+returns boolean
+language sql stable security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.products p
+    join public.stores s on s.id = p.store_id
+    where p.id = p_product_id and s.owner_id = auth.uid()
+  );
+$$;
+
+create or replace function public.can_view_product(p_product_id uuid)
+returns boolean
+language sql stable security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.products p
+    join public.stores s on s.id = p.store_id
+    where p.id = p_product_id
+      and (
+        (p.status = 'active' and p.approval_status = 'approved')
+        or s.owner_id = auth.uid()
+        or public.is_admin()
+      )
+  );
+$$;
+
+create or replace function public.can_view_order(p_order_id uuid)
+returns boolean
+language sql stable security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.orders o
+    where o.id = p_order_id
+      and (
+        o.user_id = auth.uid()
+        or (o.store_id is not null and public.owns_store(o.store_id))
+        or public.is_admin()
+      )
+  );
+$$;
+
+-- ---- profiles --------------------------------------------------------
+-- Own row or admin. No write policy: profile writes go through the API,
+-- which whitelists fields, so a user can never edit their own role.
+drop policy if exists profiles_select_own_or_admin on public.profiles;
+create policy profiles_select_own_or_admin on public.profiles
+  for select to authenticated
+  using (id = auth.uid() or public.is_admin());
+
+-- ---- stores ----------------------------------------------------------
+-- Storefront name/description are public. No write policy: store creation
+-- (including the admin's official store) goes through the API.
+drop policy if exists stores_select_public on public.stores;
+create policy stores_select_public on public.stores
+  for select to anon, authenticated
+  using (true);
+
+-- ---- seller_applications ---------------------------------------------
+-- Applicants see their own; admins see all. Only a customer may apply, and
+-- nobody can review (approve) their own application from here.
+drop policy if exists seller_applications_select_own_or_admin on public.seller_applications;
+create policy seller_applications_select_own_or_admin on public.seller_applications
+  for select to authenticated
+  using (user_id = auth.uid() or public.is_admin());
+
+drop policy if exists seller_applications_insert_own on public.seller_applications;
+create policy seller_applications_insert_own on public.seller_applications
+  for insert to authenticated
+  with check (user_id = auth.uid() and public.current_user_role() = 'customer');
+
+-- ---- categories ------------------------------------------------------
+drop policy if exists categories_select_public on public.categories;
+create policy categories_select_public on public.categories
+  for select to anon, authenticated
+  using (true);
+
+-- ---- products --------------------------------------------------------
+-- Public sees only approved + active listings; owners and admins see their
+-- own regardless of state. Write-denied for anon/authenticated so a seller
+-- cannot flip their own approval_status.
+drop policy if exists products_select_visible_or_owner on public.products;
+create policy products_select_visible_or_owner on public.products
+  for select to anon, authenticated
+  using (
+    (status = 'active' and approval_status = 'approved')
+    or public.is_admin()
+    or public.owns_store(store_id)
+  );
+
+-- ---- product_images --------------------------------------------------
+-- An image is visible exactly when its product is.
+drop policy if exists product_images_select_visible on public.product_images;
+create policy product_images_select_visible on public.product_images
+  for select to anon, authenticated
+  using (public.can_view_product(product_id));
+
+-- ---- orders ----------------------------------------------------------
+-- The buyer, the seller who owns the order's store, or an admin.
+drop policy if exists orders_select_participant on public.orders;
+create policy orders_select_participant on public.orders
+  for select to authenticated
+  using (public.can_view_order(id));
+
+-- ---- order_items -----------------------------------------------------
+drop policy if exists order_items_select_participant on public.order_items;
+create policy order_items_select_participant on public.order_items
+  for select to authenticated
+  using (public.can_view_order(order_id));
+
+-- ---- reviews ---------------------------------------------------------
+-- Visible reviews are public; hidden ones stay visible to their author, an
+-- admin, and the store that was reviewed. Authors may create/update/delete
+-- their own review.
+drop policy if exists reviews_select_visible_or_owner on public.reviews;
+create policy reviews_select_visible_or_owner on public.reviews
+  for select to anon, authenticated
+  using (
+    is_hidden = false
+    or user_id = auth.uid()
+    or public.is_admin()
+    or public.owns_product(product_id)
+  );
+
+drop policy if exists reviews_insert_own on public.reviews;
+create policy reviews_insert_own on public.reviews
+  for insert to authenticated
+  with check (user_id = auth.uid());
+
+drop policy if exists reviews_update_own_or_admin on public.reviews;
+create policy reviews_update_own_or_admin on public.reviews
+  for update to authenticated
+  using (user_id = auth.uid() or public.is_admin())
+  with check (user_id = auth.uid() or public.is_admin());
+
+drop policy if exists reviews_delete_own_or_admin on public.reviews;
+create policy reviews_delete_own_or_admin on public.reviews
+  for delete to authenticated
+  using (user_id = auth.uid() or public.is_admin());
+
+-- ---- contact_messages ------------------------------------------------
+-- The contact form is public, but a message may only be attributed to the
+-- caller's own account (or left anonymous). Reads are limited to the
+-- sender, the addressed store, and admins; marking read / replying stays
+-- on service_role.
+drop policy if exists contact_messages_select_participant on public.contact_messages;
+create policy contact_messages_select_participant on public.contact_messages
+  for select to authenticated
+  using (
+    user_id = auth.uid()
+    or public.is_admin()
+    or (store_id is not null and public.owns_store(store_id))
+  );
+
+drop policy if exists contact_messages_insert_anyone on public.contact_messages;
+create policy contact_messages_insert_anyone on public.contact_messages
+  for insert to anon, authenticated
+  with check (user_id is null or user_id = auth.uid());
+
+-- ---- hero_slides -----------------------------------------------------
+drop policy if exists hero_slides_select_active_or_admin on public.hero_slides;
+create policy hero_slides_select_active_or_admin on public.hero_slides
+  for select to anon, authenticated
+  using (is_active = true or public.is_admin());
 
 
 -- ###################### create_order.sql ######################

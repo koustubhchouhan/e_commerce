@@ -109,10 +109,14 @@ export async function optionalAuth(req, res, next) {
 
 // Gate a route to one or more roles. Use after requireAuth.
 // e.g. router.post('/products', requireAuth, requireRole('seller', 'admin'), ...)
-export const requireRole =
-  (...roles) =>
-  (req, res, next) => {
+export const requireRole = (...roles) => {
+  const middleware = (req, res, next) => {
     if (!req.user) return next(new AppError(401, 'Not authenticated'));
     if (!roles.includes(req.user.role)) return next(new AppError(403, 'Forbidden'));
     next();
   };
+  // Exposed so the route-guard audit (test/route-guards.test.js) can assert
+  // which roles each endpoint is gated to. Carries no runtime behaviour.
+  middleware.roles = roles;
+  return middleware;
+};
