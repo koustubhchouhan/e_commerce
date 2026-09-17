@@ -241,10 +241,16 @@ Guidelines when changing the schema:
 `product_images`, `orders`, `order_items`, `reviews`, `contact_messages`,
 `hero_slides`.
 
-Row Level Security is **enabled with no policies** on every table. The Express
-API uses the `service_role` key, which bypasses RLS and is the single
-authorization layer; if the `anon` key were ever used directly against these
-tables it would read and write nothing. This is defense in depth.
+Row Level Security is **enabled with policies** on every table. The Express API
+still uses the `service_role` key (which bypasses RLS) as the primary
+authorization layer, so the policies are a second layer: they define what the
+`anon`/`authenticated` keys may read and write if they ever query Postgres
+directly. Reads cover the public catalog and a caller's own data; writes are
+limited to user-authored content (reviews, contact messages, seller
+applications). Products, stores, orders, categories and hero slides are
+write-denied to those keys on purpose, so a seller cannot self-approve a
+listing or change their own role. The policies live at the end of
+`server/db/schema.sql`.
 
 ## Payments
 
@@ -345,7 +351,9 @@ Treat this as a checklist before going live.
   matching `X-CSRF-Token` header. Bearer-token clients are exempt by design.
 - **Keep the Helmet CSP** (or tighten it) and serve the SPA with an equivalent
   `Content-Security-Policy` header for the HTML document.
-- **Keep RLS enabled with no policies** on every table as defense in depth.
+- **Keep RLS policies in place** on every table as defense in depth. They
+  constrain the `anon`/`authenticated` keys; the server's `service_role` key
+  bypasses them by design, so the API remains the primary authorization layer.
 - **Do not run dev seeding in production.** `npm run seed:users` creates
   accounts with a known password and the login page exposes quick-login
   buttons gated behind `import.meta.env.DEV`, which Vite strips from production
