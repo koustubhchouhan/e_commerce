@@ -4,13 +4,19 @@ import { AppError } from '../middleware/error.js';
 const REVIEW_SELECT =
   'id, product_id, user_id, rating, comment, is_hidden, seller_reply, seller_replied_at, created_at, profiles(full_name)';
 
+// The public view exposes the author's display name as `author_name` (via the
+// display_name() helper) so this read works under RLS, without exposing the
+// profiles table.
+const PUBLIC_REVIEW_SELECT =
+  'id, product_id, user_id, rating, comment, is_hidden, seller_reply, seller_replied_at, created_at, author_name';
+
 // Shared shape for a review row, used by the public, admin and seller listings.
 export function serializeReview(r) {
   return {
     id: r.id,
     productId: r.product_id,
     userId: r.user_id,
-    author: r.profiles?.full_name ?? 'Anonymous',
+    author: r.author_name ?? r.profiles?.full_name ?? 'Anonymous',
     rating: r.rating,
     comment: r.comment,
     isHidden: r.is_hidden ?? false,
@@ -49,8 +55,8 @@ export async function canUserReview(userId, productId) {
 // from both the list and the average.
 export async function listReviews(productId) {
   const { data, error } = await db
-    .from('reviews')
-    .select(REVIEW_SELECT)
+    .from('reviews_public')
+    .select(PUBLIC_REVIEW_SELECT)
     .eq('product_id', productId)
     .eq('is_hidden', false)
     .order('created_at', { ascending: false });

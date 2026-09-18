@@ -273,7 +273,9 @@ sets it.
   seller applications). Product approval, roles, prices and order writes stay
   on `service_role`, so sellers cannot self-approve or self-promote. Helper
   functions (`is_admin`, `owns_store`, `can_view_product`, …) live alongside
-  the policies at the end of `db/schema.sql`.
+  the policies at the end of `db/schema.sql`. The public review list reads
+  `public.reviews_public`, a `security_invoker` view that pairs each review
+  with `display_name(user_id)` while keeping the reviews policies in force.
 
 ## Layout
 

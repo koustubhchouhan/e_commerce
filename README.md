@@ -250,7 +250,9 @@ limited to user-authored content (reviews, contact messages, seller
 applications). Products, stores, orders, categories and hero slides are
 write-denied to those keys on purpose, so a seller cannot self-approve a
 listing or change their own role. The policies live at the end of
-`server/db/schema.sql`.
+`server/db/schema.sql`. A `security_invoker` view, `reviews_public`, adds the
+author's display name via a `display_name()` helper so the public review list
+can read under RLS without exposing the `profiles` table.
 
 ## Payments
 

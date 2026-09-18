@@ -320,10 +320,11 @@ create index if not exists idx_hero_slides_order on public.hero_slides(is_active
 --     anon/authenticated and stay on service_role, so a seller can never
 --     self-approve a listing or change their own role.
 --
--- Known gap for stage 3: the public review list embeds
--- profiles(full_name), but profiles is readable only by its owner and
--- admins. A user-scoped reviews read needs a narrow public view of display
--- names; until that exists that read stays on service_role.
+-- Display names: the public review list needs each author's name, but
+-- profiles is readable only by its owner and admins. The display_name()
+-- helper projects just the name, and the reviews_public view joins it onto
+-- reviews with reviews RLS still in force, so a user-scoped read gets author
+-- names without opening up the profiles table.
 -- =====================================================================
 
 alter table public.profiles            enable row level security;
@@ -420,6 +421,18 @@ as $$
         or public.is_admin()
       )
   );
+$$;
+
+-- Resolve a profile's public display name without exposing email, phone,
+-- role or password hashes. SECURITY DEFINER so it can read past the
+-- owner/admin-only profiles policy; it is the only profile column the public
+-- reviews_public view needs.
+create or replace function public.display_name(p_user_id uuid)
+returns text
+language sql stable security definer
+set search_path = ''
+as $$
+  select nullif(full_name, '') from public.profiles where id = p_user_id;
 $$;
 
 -- ---- profiles --------------------------------------------------------
@@ -544,3 +557,27 @@ drop policy if exists hero_slides_select_active_or_admin on public.hero_slides;
 create policy hero_slides_select_active_or_admin on public.hero_slides
   for select to anon, authenticated
   using (is_active = true or public.is_admin());
+
+-- ---- public read views ----------------------------------------------
+-- The public review list needs the author's display name. This view adds it
+-- via display_name() while `security_invoker = true` keeps the reviews RLS
+-- policies in force: an anonymous visitor sees visible reviews only, and an
+-- author, the store that was reviewed, or an admin still sees hidden ones.
+create or replace view public.reviews_public
+with (security_invoker = true)
+as
+select
+  r.id,
+  r.product_id,
+  r.user_id,
+  public.display_name(r.user_id) as author_name,
+  r.rating,
+  r.comment,
+  r.is_hidden,
+  r.seller_reply,
+  r.seller_replied_at,
+  r.created_at
+from public.reviews r;
+
+grant select on public.reviews_public to anon, authenticated;
+grant execute on function public.display_name(uuid) to anon, authenticated;
