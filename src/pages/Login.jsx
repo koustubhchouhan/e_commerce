@@ -3,6 +3,7 @@ import { ShoppingCart, Mail, Lock, EyeOff, Eye, ArrowRight, Globe, AlertCircle }
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { startGoogleOAuth, isGoogleOAuthConfigured } from '../lib/googleAuth';
+import { POLICY_LINKS } from '../lib/business';
 
 // Role the person intends to sign in as. This is only a UX guard — the real
 // role still comes from the server. If the selection mismatches the account,
@@ -223,6 +224,18 @@ export default function Login() {
             Request Access
           </Link>
         </p>
+
+        <nav className="mt-5 flex flex-wrap justify-center gap-x-4 gap-y-2">
+          {POLICY_LINKS.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="text-[#9e8c73] text-xs hover:text-[#ff9933] transition-colors"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
       </div>
     </div>
   );

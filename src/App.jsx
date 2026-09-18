@@ -25,6 +25,12 @@ import OrderDetails from "./pages/OrderDetails";
 import SearchResults from "./pages/SearchResults";
 import SellerRequests from "./pages/SellerRequests";
 import NotFound from "./pages/NotFound";
+import PolicyLayout from "./components/PolicyLayout";
+import TermsAndConditions from "./pages/legal/TermsAndConditions";
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import RefundPolicy from "./pages/legal/RefundPolicy";
+import ShippingPolicy from "./pages/legal/ShippingPolicy";
+import ContactUs from "./pages/legal/ContactUs";
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { userRole } = useAuth();
@@ -75,6 +81,16 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+
+            {/* Public legal pages — reachable without signing in so buyers and
+                payment-gateway reviewers can always read our policies. */}
+            <Route element={<PolicyLayout />}>
+              <Route path="/terms" element={<TermsAndConditions />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/refund-policy" element={<RefundPolicy />} />
+              <Route path="/shipping-policy" element={<ShippingPolicy />} />
+              <Route path="/contact-us" element={<ContactUs />} />
+            </Route>
 
             <Route
               path="/home"

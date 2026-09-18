@@ -164,3 +164,61 @@
     animation: none;
   }
 }
+
+/* Typography for the public legal/policy pages (Terms, Privacy, Refund,
+   Shipping, Contact). Scoped so it never leaks into the rest of the app. */
+.policy-prose {
+  color: var(--color-on-surface-variant);
+  font-size: 0.95rem;
+  line-height: 1.75;
+}
+
+.policy-prose h2 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff4e6;
+  margin: 2rem 0 0.75rem;
+}
+
+.policy-prose h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-on-surface);
+  margin: 1.25rem 0 0.5rem;
+}
+
+.policy-prose p {
+  margin-bottom: 0.9rem;
+}
+
+.policy-prose ul,
+.policy-prose ol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0 0 1rem 1.35rem;
+}
+
+.policy-prose ul {
+  list-style: disc;
+}
+
+.policy-prose ol {
+  list-style: decimal;
+}
+
+.policy-prose a {
+  color: var(--color-primary-container);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.policy-prose a:hover {
+  color: var(--color-primary-fixed);
+}
+
+.policy-prose strong {
+  color: var(--color-on-surface);
+  font-weight: 600;
+}
