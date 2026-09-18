@@ -1,0 +1,37 @@
+# Render Blueprint — one-click deploy for the Express API.
+#
+# In the Render dashboard: New + -> Blueprint -> pick this repo. Render reads
+# this file, then asks for the env vars marked `sync: false` below.
+#
+# After the frontend is deployed, set CLIENT_ORIGIN to the SPA origin (e.g.
+# https://your-app.vercel.app) and put the API host into vercel.json's rewrite.
+services:
+  - type: web
+    name: novamarket-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NODE_ENV
+        value: production
+      # The SPA and API share a site through the Vercel proxy, so 'lax' is
+      # correct. Use 'none' only if the browser calls the API directly across
+      # sites (requires HTTPS).
+      - key: COOKIE_SAMESITE
+        value: lax
+      # Exact SPA origin, e.g. https://your-app.vercel.app
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      # SECRET: bypasses RLS. Server-side only.
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

@@ -294,7 +294,9 @@ integration (for example Razorpay or Stripe) needs:
 
 ## Deployment
 
-The frontend and the API deploy separately.
+The frontend and the API deploy separately. Ready-made config lives in
+`render.yaml` (backend blueprint), `server/Procfile` and `vercel.json`
+(frontend); adjust the placeholders described below.
 
 ### Backend (Render, Railway, Fly.io, ...)
 
@@ -304,6 +306,12 @@ The frontend and the API deploy separately.
 - Set all backend environment variables, including `NODE_ENV=production`,
   `CLIENT_ORIGIN=https://<your-spa-origin>` and the three Supabase keys.
 - Use a Node 20+ runtime.
+
+**Render:** create a Blueprint from this repo and Render reads `render.yaml`
+(`rootDir: server`, `/health` health check). It prompts for the variables marked
+`sync: false`. Render injects `PORT` automatically, so don't set it yourself.
+The free plan spins down when idle, so the first request may be slow.
+
 
 ### Frontend (Vercel, Netlify, ...)
 
@@ -322,6 +330,10 @@ The frontend and the API deploy separately.
     ]
   }
   ```
+
+  This repo already ships `vercel.json` with that rewrite plus a
+  `/(.*) -> /index.html` catch-all (so deep links like `/terms` work). Replace
+  `YOUR-API-HOST.onrender.com` with your real API host before deploying.
 
   **Option B — direct cross-site calls.** Set `VITE_API_URL` to the API origin.
   Because the SPA and API are now on different sites, the API must run with
