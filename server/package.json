@@ -12,7 +12,7 @@
     "seed:users": "node scripts/seed-users.js"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.0.0"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
