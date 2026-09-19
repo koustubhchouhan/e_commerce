@@ -5,6 +5,7 @@ import GlassCard from '../components/GlassCard';
 import { useToastStore } from '../store/toastStore';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
+import { BUSINESS, businessAddress } from '../lib/business';
 
 const inputClass = 'w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-3 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors';
 
@@ -117,8 +118,8 @@ export default function Contact() {
             </div>
             <div>
               <h3 className="font-[Outfit] text-xl font-bold text-[#fff4e6] mb-1">Direct Line</h3>
-              <p className="text-[#cbb89d] text-sm mb-1">Mon-Fri from 9am to 6pm EST.</p>
-              <a href="tel:+18005550199" className="text-[#ffd27a] font-semibold hover:underline">+1 (800) 555-0199</a>
+              <p className="text-[#cbb89d] text-sm mb-1">{BUSINESS.supportHours}</p>
+              <a href={`tel:${BUSINESS.phone.replace(/[^+\d]/g, '')}`} className="text-[#ffd27a] font-semibold hover:underline">{BUSINESS.phone}</a>
             </div>
           </GlassCard>
 
@@ -129,7 +130,12 @@ export default function Contact() {
             <div>
               <h3 className="font-[Outfit] text-xl font-bold text-[#fff4e6] mb-1">Headquarters</h3>
               <p className="text-[#cbb89d] text-sm leading-relaxed">
-                1284 Neon Boulevard, Suite 404<br/>Neo-Angeles, CA 90210<br/>United States
+                {businessAddress.map((line, index) => (
+                  <span key={line}>
+                    {line}
+                    {index < businessAddress.length - 1 && <br />}
+                  </span>
+                ))}
               </p>
             </div>
           </GlassCard>
