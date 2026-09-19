@@ -275,6 +275,24 @@ export const api = {
   order: (id) => request(`/orders/${id}`, { auth: true }),
   cancelOrder: (id) => request(`/orders/${id}/cancel`, { method: 'PATCH', auth: true }),
 
+  // ---- Payments ----
+  // Opens a gateway order for the server-priced cart. Returns the public keyId
+  // plus the gateway order id the Razorpay modal needs.
+  createPaymentOrder: (items, shippingAddress) =>
+    request('/payments/order', {
+      method: 'POST',
+      body: { items, shipping_address: shippingAddress },
+      auth: true,
+    }),
+  // Called from the modal's success handler with the gateway's signature. The
+  // server verifies it, then flips the orders to paid.
+  verifyPayment: ({ razorpay_order_id, razorpay_payment_id, razorpay_signature }) =>
+    request('/payments/verify', {
+      method: 'POST',
+      body: { razorpay_order_id, razorpay_payment_id, razorpay_signature },
+      auth: true,
+    }),
+
   // ---- Contact ----
   submitContactMessage: (data) => request('/contact', { method: 'POST', body: data, auth: true }),
   myContactMessages: () => request('/contact-messages/mine', { auth: true }),

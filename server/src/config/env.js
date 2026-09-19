@@ -11,6 +11,24 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
+// Razorpay is optional: without it the app still boots (local dev, tests) and
+// the /payments routes answer 503 "Payments not configured". KEY_SECRET and
+// WEBHOOK_SECRET are server-only; only keyId ever reaches the browser.
+const razorpay = {
+  keyId: process.env.RAZORPAY_KEY_ID || '',
+  keySecret: process.env.RAZORPAY_KEY_SECRET || '',
+  webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || '',
+};
+const paymentsConfigured = Boolean(razorpay.keyId && razorpay.keySecret);
+
+if ((process.env.NODE_ENV || 'development') !== 'test') {
+  if (!paymentsConfigured) {
+    console.warn('[env] Razorpay keys not set - /payments routes will return 503.');
+  } else if (!razorpay.webhookSecret) {
+    console.warn('[env] RAZORPAY_WEBHOOK_SECRET not set - the webhook endpoint will reject events.');
+  }
+}
+
 export const env = {
   port: Number(process.env.PORT) || 4000,
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
@@ -23,4 +41,6 @@ export const env = {
   supabaseUrl: process.env.SUPABASE_URL,
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  razorpay,
+  paymentsConfigured,
 };

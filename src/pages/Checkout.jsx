@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, CreditCard, ArrowRight, Check } from 'lucide-react';
+import { ShieldCheck, CreditCard, ArrowRight, Check, Lock } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
@@ -9,6 +9,30 @@ import { api } from '../lib/api';
 import { inr } from '../lib/money';
 
 const STEPS = ['Shipping', 'Payment'];
+
+const RAZORPAY_SRC = 'https://checkout.razorpay.com/v1/checkout.js';
+
+// Inject Razorpay's checkout script exactly once. Resolves with the global
+// `Razorpay` constructor so a dismissed/duplicated modal cannot double-load it.
+function loadRazorpay() {
+  if (typeof window === 'undefined') return Promise.reject(new Error('Payments unavailable.'));
+  if (window.Razorpay) return Promise.resolve(window.Razorpay);
+
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${RAZORPAY_SRC}"]`);
+    const script = existing || document.createElement('script');
+    script.addEventListener('load', () => {
+      if (window.Razorpay) resolve(window.Razorpay);
+      else reject(new Error('Could not start the payment gateway.'));
+    });
+    script.addEventListener('error', () => reject(new Error('Could not reach the payment gateway.')));
+    if (!existing) {
+      script.src = RAZORPAY_SRC;
+      script.async = true;
+      document.head.appendChild(script);
+    }
+  });
+}
 
 export default function Checkout() {
   const [step, setStep] = useState(0);
@@ -29,7 +53,6 @@ export default function Checkout() {
     pin: '',
     phone: '',
   });
-  const [payment_form, setPayment] = useState({ cardNumber: '', expiry: '', cvv: '' });
   const { user } = useAuth();
   const saved = user?.shippingAddress;
   const appliedDefault = useRef(false);
@@ -57,28 +80,74 @@ export default function Checkout() {
     }
     setPlacing(true);
     try {
-      const payload = {
-        items: items.map(({ product, quantity }) => ({ product_id: product.id, quantity })),
-        shipping_address: {
-          firstName: shipping_form.firstName,
-          lastName: shipping_form.lastName,
-          address: shipping_form.address,
-          city: shipping_form.city,
-          pin: shipping_form.pin,
-          phone: shipping_form.phone,
-        },
+      const payloadItems = items.map(({ product, quantity }) => ({
+        product_id: product.id,
+        quantity,
+      }));
+      const shippingAddress = {
+        firstName: shipping_form.firstName,
+        lastName: shipping_form.lastName,
+        address: shipping_form.address,
+        city: shipping_form.city,
+        pin: shipping_form.pin,
+        phone: shipping_form.phone,
       };
-      const res = await api.createOrder(payload.items, payload.shipping_address);
-      clearCart();
-      const orderCount = res.orders?.length ?? 1;
-      addToast(
-        orderCount > 1
-          ? `Order placed — split into ${orderCount} store orders.`
-          : 'Order placed successfully!',
-        'success'
-      );
-      navigate('/order-confirmation', {
-        state: { orders: res.orders ?? [], orderId: res.order_id, total: res.total },
+
+      // Open the gateway order (server prices it) and load the modal in parallel.
+      const [Razorpay, order] = await Promise.all([
+        loadRazorpay(),
+        api.createPaymentOrder(payloadItems, shippingAddress),
+      ]);
+
+      // Resolves on a verified capture, rejects on dismiss/failure so the catch
+      // below can surface a message. Pending orders stay on hold for a retry.
+      await new Promise((resolve, reject) => {
+        const rzp = new Razorpay({
+          key: order.keyId,
+          amount: order.amount,
+          currency: order.currency,
+          name: 'NovaMarket',
+          description: order.orders?.length > 1 ? `${order.orders.length} store orders` : 'Order payment',
+          order_id: order.razorpayOrderId,
+          prefill: {
+            name: `${shipping_form.firstName} ${shipping_form.lastName}`.trim(),
+            contact: shipping_form.phone,
+            email: user?.email,
+          },
+          notes: { order_ids: (order.orderIds ?? []).join(',') },
+          theme: { color: '#ff9933' },
+          handler: async (response) => {
+            try {
+              await api.verifyPayment(response);
+              clearCart();
+              const orderCount = order.orders?.length ?? 1;
+              addToast(
+                orderCount > 1
+                  ? `Payment successful — split into ${orderCount} store orders.`
+                  : 'Payment successful!',
+                'success'
+              );
+              navigate('/order-confirmation', {
+                state: {
+                  orders: order.orders ?? [],
+                  orderId: order.orderIds?.[0],
+                  total: order.total,
+                },
+              });
+              resolve();
+            } catch (err) {
+              reject(new Error(err.message || 'We could not confirm your payment.'));
+            }
+          },
+          modal: {
+            ondismiss: () =>
+              reject(new Error('Payment cancelled. Your order is on hold — you can retry.')),
+          },
+        });
+        rzp.on('payment.failed', (response) => {
+          reject(new Error(response?.error?.description || 'Payment failed. Please try again.'));
+        });
+        rzp.open();
       });
     } catch (err) {
       addToast(err.message || 'Failed to place order.', 'error');
@@ -136,17 +205,19 @@ export default function Checkout() {
               <div className="flex items-center gap-2 text-xs text-[#cbb89d] mb-2">
                 <CreditCard size={15} className="text-[#ffd27a]" /> All major credit & debit cards accepted
               </div>
-              <div className="flex flex-col gap-5">
-                <Field label="Card Number" value={payment_form.cardNumber} onChange={v => setPayment({...payment_form, cardNumber: v})} placeholder="4242 4242 4242 4242" />
-                <div className="grid grid-cols-2 gap-4">
-                  <Field label="Expiry Date" value={payment_form.expiry} onChange={v => setPayment({...payment_form, expiry: v})} placeholder="MM / YY" />
-                  <Field label="CVV" value={payment_form.cvv} onChange={v => setPayment({...payment_form, cvv: v})} placeholder="•••" />
+              <div className="rounded-xl border border-white/10 bg-[#1a1307]/70 p-5 flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-[#f1e7d7] font-semibold">
+                  <Lock size={16} className="text-[#ffd27a]" /> Secure payment via Razorpay
                 </div>
+                <p className="text-xs text-[#cbb89d] leading-relaxed">
+                  Clicking Pay opens Razorpay's secure checkout. Your card details are entered there
+                  and never touch NovaMarket's servers.
+                </p>
               </div>
               <div className="flex gap-3 mt-4">
                 <button onClick={() => setStep(0)} className="py-3.5 px-6 rounded-xl border border-white/10 text-[#f1e7d7] font-[Outfit] font-bold hover:bg-white/5 transition-all">← Back</button>
                 <button onClick={handlePlaceOrder} disabled={placing} className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-[#c98a12] to-[#ffb52e] text-white font-[Outfit] text-lg font-bold hover:shadow-[0_0_11px_rgba(201,138,18,0.22)] transition-all flex items-center justify-center gap-2 disabled:opacity-60">
-                  {placing ? 'Placing...' : 'Place Order'} {!placing && <ArrowRight size={20} />}
+                  {placing ? 'Processing...' : `Pay ${inr(total)}`} {!placing && <ArrowRight size={20} />}
                 </button>
               </div>
             </GlassCard>

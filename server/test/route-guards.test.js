@@ -10,6 +10,7 @@ import sellerRoutes from '../src/routes/seller.routes.js';
 import sellerApplicationsRoutes from '../src/routes/sellerApplications.routes.js';
 import adminRoutes from '../src/routes/admin.routes.js';
 import orderRoutes from '../src/routes/order.routes.js';
+import paymentRoutes from '../src/routes/payment.routes.js';
 import contactRoutes from '../src/routes/contact.routes.js';
 
 // Must mirror the app.use(...) mounts in src/app.js. If a router is mounted at
@@ -22,6 +23,7 @@ const MOUNTS = [
   ['', sellerApplicationsRoutes],
   ['', adminRoutes],
   ['', orderRoutes],
+  ['/payments', paymentRoutes],
   ['', contactRoutes],
 ];
 
@@ -41,6 +43,7 @@ const PUBLIC_ROUTES = new Set([
   'GET /products/:id',
   'GET /products/:id/reviews',
   'POST /contact',
+  'POST /payments/webhook',
 ]);
 
 function joinPath(prefix, routePath) {

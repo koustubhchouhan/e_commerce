@@ -834,6 +834,141 @@ begin
 end;
 $$;
 
+-- =====================================================================
+-- Payment lifecycle.
+--   mark_payment_captured -> flip a payments row to 'captured' and every order
+--     it paid for to 'paid', in one transaction. Idempotent: a webhook retry
+--     racing /payments/verify affects zero rows the second time.
+--   mark_payment_failed   -> mark the payment failed and release the stock its
+--     still-pending orders reserved, so an abandoned checkout frees inventory.
+-- Both can move money/stock, so the revokes below drop the default
+-- anon/authenticated EXECUTE grant and leave them service_role-only.
+-- =====================================================================
+create or replace function public.mark_payment_captured(
+  p_gateway_order_id   text,
+  p_gateway_payment_id text,
+  p_raw_payload        jsonb default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_payment_id uuid;
+  v_order_ids  uuid[];
+  v_status     payment_status;
+begin
+  select id into v_payment_id
+    from public.payments
+    where gateway_order_id = p_gateway_order_id
+    for update;
+
+  if not found then
+    raise exception 'Unknown payment order %', p_gateway_order_id;
+  end if;
+
+  select array_agg(order_id) into v_order_ids
+    from public.payment_orders
+    where payment_id = v_payment_id;
+
+  -- Only a payment that has not reached a terminal state flips.
+  update public.payments
+    set status             = 'captured',
+        gateway_payment_id = coalesce(gateway_payment_id, p_gateway_payment_id),
+        signature_verified = true,
+        raw_payload        = coalesce(p_raw_payload, raw_payload),
+        updated_at         = now()
+    where id = v_payment_id
+      and status in ('created', 'authorized');
+
+  update public.orders
+    set status = 'paid'
+    where id = any(coalesce(v_order_ids, '{}'::uuid[]))
+      and status = 'pending';
+
+  select status into v_status from public.payments where id = v_payment_id;
+
+  return jsonb_build_object(
+    'payment_id', v_payment_id,
+    'status',     v_status,
+    'order_ids',  coalesce(to_jsonb(v_order_ids), '[]'::jsonb)
+  );
+end;
+$$;
+
+create or replace function public.mark_payment_failed(
+  p_gateway_order_id   text default null,
+  p_gateway_payment_id text default null,
+  p_raw_payload        jsonb default null,
+  p_payment_id         uuid default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_payment_id uuid;
+  v_order_ids  uuid[];
+  v_status     payment_status;
+begin
+  select id into v_payment_id
+    from public.payments
+    where (p_payment_id is not null and id = p_payment_id)
+       or (p_gateway_order_id is not null and gateway_order_id = p_gateway_order_id)
+    for update;
+
+  if not found then
+    raise exception 'Unknown payment (order %, id %)', p_gateway_order_id, p_payment_id;
+  end if;
+
+  select array_agg(order_id) into v_order_ids
+    from public.payment_orders
+    where payment_id = v_payment_id;
+
+  -- Give back the stock of orders that were still awaiting payment.
+  update public.products p
+    set stock = p.stock + released.qty
+    from (
+      select oi.product_id, sum(oi.quantity) as qty
+      from public.order_items oi
+      join public.orders o on o.id = oi.order_id
+      where oi.order_id = any(coalesce(v_order_ids, '{}'::uuid[]))
+        and o.status = 'pending'
+        and oi.product_id is not null
+      group by oi.product_id
+    ) released
+    where p.id = released.product_id;
+
+  update public.orders
+    set status = 'cancelled'
+    where id = any(coalesce(v_order_ids, '{}'::uuid[]))
+      and status = 'pending';
+
+  update public.payments
+    set status             = 'failed',
+        gateway_payment_id = coalesce(gateway_payment_id, p_gateway_payment_id),
+        raw_payload        = coalesce(p_raw_payload, raw_payload),
+        updated_at         = now()
+    where id = v_payment_id
+      and status in ('created', 'authorized');
+
+  select status into v_status from public.payments where id = v_payment_id;
+
+  return jsonb_build_object(
+    'payment_id', v_payment_id,
+    'status',     v_status,
+    'order_ids',  coalesce(to_jsonb(v_order_ids), '[]'::jsonb)
+  );
+end;
+$$;
+
+revoke all on function public.mark_payment_captured(text, text, jsonb) from public, anon, authenticated;
+revoke all on function public.mark_payment_failed(text, text, jsonb, uuid) from public, anon, authenticated;
+grant execute on function public.mark_payment_captured(text, text, jsonb) to service_role;
+grant execute on function public.mark_payment_failed(text, text, jsonb, uuid) to service_role;
+
 
 -- ###################### seed.sql ######################
 

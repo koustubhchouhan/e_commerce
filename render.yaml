@@ -35,3 +35,12 @@ services:
       # SECRET: bypasses RLS. Server-side only.
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+      # Payments. Optional: leave unset and /payments answers 503. Only
+      # RAZORPAY_KEY_ID is ever sent to the browser.
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      # Signs the raw webhook body. Server-only.
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
