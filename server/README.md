@@ -52,9 +52,13 @@ cp .env.example .env
 | `SUPABASE_URL` | **Yes** | — | Project URL. |
 | `SUPABASE_ANON_KEY` | **Yes** | — | Used only for auth sign-in / token refresh. |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Yes** | — | Full database access, bypasses RLS. Server only, never shipped to the browser. |
+| `RAZORPAY_KEY_ID` | No | — | Razorpay key id. Unset (with the secret) keeps the API running but `/payments/*` returns `503`. |
+| `RAZORPAY_KEY_SECRET` | No | — | Razorpay key secret, verifies checkout signatures. Server only. |
+| `RAZORPAY_WEBHOOK_SECRET` | No | — | Signing secret for `POST /payments/webhook`. Server only. |
 
 The server exits at boot with a clear message if any required variable is
-missing.
+missing. The optional Razorpay variables only produce a boot warning when
+absent.
 
 ## Install and run
 
@@ -202,9 +206,21 @@ All responses are JSON. Errors use `{ "error": "message", "details": ... }`.
 Order status values: `pending`, `paid`, `shipped`, `delivered`, `cancelled`.
 Allowed transitions are `pending -> shipped`, `paid -> shipped`,
 `shipped -> delivered`, and `cancelled` from `pending`/`paid`. Only `shipped`,
-`delivered` and `cancelled` are accepted by the status endpoints; the `paid`
-state is reserved for a future payment-gateway webhook and nothing in the API
-sets it.
+`delivered` and `cancelled` are accepted by the status endpoints; `paid` is set
+by the payment capture path below, never by a status endpoint.
+
+### Payments
+
+| Method | Path | Auth | Notes |
+| --- | --- | --- | --- |
+| POST | `/payments/order` | ✓ | `{ items, shipping_address? }`. Prices the cart via `create_order`, records a `payments` row, links orders in `payment_orders`, opens a Razorpay order. Returns `{ keyId, razorpayOrderId, amount, currency, orderIds, orders, total }` (`amount` in paise). `503` when Razorpay is unconfigured. |
+| POST | `/payments/verify` | ✓ | `{ razorpay_order_id, razorpay_payment_id, razorpay_signature }`. Verifies the checkout signature then calls `mark_payment_captured`, flipping the payment to `captured` and all linked orders to `paid`. Idempotent, so it races the webhook safely. |
+| POST | `/payments/webhook` | public | Razorpay → API. No cookie/CSRF; authenticated by the `X-Razorpay-Signature` HMAC over the raw body. Handles `payment.captured` / `payment.failed`, always returns `200` once the signature verifies. Requires `RAZORPAY_WEBHOOK_SECRET`. |
+
+`RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET` never leave the server;
+only `RAZORPAY_KEY_ID` is returned to the browser. `mark_payment_captured` and
+`mark_payment_failed` are `security definer` RPCs granted to `service_role`
+only.
 
 ### Seller applications
 
@@ -255,7 +271,8 @@ sets it.
 
 `profiles`, `stores`, `seller_applications`, `categories`, `products`,
 `product_images`, `orders`, `order_items`, `reviews`, `contact_messages`,
-`hero_slides`. Full column definitions are in `db/schema.sql`.
+`hero_slides`, `payments`, `payment_orders`. Full column definitions are in
+`db/schema.sql`.
 
 - `handle_new_user` (trigger on `auth.users`) creates the matching `profiles`
   row with the default `customer` role.
@@ -266,6 +283,10 @@ sets it.
 - `create_order` (in `db/create_order.sql`) is the atomic checkout: it locks
   product rows `FOR UPDATE`, computes prices from `products`, enforces stock and
   single-store carts, and writes the order and items in one transaction.
+- `mark_payment_captured` / `mark_payment_failed` (in `db/create_order.sql`) are
+  the idempotent payment RPCs: capture flips a payment and its linked orders to
+  `paid`, failure marks the payment `failed` and returns the stock of orders
+  still `pending`.
 - Row Level Security is enabled on every table with explicit policies. The
   API's `service_role` key bypasses RLS, so the policies are a second layer for
   the `anon`/`authenticated` keys: public catalog reads plus a caller's own
@@ -283,14 +304,14 @@ sets it.
 server/
   db/                schema.sql, create_order.sql, seed.sql, setup_all.sql
   scripts/           seed-users.js (dev role accounts)
-  test/              route-guards.test.js (authz audit), auth-middleware.test.js, helpers/env.js
+  test/              route-guards.test.js (authz audit), auth-middleware.test.js, payment-signature.test.js, helpers/env.js
   src/
     config/          env.js (fail-fast), supabase.js (db + authClient)
     middleware/      auth.js (requireAuth/requireRole/optionalAuth + CSRF), validate.js, error.js, asyncHandler.js
-    services/        catalog, product, seller, admin, order, contact, review, hero, storage, session-cookies, product-data
-    controllers/     auth, catalog, product, seller, admin, order, contact, review, hero
-    routes/          health, auth, catalog, seller, sellerApplications, admin, order, contact
-    validators/      auth, catalog, product, seller, order, contact, hero
+    services/        catalog, product, seller, admin, order, payment, contact, review, hero, storage, session-cookies, product-data
+    controllers/     auth, catalog, product, seller, admin, order, payment, contact, review, hero
+    routes/          health, auth, catalog, seller, sellerApplications, admin, order, payment, contact
+    validators/      auth, catalog, product, seller, order, payment, contact, hero
     app.js           express app (helmet, cors, cookies, json, routes, error handling)
     index.js         listen()
 ```

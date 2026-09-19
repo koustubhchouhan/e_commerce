@@ -11,6 +11,7 @@ import sellerRoutes from './routes/seller.routes.js';
 import sellerApplicationsRoutes from './routes/sellerApplications.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import orderRoutes from './routes/order.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
 import contactRoutes from './routes/contact.routes.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
@@ -40,6 +41,8 @@ export function createApp() {
     })
   );
   app.use(cookieParser());
+  // Razorpay signs the raw webhook body, so capture it before the JSON parser.
+  app.use('/payments/webhook', express.raw({ type: 'application/json' }));
   app.use(express.json());
   if (env.nodeEnv !== 'test') app.use(morgan('dev'));
 
@@ -51,6 +54,7 @@ export function createApp() {
   app.use(sellerApplicationsRoutes);
   app.use(adminRoutes);
   app.use(orderRoutes);
+  app.use('/payments', paymentRoutes);
   app.use(contactRoutes);
 
   // Fallbacks (order matters: 404 first, then the error handler)

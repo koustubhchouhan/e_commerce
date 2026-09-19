@@ -64,8 +64,8 @@ graph LR
 
 - **Node.js 20+** (the server declares `engines.node >= 20`).
 - A **Supabase** project (the free tier is enough).
-- Optional: a payment-provider account — see [Payments](#payments). There is no
-  live payment gateway wired in yet.
+- Optional: a Razorpay account — see [Payments](#payments). Without keys the app
+  still runs; checkout reports that payments are not configured.
 
 ## Local setup
 
@@ -208,6 +208,9 @@ put the `service_role` key or any other secret in a `VITE_` variable.
 | `SUPABASE_URL` | **Yes** | — | Supabase project URL. |
 | `SUPABASE_ANON_KEY` | **Yes** | — | Used only for auth sign-in / token refresh. |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Yes** | — | Full database access, bypasses RLS. Server only. |
+| `RAZORPAY_KEY_ID` | No | — | Razorpay key id. Without it (and the secret) `/payments/*` returns `503`. |
+| `RAZORPAY_KEY_SECRET` | No | — | Razorpay key secret, signs checkout signatures. Server only. |
+| `RAZORPAY_WEBHOOK_SECRET` | No | — | Signing secret for `POST /payments/webhook`. Server only. |
 
 The server fails fast at boot if any required Supabase variable is missing.
 
@@ -219,7 +222,7 @@ Supabase SQL Editor.
 - `server/db/setup_all.sql` — the whole schema in one paste. **Use this for a
   fresh project.**
 - `server/db/schema.sql` — tables, enums, triggers, indexes, RLS.
-- `server/db/create_order.sql` — the checkout function.
+- `server/db/create_order.sql` — the checkout function and the payment RPCs.
 - `server/db/seed.sql` — seed categories and default hero slides.
 
 Guidelines when changing the schema:
@@ -239,7 +242,7 @@ Guidelines when changing the schema:
 
 `profiles`, `stores`, `seller_applications`, `categories`, `products`,
 `product_images`, `orders`, `order_items`, `reviews`, `contact_messages`,
-`hero_slides`.
+`hero_slides`, `payments`, `payment_orders`.
 
 Row Level Security is **enabled with policies** on every table. The Express API
 still uses the `service_role` key (which bypasses RLS) as the primary
@@ -256,41 +259,52 @@ can read under RLS without exposing the `profiles` table.
 
 ## Payments
 
-**There is no live payment gateway integration.** The current checkout is a
-placeholder that models the flow without charging anyone:
+Checkout is wired to **Razorpay**. The flow is deliberately a thin redirect to
+the gateway's hosted modal — no card data ever reaches this app:
 
-1. The SPA collects card fields for layout only — they are not sent to the API
-   and no card data is stored.
-2. `POST /orders` calls the `create_order` Postgres function, which creates the
-   order with status `pending`, computes every price from the `products` table
-   (the client never sends a price), locks product rows `FOR UPDATE`, decrements
-   stock and rejects mixed-store carts. The whole call is one transaction.
-3. An order can then be cancelled by the customer before it ships, or advanced
-   in fulfilment by a seller (`PATCH /seller/orders/:id/status`) or an admin
-   (`PATCH /admin/orders/:id/status`). Cancelling restores stock. The allowed
-   transitions are `pending -> shipped`, `paid -> shipped`,
-   `shipped -> delivered`, and `cancelled` from `pending`/`paid`. Only
-   `shipped`, `delivered` and `cancelled` are accepted by these endpoints.
+1. The SPA collects the shipping address and calls `POST /payments/order` with
+   the cart. The server re-runs the `create_order` Postgres function, which
+   creates the orders as `pending`, computes every price from the `products`
+   table (the client never sends a price), locks product rows `FOR UPDATE`,
+   decrements stock and rejects mixed-store carts — all in one transaction.
+2. The server records a `payments` row, links it to every order it covers
+   through `payment_orders` (one cart can split across stores), then creates a
+   matching Razorpay order for exactly the database-computed total. Only the
+   public `keyId`, the gateway order id and the amount go back to the browser.
+3. The SPA opens Razorpay's checkout script
+   (`checkout.razorpay.com/v1/checkout.js`). On success the browser posts the
+   gateway ids + signature to `POST /payments/verify`; the server verifies the
+   signature and calls `mark_payment_captured`, which flips the payment to
+   `captured` and all linked orders to `paid` atomically and idempotently.
+4. A dismissed modal or a failed payment leaves the orders `pending` so the
+   customer can retry; no stock is lost.
+5. Razorpay also calls the signed webhook `POST /payments/webhook`
+   (`payment.captured` / `payment.failed`) so capture still completes if the
+   browser never returns. The webhook has no auth/CSRF — its HMAC signature
+   over the raw body is the authentication. `mark_payment_failed` releases the
+   stock of still-pending orders.
 
-The `paid` status exists in the order-status enum but **nothing in the API sets
-it** — it is reserved for a payment gateway webhook.
+Amounts are charged in INR and only cover the order subtotal (no shipping or
+tax yet). Refunds are deferred to a later phase; `PATCH /orders/:id/cancel`
+still only applies to `pending` orders.
 
+Payment secrets are server-only (`RAZORPAY_KEY_SECRET`,
+`RAZORPAY_WEBHOOK_SECRET`). If `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` are
+unset the API still boots for catalog/order work, but `/payments/*` answers
+`503 Payments not configured`. See `server/.env.example` and `render.yaml`.
 
-### Adding a real gateway
+Razorpay's checkout script is loaded from `https://checkout.razorpay.com` and
+the browser may talk to `https://api.razorpay.com`; the SPA host must allow
+those in its Content-Security-Policy if one is set (the API's own strict CSP
+only applies to JSON responses).
 
-The status enum and the `pending` order already give you the seams. A typical
-integration (for example Razorpay or Stripe) needs:
+### Webhook setup
 
-1. A server endpoint that creates a provider order/intent for an existing
-   `pending` order and returns the provider's public key + order id to the SPA.
-2. A signed webhook endpoint (verify the signature before trusting the body)
-   that marks the order `paid` on success. Webhooks must be called by the
-   provider, so they cannot go through the cookie-based CSRF flow — treat the
-   signature as the authentication.
-3. Provider secrets stored as server environment variables only. Never in a
-   `VITE_` variable and never in the repository.
-4. Idempotency: record the provider payment id on the order and ignore repeat
-   webhook deliveries.
+In the Razorpay dashboard add a webhook pointing at
+`https://<api-host>/payments/webhook`, subscribe to `payment.captured` and
+`payment.failed`, and copy the signing secret into `RAZORPAY_WEBHOOK_SECRET`.
+The endpoint always returns `200` once the signature verifies so Razorpay does
+not retry on transient downstream errors.
 
 ## Deployment
 
