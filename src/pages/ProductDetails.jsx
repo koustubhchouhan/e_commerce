@@ -165,7 +165,7 @@ export default function ProductDetails() {
 
         {/* Left: Image Slider */}
         <div className="flex flex-col gap-4">
-          <GlassCard className="relative aspect-square flex items-center justify-center p-6 bg-[#100901]/50" hover={false}>
+          <GlassCard className="relative w-full max-w-[560px] mx-auto aspect-square flex items-center justify-center p-6 bg-[#100901]/50" hover={false}>
             <img src={images[activeImage]} alt={product.title} className="w-full h-full object-contain transition-opacity duration-500" />
             {hasGallery && (
               <>
@@ -184,7 +184,7 @@ export default function ProductDetails() {
             )}
           </GlassCard>
           {hasGallery && (
-            <div className="flex gap-4 overflow-x-auto pb-1">
+            <div className="flex gap-4 overflow-x-auto pb-1 w-full max-w-[560px] mx-auto">
               {images.map((img, idx) => (
                 <button key={idx} onClick={() => setActiveImage(idx)} className={`w-24 h-24 rounded-lg overflow-hidden shrink-0 transition-all ${activeImage === idx ? 'border-2 border-[#ff9933] opacity-100' : 'border border-white/10 opacity-60 hover:opacity-100'}`}>
                   <img src={img} alt={`${product.title} view ${idx + 1}`} className="w-full h-full object-cover" />
