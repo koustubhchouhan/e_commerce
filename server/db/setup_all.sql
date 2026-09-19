@@ -38,6 +38,18 @@ do $$ begin
   create type order_status as enum ('pending', 'paid', 'shipped', 'delivered', 'cancelled');
 exception when duplicate_object then null; end $$;
 
+-- Gateway-agnostic payment lifecycle: 'created' is a local gateway order
+-- before the customer pays; 'captured'/'authorized'/'failed'/'refunded' come
+-- from the payment gateway.
+do $$ begin
+  create type payment_status as enum ('created', 'authorized', 'captured', 'failed', 'refunded');
+exception when duplicate_object then null; end $$;
+
+-- 'expired' marks an unpaid order abandoned at checkout (its reserved stock
+-- is released); 'refunded' marks an order whose payment was returned.
+alter type order_status add value if not exists 'expired';
+alter type order_status add value if not exists 'refunded';
+
 -- ---- profiles (1:1 with auth.users) ---------------------------------
 create table if not exists public.profiles (
   id               uuid primary key references auth.users(id) on delete cascade,
@@ -224,6 +236,53 @@ create table if not exists public.order_items (
 
 create index if not exists idx_order_items_order_id on public.order_items(order_id);
 
+-- ---- payments -------------------------------------------------------
+-- One payment covers one checkout, which can fan out to several orders: a
+-- mixed cart is split one order per seller by create_orders(). The gateway is
+-- charged once, so payments is the source of truth for money and
+-- payment_orders links it to every order it paid for.
+--
+-- Writes are service_role only. The API creates rows with status 'created',
+-- then a signature-verified webhook (or /payments/verify) flips them to
+-- 'captured'. gateway_payment_id is unique so a retried webhook can never
+-- double-insert.
+create table if not exists public.payments (
+  id                 uuid primary key default gen_random_uuid(),
+  user_id            uuid not null references public.profiles(id) on delete restrict,
+  gateway            text not null default 'razorpay',
+  gateway_order_id   text,
+  gateway_payment_id text,
+  amount             numeric(12,2) not null default 0,
+  currency           text not null default 'INR',
+  status             payment_status not null default 'created',
+  signature_verified boolean not null default false,
+  raw_payload        jsonb,
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz not null default now()
+);
+
+create index if not exists idx_payments_user_id on public.payments(user_id);
+
+-- A gateway id must map to at most one payment row (webhook retries, verify
+-- after webhook, etc.). Partial indexes so the many NULL placeholders during
+-- the 'created' stage do not collide.
+create unique index if not exists idx_payments_gateway_order_id
+  on public.payments(gateway_order_id) where gateway_order_id is not null;
+create unique index if not exists idx_payments_gateway_payment_id
+  on public.payments(gateway_payment_id) where gateway_payment_id is not null;
+
+-- One payment may cover several orders, and an order is paid by exactly one
+-- payment. The composite primary key enforces the first, the unique on
+-- order_id enforces the second.
+create table if not exists public.payment_orders (
+  payment_id uuid not null references public.payments(id) on delete cascade,
+  order_id   uuid not null references public.orders(id) on delete restrict,
+  primary key (payment_id, order_id),
+  unique (order_id)
+);
+
+create index if not exists idx_payment_orders_order_id on public.payment_orders(order_id);
+
 -- Backfill store_id for orders created before splitting existed. Every legacy
 -- order came from a single store because checkout rejected mixed carts.
 update public.orders o
@@ -347,6 +406,8 @@ alter table public.products            enable row level security;
 alter table public.product_images      enable row level security;
 alter table public.orders              enable row level security;
 alter table public.order_items         enable row level security;
+alter table public.payments            enable row level security;
+alter table public.payment_orders      enable row level security;
 alter table public.reviews             enable row level security;
 alter table public.contact_messages    enable row level security;
 alter table public.hero_slides         enable row level security;
@@ -512,6 +573,21 @@ create policy orders_select_participant on public.orders
 -- ---- order_items -----------------------------------------------------
 drop policy if exists order_items_select_participant on public.order_items;
 create policy order_items_select_participant on public.order_items
+  for select to authenticated
+  using (public.can_view_order(order_id));
+
+-- ---- payments --------------------------------------------------------
+-- Only the buyer and admins may read a payment directly; sellers fulfil the
+-- order and never need the gateway ids. Writes stay on service_role: the
+-- server is the only actor allowed to mark a payment captured, and only
+-- after verifying the gateway signature.
+drop policy if exists payments_select_own_or_admin on public.payments;
+create policy payments_select_own_or_admin on public.payments
+  for select to authenticated
+  using (user_id = auth.uid() or public.is_admin());
+
+drop policy if exists payment_orders_select_participant on public.payment_orders;
+create policy payment_orders_select_participant on public.payment_orders
   for select to authenticated
   using (public.can_view_order(order_id));
 
