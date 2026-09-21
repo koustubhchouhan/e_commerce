@@ -6,6 +6,7 @@ import {
   listSellers,
   revokeSeller,
   listAllOrders,
+  getAdminOrder,
   updateAdminOrderStatus,
   listCategories,
   createCategory,
@@ -78,6 +79,13 @@ router.delete(
   revokeSeller
 );
 router.get('/admin/orders', requireAuth, requireRole('admin'), listAllOrders);
+router.get(
+  '/admin/orders/:id',
+  requireAuth,
+  requireRole('admin'),
+  validateParams(uuidParamSchema),
+  getAdminOrder
+);
 router.patch(
   '/admin/orders/:id/status',
   requireAuth,

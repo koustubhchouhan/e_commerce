@@ -122,6 +122,41 @@ export async function getOrder(userId, userRole, orderId) {
   return withItems;
 }
 
+// GET /admin/orders/:id — everything an admin needs about one order: the order
+// itself, its line items, the buyer's contact details and the seller store.
+// Same shape as getOrder() plus the customer/store info an admin may see.
+export async function getOrderForAdmin(orderId) {
+  const { data: order, error } = await db
+    .from('orders')
+    .select(
+      'id, user_id, store_id, status, subtotal, total, shipping_address, created_at, profiles(full_name, email, phone), stores(name)'
+    )
+    .eq('id', orderId)
+    .maybeSingle();
+
+  if (error) throw new AppError(500, `Could not load order: ${error.message}`);
+  if (!order) throw new AppError(404, 'Order not found');
+
+  const [withItems] = await attachItems([order]);
+
+  return {
+    id: withItems.id,
+    status: withItems.status,
+    subtotal: withItems.subtotal,
+    total: withItems.total,
+    shippingAddress: withItems.shipping_address,
+    createdAt: withItems.created_at,
+    customer: {
+      id: order.user_id,
+      name: order.profiles?.full_name ?? null,
+      email: order.profiles?.email ?? null,
+      phone: order.profiles?.phone ?? null,
+    },
+    store: order.stores?.name ?? null,
+    items: withItems.items,
+  };
+}
+
 // Allowed order lifecycle steps (terminal states have no outgoing steps).
 const STATUS_TRANSITIONS = {
   pending: ['shipped', 'cancelled'],

@@ -1,6 +1,5 @@
 import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp, MessageSquare, Menu, Reply, Image as ImageIcon, Pencil, ClipboardCheck, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { ProductGrid } from './Home';
 import GlassCard from '../components/GlassCard';
 import { useToastStore } from '../store/toastStore';
@@ -50,6 +49,16 @@ const EMPTY_SLIDE = {
   isActive: true,
 };
 
+// Small labelled section inside the admin order-detail modal.
+function OrderDetailBlock({ title, children }) {
+  return (
+    <div className="rounded-lg border border-white/10 bg-[#1a1307]/40 p-4">
+      <h3 className="text-[#ff9933] text-xs font-bold uppercase tracking-wider mb-2">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('products');
   const [navOpen, setNavOpen] = useState(false);
@@ -84,6 +93,8 @@ export default function AdminPanel() {
   const [busy, setBusy] = useState(false);
   const [updating, setUpdating] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [orderDetail, setOrderDetail] = useState(null);
+  const [loadingOrderDetail, setLoadingOrderDetail] = useState(false);
   const [categoryModal, setCategoryModal] = useState(false);
   const [messageModal, setMessageModal] = useState(null);
   const [replyText, setReplyText] = useState('');
@@ -179,6 +190,23 @@ export default function AdminPanel() {
       addToast('Failed to load orders.', 'error');
     } finally {
       if (spinner) setLoadingOrders(false);
+    }
+  };
+
+  // Open the order drawer immediately with the row's data, then fill in the
+  // customer contact, shipping address and full line items from the admin
+  // detail endpoint.
+  const openOrderDetail = async (order) => {
+    setOrderDetail(order);
+    setLoadingOrderDetail(true);
+    try {
+      const detail = await api.adminOrder(order.id);
+      setOrderDetail(detail);
+    } catch (err) {
+      addToast(err.message || 'Failed to load order details.', 'error');
+      setOrderDetail(null);
+    } finally {
+      setLoadingOrderDetail(false);
     }
   };
 
@@ -736,11 +764,20 @@ export default function AdminPanel() {
                   </thead>
                   <tbody>
                     {visibleOrders.map(order => (
-                      <tr key={order.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      <tr
+                        key={order.id}
+                        onClick={() => openOrderDetail(order)}
+                        className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
+                      >
                         <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">
-                          <Link to={`/orders/${order.id}`} className="hover:text-[#ff9933] transition-colors" title="View full order">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); openOrderDetail(order); }}
+                            className="hover:text-[#ff9933] transition-colors uppercase"
+                            title="View order details"
+                          >
                             {shortId(order.id)}
-                          </Link>
+                          </button>
                         </td>
                         <td className="py-4 px-4 text-[#f1e7d7] font-semibold">{order.customerName || 'Customer'}</td>
                         <td className="py-4 px-4 text-[#fff4e6]">{order.items?.map((i) => i.productName).join(', ') || '—'}</td>
@@ -760,7 +797,7 @@ export default function AdminPanel() {
                                   <button
                                     key={action.key}
                                     disabled={!!updating && updating.id === order.id}
-                                    onClick={() => handleOrderStatus(order, action.key)}
+                                    onClick={(e) => { e.stopPropagation(); handleOrderStatus(order, action.key); }}
                                     className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
                                       action.key === 'cancelled'
                                         ? 'bg-[#ffb4ab]/10 text-[#ffb4ab] border-[#ffb4ab]/30 hover:bg-[#ffb4ab]/20'
@@ -1328,6 +1365,135 @@ export default function AdminPanel() {
         )}
 
       </main>
+
+      {orderDetail && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+          onMouseDown={() => setOrderDetail(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Order details"
+        >
+          <GlassCard hover={false} className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8">
+              <div className="flex items-start justify-between gap-4 mb-6">
+                <div className="min-w-0">
+                  <h2 className="font-[Outfit] text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
+                    <ShoppingBag size={22} className="text-[#ff9933]" /> Order Details
+                  </h2>
+                  <p className="text-[#cbb89d] text-xs mt-1 font-mono break-all">{orderDetail.id}</p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${ORDER_STATUS_STYLES[orderDetail.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
+                    {orderDetail.status}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setOrderDetail(null)}
+                    className="w-9 h-9 rounded-full border border-white/10 text-[#cbb89d] flex items-center justify-center hover:bg-white/5 transition-colors"
+                    aria-label="Close order details"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {loadingOrderDetail ? (
+                <div className="flex items-center justify-center h-40 text-[#cbb89d] gap-2">
+                  <Loader2 size={18} className="animate-spin" /> Loading order details...
+                </div>
+              ) : (
+                <div className="flex flex-col gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <OrderDetailBlock title="Customer">
+                      <p className="text-[#f1e7d7] font-semibold">{orderDetail.customer?.name || 'Customer'}</p>
+                      {orderDetail.customer?.email && (
+                        <p className="text-[#cbb89d] text-sm break-all">{orderDetail.customer.email}</p>
+                      )}
+                      {orderDetail.customer?.phone && (
+                        <p className="text-[#cbb89d] text-sm">{orderDetail.customer.phone}</p>
+                      )}
+                    </OrderDetailBlock>
+
+                    <OrderDetailBlock title="Order">
+                      <p className="text-[#cbb89d] text-sm">Placed {formatDate(orderDetail.createdAt)}</p>
+                      <p className="text-[#cbb89d] text-sm">
+                        Seller store: <span className="text-[#f1e7d7]">{orderDetail.store || '—'}</span>
+                      </p>
+                    </OrderDetailBlock>
+                  </div>
+
+                  <OrderDetailBlock title="Shipping Address">
+                    {orderDetail.shippingAddress ? (
+                      <p className="text-[#cbb89d] text-sm leading-relaxed">
+                        {[orderDetail.shippingAddress.firstName, orderDetail.shippingAddress.lastName]
+                          .filter(Boolean)
+                          .join(' ')}
+                        <br />
+                        {orderDetail.shippingAddress.address}
+                        <br />
+                        {[orderDetail.shippingAddress.city, orderDetail.shippingAddress.pin]
+                          .filter(Boolean)
+                          .join(' - ')}
+                        {orderDetail.shippingAddress.phone && (
+                          <>
+                            <br />
+                            {orderDetail.shippingAddress.phone}
+                          </>
+                        )}
+                      </p>
+                    ) : (
+                      <p className="text-[#9e8c73] text-sm">No shipping address on this order.</p>
+                    )}
+                  </OrderDetailBlock>
+
+                  <div>
+                    <h3 className="text-[#ff9933] text-xs font-bold uppercase tracking-wider mb-3">Items</h3>
+                    <div className="border border-white/10 rounded-lg overflow-hidden">
+                      <table className="w-full text-left border-collapse text-sm">
+                        <thead>
+                          <tr className="border-b border-white/10 text-[#cbb89d] text-[11px] uppercase tracking-wider">
+                            <th className="py-2.5 px-4 font-semibold">Product</th>
+                            <th className="py-2.5 px-4 font-semibold text-center">Qty</th>
+                            <th className="py-2.5 px-4 font-semibold text-right">Price</th>
+                            <th className="py-2.5 px-4 font-semibold text-right">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(orderDetail.items ?? []).map((item) => (
+                            <tr key={item.id} className="border-b border-white/5 last:border-0">
+                              <td className="py-2.5 px-4 text-[#fff4e6]">{item.productName}</td>
+                              <td className="py-2.5 px-4 text-center text-[#cbb89d]">{item.quantity}</td>
+                              <td className="py-2.5 px-4 text-right text-[#cbb89d]">{inr(item.unitPrice)}</td>
+                              <td className="py-2.5 px-4 text-right text-[#f1e7d7] font-semibold">{inr(item.lineTotal)}</td>
+                            </tr>
+                          ))}
+                          {(orderDetail.items ?? []).length === 0 && (
+                            <tr>
+                              <td colSpan={4} className="py-6 text-center text-[#9e8c73] text-sm">No items on this order.</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-end gap-1 border-t border-white/10 pt-4">
+                    <div className="flex items-center justify-between w-full sm:w-64 text-sm">
+                      <span className="text-[#cbb89d]">Subtotal</span>
+                      <span className="text-[#f1e7d7]">{inr(orderDetail.subtotal)}</span>
+                    </div>
+                    <div className="flex items-center justify-between w-full sm:w-64 text-base">
+                      <span className="text-[#cbb89d] font-semibold">Total</span>
+                      <span className="text-[#ff9933] font-bold">{inr(orderDetail.total)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </GlassCard>
+        </div>
+      )}
 
       {rejecting && (
         <div

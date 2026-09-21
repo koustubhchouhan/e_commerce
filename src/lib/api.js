@@ -215,6 +215,7 @@ export const api = {
   adminSellers: () => request('/admin/sellers', { auth: true }),
   revokeSeller: (id) => request(`/admin/sellers/${id}`, { method: 'DELETE', auth: true }),
   adminOrders: () => request('/admin/orders', { auth: true }),
+  adminOrder: (id) => request(`/admin/orders/${id}`, { auth: true }),
   adminUpdateOrderStatus: (id, status) =>
     request(`/admin/orders/${id}/status`, { method: 'PATCH', body: { status }, auth: true }),
   adminCategories: () => request('/admin/categories', { auth: true }),
