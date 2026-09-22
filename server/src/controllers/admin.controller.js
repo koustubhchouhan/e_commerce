@@ -67,6 +67,18 @@ export const getPlatformLedger = asyncHandler(async (req, res) => {
   res.json(await adminService.getPlatformLedger());
 });
 
+export const createSettlement = asyncHandler(async (req, res) => {
+  const { store_id, order_ids, note } = req.body;
+  res.status(201).json(
+    await adminService.createSettlement({
+      storeId: store_id,
+      orderIds: order_ids,
+      note,
+      adminId: req.user.id,
+    })
+  );
+});
+
 export const listReviews = asyncHandler(async (req, res) => {
   res.json({ items: await adminService.listReviews() });
 });

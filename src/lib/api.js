@@ -233,6 +233,12 @@ export const api = {
       auth: true,
     }),
   adminLedger: () => request('/admin/ledger', { auth: true }),
+  adminCreateSettlement: (storeId, orderIds, note) =>
+    request('/admin/settlements', {
+      method: 'POST',
+      body: { store_id: storeId, order_ids: orderIds, ...(note ? { note } : {}) },
+      auth: true,
+    }),
   adminReviews: () => request('/admin/reviews', { auth: true }),
   adminSetReviewHidden: (id, isHidden) =>
     request(`/admin/reviews/${id}`, { method: 'PATCH', body: { is_hidden: isHidden }, auth: true }),

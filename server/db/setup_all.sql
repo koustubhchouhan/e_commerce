@@ -283,6 +283,37 @@ create table if not exists public.payment_orders (
 
 create index if not exists idx_payment_orders_order_id on public.payment_orders(order_id);
 
+-- ---- settlements ----------------------------------------------------
+-- The platform takes every payment into one account and pays each seller out
+-- by hand. A settlement records one such payout: its store, the amount split
+-- into gross / platform fee / net, and exactly which orders it covers. The
+-- unique index on settlement_orders.order_id is what guarantees an order is
+-- never paid out twice, even if two admins settle at the same moment.
+create table if not exists public.settlements (
+  id          uuid primary key default gen_random_uuid(),
+  store_id    uuid not null references public.stores(id) on delete cascade,
+  gross       numeric(12,2) not null default 0,
+  fee         numeric(12,2) not null default 0,
+  net         numeric(12,2) not null default 0,
+  order_count int not null default 0,
+  note        text,
+  created_by  uuid references public.profiles(id) on delete set null,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists idx_settlements_store_id on public.settlements(store_id);
+create index if not exists idx_settlements_created_at on public.settlements(created_at desc);
+
+create table if not exists public.settlement_orders (
+  settlement_id uuid not null references public.settlements(id) on delete cascade,
+  order_id      uuid not null references public.orders(id) on delete restrict,
+  amount        numeric(12,2) not null default 0,
+  primary key (settlement_id, order_id),
+  unique (order_id)
+);
+
+create index if not exists idx_settlement_orders_order_id on public.settlement_orders(order_id);
+
 -- Backfill store_id for orders created before splitting existed. Every legacy
 -- order came from a single store because checkout rejected mixed carts.
 update public.orders o
@@ -408,6 +439,8 @@ alter table public.orders              enable row level security;
 alter table public.order_items         enable row level security;
 alter table public.payments            enable row level security;
 alter table public.payment_orders      enable row level security;
+alter table public.settlements         enable row level security;
+alter table public.settlement_orders   enable row level security;
 alter table public.reviews             enable row level security;
 alter table public.contact_messages    enable row level security;
 alter table public.hero_slides         enable row level security;
@@ -590,6 +623,19 @@ drop policy if exists payment_orders_select_participant on public.payment_orders
 create policy payment_orders_select_participant on public.payment_orders
   for select to authenticated
   using (public.can_view_order(order_id));
+
+-- ---- settlements -----------------------------------------------------
+-- Payout records are admin-only. Sellers see their own payout history through
+-- the API, and writes go through create_settlement() on service_role.
+drop policy if exists settlements_select_admin on public.settlements;
+create policy settlements_select_admin on public.settlements
+  for select to authenticated
+  using (public.is_admin());
+
+drop policy if exists settlement_orders_select_admin on public.settlement_orders;
+create policy settlement_orders_select_admin on public.settlement_orders
+  for select to authenticated
+  using (public.is_admin());
 
 -- ---- reviews ---------------------------------------------------------
 -- Visible reviews are public; hidden ones stay visible to their author, an
@@ -970,6 +1016,88 @@ grant execute on function public.mark_payment_captured(text, text, jsonb) to ser
 grant execute on function public.mark_payment_failed(text, text, jsonb, uuid) to service_role;
 
 
+-- =====================================================================
+-- Seller settlements.
+--   create_settlement -> record one manual payout to a store: the orders it
+--     covers plus gross / platform fee / net. It refuses if any order is for
+--     another store, is not in a settled revenue state, or was already paid
+--     out. Writes money-adjacent rows, so service_role only.
+-- =====================================================================
+create or replace function public.create_settlement(
+  p_store_id   uuid,
+  p_order_ids  uuid[],
+  p_fee_rate   numeric,
+  p_created_by uuid default null,
+  p_note       text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_gross     numeric(12,2);
+  v_fee       numeric(12,2);
+  v_net       numeric(12,2);
+  v_eligible  int;
+  v_requested int;
+  v_id        uuid;
+begin
+  v_requested := coalesce(array_length(p_order_ids, 1), 0);
+  if v_requested = 0 then
+    raise exception 'No orders supplied';
+  end if;
+  if p_fee_rate is null or p_fee_rate < 0 or p_fee_rate >= 1 then
+    raise exception 'Invalid fee rate %', p_fee_rate;
+  end if;
+
+  -- Lock the candidate orders so a concurrent settlement cannot double-count.
+  perform 1 from public.orders where id = any(p_order_ids) for update;
+
+  select coalesce(sum(o.total), 0), count(*)
+    into v_gross, v_eligible
+    from public.orders o
+    where o.id = any(p_order_ids)
+      and o.store_id = p_store_id
+      and o.status in ('paid', 'shipped', 'delivered')
+      and not exists (
+        select 1 from public.settlement_orders so where so.order_id = o.id
+      );
+
+  if v_eligible <> v_requested then
+    raise exception 'Some orders are not settleable (wrong store, unpaid, or already settled)';
+  end if;
+
+  v_fee := round(v_gross * p_fee_rate, 2);
+  v_net := round(v_gross - v_fee, 2);
+
+  insert into public.settlements
+    (store_id, gross, fee, net, order_count, note, created_by)
+  values
+    (p_store_id, v_gross, v_fee, v_net, v_eligible, p_note, p_created_by)
+  returning id into v_id;
+
+  insert into public.settlement_orders (settlement_id, order_id, amount)
+  select v_id, o.id, round(o.total * (1 - p_fee_rate), 2)
+    from public.orders o
+    where o.id = any(p_order_ids);
+
+  return jsonb_build_object(
+    'id',          v_id,
+    'store_id',    p_store_id,
+    'gross',       v_gross,
+    'fee',         v_fee,
+    'net',         v_net,
+    'order_count', v_eligible,
+    'order_ids',   to_jsonb(p_order_ids)
+  );
+end;
+$$;
+
+revoke all on function public.create_settlement(uuid, uuid[], numeric, uuid, text) from public, anon, authenticated;
+grant execute on function public.create_settlement(uuid, uuid[], numeric, uuid, text) to service_role;
+
+
 -- ###################### seed.sql ######################
 
 -- =====================================================================
@@ -1003,6 +1131,6 @@ where not exists (select 1 from public.hero_slides);
 -- immediately (otherwise you may get "table not found in schema cache").
 notify pgrst, 'reload schema';
 
--- Sanity check: should list all 11 tables.
+-- Sanity check: should list all 15 tables.
 select table_name from information_schema.tables
 where table_schema = 'public' order by table_name;

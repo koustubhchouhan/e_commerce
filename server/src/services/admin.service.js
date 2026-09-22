@@ -389,18 +389,20 @@ const round2 = (n) => Math.round(n * 100) / 100;
 export async function getPlatformLedger() {
   const { data: orders, error } = await db
     .from('orders')
-    .select('id, status, total, created_at, profiles(full_name)')
+    .select('id, status, total, created_at, store_id, profiles(full_name)')
     .order('created_at', { ascending: false });
   if (error) throw new AppError(500, `Could not load orders: ${error.message}`);
 
   const all = orders ?? [];
   const revenueOrders = all.filter((o) => REVENUE_STATUSES.includes(o.status));
   const revenueIds = revenueOrders.map((o) => o.id);
+  const orderById = new Map(revenueOrders.map((o) => [o.id, o]));
 
   let unitsSold = 0;
   let sellers = [];
   let unattributedGross = 0;
   let officialGross = 0;
+  let settledOrderIds = new Set();
 
   if (revenueIds.length > 0) {
     const { data: items, error: itemErr } = await db
@@ -408,6 +410,14 @@ export async function getPlatformLedger() {
       .select('order_id, product_id, quantity, line_total')
       .in('order_id', revenueIds);
     if (itemErr) throw new AppError(500, `Could not load order items: ${itemErr.message}`);
+
+    // Orders already covered by a settlement are no longer owed to the seller.
+    const { data: settled, error: settledErr } = await db
+      .from('settlement_orders')
+      .select('order_id')
+      .in('order_id', revenueIds);
+    if (settledErr) throw new AppError(500, `Could not load settlements: ${settledErr.message}`);
+    settledOrderIds = new Set((settled ?? []).map((s) => s.order_id));
 
     const productIds = [...new Set((items ?? []).map((i) => i.product_id).filter(Boolean))];
     const storeByProduct = new Map();
@@ -464,25 +474,50 @@ export async function getPlatformLedger() {
           name: meta?.name ?? 'Unknown store',
           sellerName: meta?.sellerName ?? null,
           orderIds: new Set(),
+          orderGross: new Map(),
           units: 0,
           gross: 0,
         });
       }
       const row = acc.get(storeId);
       row.orderIds.add(it.order_id);
+      row.orderGross.set(it.order_id, (row.orderGross.get(it.order_id) ?? 0) + amt);
       row.units += it.quantity;
       row.gross += amt;
     }
 
     sellers = [...acc.values()]
-      .map(({ orderIds, gross, units, ...rest }) => ({
-        ...rest,
-        orderCount: orderIds.size,
-        units,
-        gross: round2(gross),
-        fee: round2(gross * PLATFORM_FEE_RATE),
-        payout: round2(gross * (1 - PLATFORM_FEE_RATE)),
-      }))
+      .map(({ orderIds, orderGross, gross, units, ...rest }) => {
+        let settledGross = 0;
+        let unsettledGross = 0;
+        const unsettledOrders = [];
+        for (const [orderId, orderTotal] of orderGross) {
+          if (settledOrderIds.has(orderId)) {
+            settledGross += orderTotal;
+            continue;
+          }
+          unsettledGross += orderTotal;
+          unsettledOrders.push({
+            id: orderId,
+            gross: round2(orderTotal),
+            net: round2(orderTotal * (1 - PLATFORM_FEE_RATE)),
+            createdAt: orderById.get(orderId)?.created_at ?? null,
+          });
+        }
+        unsettledOrders.sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0));
+        return {
+          ...rest,
+          orderCount: orderIds.size,
+          units,
+          gross: round2(gross),
+          fee: round2(gross * PLATFORM_FEE_RATE),
+          payout: round2(gross * (1 - PLATFORM_FEE_RATE)),
+          settledGross: round2(settledGross),
+          unsettledGross: round2(unsettledGross),
+          unsettledPayout: round2(unsettledGross * (1 - PLATFORM_FEE_RATE)),
+          unsettledOrders,
+        };
+      })
       .sort((a, b) => b.gross - a.gross);
   }
 
@@ -504,6 +539,30 @@ export async function getPlatformLedger() {
     };
   });
 
+  const unsettledPayouts = round2(sellers.reduce((sum, s) => sum + s.unsettledPayout, 0));
+  const settledPayouts = round2(
+    sellers.reduce((sum, s) => sum + s.settledGross * (1 - PLATFORM_FEE_RATE), 0)
+  );
+
+  const { data: settlementRows, error: settlementErr } = await db
+    .from('settlements')
+    .select('id, store_id, gross, fee, net, order_count, note, created_at, stores(name), profiles(full_name)')
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (settlementErr) throw new AppError(500, `Could not load settlements: ${settlementErr.message}`);
+  const settlements = (settlementRows ?? []).map((s) => ({
+    id: s.id,
+    storeId: s.store_id,
+    storeName: s.stores?.name ?? 'Unknown store',
+    gross: Number(s.gross),
+    fee: Number(s.fee),
+    net: Number(s.net),
+    orderCount: s.order_count,
+    note: s.note ?? null,
+    createdBy: s.profiles?.full_name ?? null,
+    createdAt: s.created_at,
+  }));
+
   return {
     feeRate: PLATFORM_FEE_RATE,
     asOf: new Date().toISOString(),
@@ -511,6 +570,8 @@ export async function getPlatformLedger() {
       grossSales,
       platformFees,
       sellerPayouts,
+      unsettledPayouts,
+      settledPayouts,
       // Sales from the platform's own store; not part of seller payouts.
       officialSales: round2(officialGross),
       orders: revenueOrders.length,
@@ -521,5 +582,29 @@ export async function getPlatformLedger() {
     sellers,
     grossUnattributed: round2(unattributedGross),
     transactions,
+    settlements,
+  };
+}
+
+// POST /admin/settlements — record one manual seller payout. The RPC validates
+// the orders (right store, settled revenue state, not already paid) and writes
+// the settlement and its orders atomically, so an order can never be paid twice.
+export async function createSettlement({ storeId, orderIds, note, adminId }) {
+  const { data, error } = await db.rpc('create_settlement', {
+    p_store_id: storeId,
+    p_order_ids: orderIds,
+    p_fee_rate: PLATFORM_FEE_RATE,
+    p_created_by: adminId ?? null,
+    p_note: note ?? null,
+  });
+  if (error) throw new AppError(400, error.message);
+  return {
+    id: data.id,
+    storeId: data.store_id,
+    gross: Number(data.gross),
+    fee: Number(data.fee),
+    net: Number(data.net),
+    orderCount: data.order_count,
+    orderIds: data.order_ids,
   };
 }

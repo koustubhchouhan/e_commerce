@@ -271,6 +271,37 @@ create table if not exists public.payment_orders (
 
 create index if not exists idx_payment_orders_order_id on public.payment_orders(order_id);
 
+-- ---- settlements ----------------------------------------------------
+-- The platform takes every payment into one account and pays each seller out
+-- by hand. A settlement records one such payout: its store, the amount split
+-- into gross / platform fee / net, and exactly which orders it covers. The
+-- unique index on settlement_orders.order_id is what guarantees an order is
+-- never paid out twice, even if two admins settle at the same moment.
+create table if not exists public.settlements (
+  id          uuid primary key default gen_random_uuid(),
+  store_id    uuid not null references public.stores(id) on delete cascade,
+  gross       numeric(12,2) not null default 0,
+  fee         numeric(12,2) not null default 0,
+  net         numeric(12,2) not null default 0,
+  order_count int not null default 0,
+  note        text,
+  created_by  uuid references public.profiles(id) on delete set null,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists idx_settlements_store_id on public.settlements(store_id);
+create index if not exists idx_settlements_created_at on public.settlements(created_at desc);
+
+create table if not exists public.settlement_orders (
+  settlement_id uuid not null references public.settlements(id) on delete cascade,
+  order_id      uuid not null references public.orders(id) on delete restrict,
+  amount        numeric(12,2) not null default 0,
+  primary key (settlement_id, order_id),
+  unique (order_id)
+);
+
+create index if not exists idx_settlement_orders_order_id on public.settlement_orders(order_id);
+
 -- Backfill store_id for orders created before splitting existed. Every legacy
 -- order came from a single store because checkout rejected mixed carts.
 update public.orders o
@@ -396,6 +427,8 @@ alter table public.orders              enable row level security;
 alter table public.order_items         enable row level security;
 alter table public.payments            enable row level security;
 alter table public.payment_orders      enable row level security;
+alter table public.settlements         enable row level security;
+alter table public.settlement_orders   enable row level security;
 alter table public.reviews             enable row level security;
 alter table public.contact_messages    enable row level security;
 alter table public.hero_slides         enable row level security;
@@ -578,6 +611,19 @@ drop policy if exists payment_orders_select_participant on public.payment_orders
 create policy payment_orders_select_participant on public.payment_orders
   for select to authenticated
   using (public.can_view_order(order_id));
+
+-- ---- settlements -----------------------------------------------------
+-- Payout records are admin-only. Sellers see their own payout history through
+-- the API, and writes go through create_settlement() on service_role.
+drop policy if exists settlements_select_admin on public.settlements;
+create policy settlements_select_admin on public.settlements
+  for select to authenticated
+  using (public.is_admin());
+
+drop policy if exists settlement_orders_select_admin on public.settlement_orders;
+create policy settlement_orders_select_admin on public.settlement_orders
+  for select to authenticated
+  using (public.is_admin());
 
 -- ---- reviews ---------------------------------------------------------
 -- Visible reviews are public; hidden ones stay visible to their author, an

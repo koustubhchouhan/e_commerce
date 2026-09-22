@@ -90,7 +90,8 @@ Open the Supabase **SQL Editor**, create a new query, paste the entire contents
 of `server/db/setup_all.sql` and **Run**. That single file applies, in order:
 
 1. `schema.sql` — enums, tables, the `handle_new_user` trigger, indexes, RLS.
-2. `create_order.sql` — the atomic server-authoritative checkout function.
+2. `create_order.sql` — the atomic server-authoritative checkout function, the
+   payment RPCs and the settlement RPC.
 3. `seed.sql` — starter categories and the two default hero slides.
 
 Every statement is idempotent (`IF NOT EXISTS`, guarded enums,
@@ -222,7 +223,8 @@ Supabase SQL Editor.
 - `server/db/setup_all.sql` — the whole schema in one paste. **Use this for a
   fresh project.**
 - `server/db/schema.sql` — tables, enums, triggers, indexes, RLS.
-- `server/db/create_order.sql` — the checkout function and the payment RPCs.
+- `server/db/create_order.sql` — the checkout function, the payment RPCs and the
+  settlement RPC.
 - `server/db/seed.sql` — seed categories and default hero slides.
 
 Guidelines when changing the schema:
@@ -242,7 +244,7 @@ Guidelines when changing the schema:
 
 `profiles`, `stores`, `seller_applications`, `categories`, `products`,
 `product_images`, `orders`, `order_items`, `reviews`, `contact_messages`,
-`hero_slides`, `payments`, `payment_orders`.
+`hero_slides`, `payments`, `payment_orders`, `settlements`, `settlement_orders`.
 
 Row Level Security is **enabled with policies** on every table. The Express API
 still uses the `service_role` key (which bypasses RLS) as the primary
@@ -297,6 +299,23 @@ Razorpay's checkout script is loaded from `https://checkout.razorpay.com` and
 the browser may talk to `https://api.razorpay.com`; the SPA host must allow
 those in its Content-Security-Policy if one is set (the API's own strict CSP
 only applies to JSON responses).
+
+### Seller settlements
+
+Payments are collected into a single platform account and sellers are paid out
+by hand. `GET /admin/ledger` attributes every settled order back to its store
+and reports, per seller, the gross, the platform fee and the payout (gross minus
+the flat `PLATFORM_FEE_RATE` in `server/src/services/admin.service.js`), split
+into already-settled and still-unsettled amounts.
+
+To record a payout, `POST /admin/settlements` calls the `create_settlement`
+Postgres function with the store and the orders it covers. In one transaction
+the function re-checks that every order belongs to that store, is in a revenue
+state (`paid`/`shipped`/`delivered`) and has not been settled before, then writes
+the `settlements` row and its `settlement_orders` lines. The unique index on
+`settlement_orders.order_id` means an order can never be paid twice, even under a
+race. Settled orders drop out of the seller's unsettled balance on the next
+ledger load. The RPC is `service_role`-only; admins act on it through the API.
 
 ### Webhook setup
 

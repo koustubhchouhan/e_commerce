@@ -295,3 +295,85 @@ revoke all on function public.mark_payment_captured(text, text, jsonb) from publ
 revoke all on function public.mark_payment_failed(text, text, jsonb, uuid) from public, anon, authenticated;
 grant execute on function public.mark_payment_captured(text, text, jsonb) to service_role;
 grant execute on function public.mark_payment_failed(text, text, jsonb, uuid) to service_role;
+
+
+-- =====================================================================
+-- Seller settlements.
+--   create_settlement -> record one manual payout to a store: the orders it
+--     covers plus gross / platform fee / net. It refuses if any order is for
+--     another store, is not in a settled revenue state, or was already paid
+--     out. Writes money-adjacent rows, so service_role only.
+-- =====================================================================
+create or replace function public.create_settlement(
+  p_store_id   uuid,
+  p_order_ids  uuid[],
+  p_fee_rate   numeric,
+  p_created_by uuid default null,
+  p_note       text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_gross     numeric(12,2);
+  v_fee       numeric(12,2);
+  v_net       numeric(12,2);
+  v_eligible  int;
+  v_requested int;
+  v_id        uuid;
+begin
+  v_requested := coalesce(array_length(p_order_ids, 1), 0);
+  if v_requested = 0 then
+    raise exception 'No orders supplied';
+  end if;
+  if p_fee_rate is null or p_fee_rate < 0 or p_fee_rate >= 1 then
+    raise exception 'Invalid fee rate %', p_fee_rate;
+  end if;
+
+  -- Lock the candidate orders so a concurrent settlement cannot double-count.
+  perform 1 from public.orders where id = any(p_order_ids) for update;
+
+  select coalesce(sum(o.total), 0), count(*)
+    into v_gross, v_eligible
+    from public.orders o
+    where o.id = any(p_order_ids)
+      and o.store_id = p_store_id
+      and o.status in ('paid', 'shipped', 'delivered')
+      and not exists (
+        select 1 from public.settlement_orders so where so.order_id = o.id
+      );
+
+  if v_eligible <> v_requested then
+    raise exception 'Some orders are not settleable (wrong store, unpaid, or already settled)';
+  end if;
+
+  v_fee := round(v_gross * p_fee_rate, 2);
+  v_net := round(v_gross - v_fee, 2);
+
+  insert into public.settlements
+    (store_id, gross, fee, net, order_count, note, created_by)
+  values
+    (p_store_id, v_gross, v_fee, v_net, v_eligible, p_note, p_created_by)
+  returning id into v_id;
+
+  insert into public.settlement_orders (settlement_id, order_id, amount)
+  select v_id, o.id, round(o.total * (1 - p_fee_rate), 2)
+    from public.orders o
+    where o.id = any(p_order_ids);
+
+  return jsonb_build_object(
+    'id',          v_id,
+    'store_id',    p_store_id,
+    'gross',       v_gross,
+    'fee',         v_fee,
+    'net',         v_net,
+    'order_count', v_eligible,
+    'order_ids',   to_jsonb(p_order_ids)
+  );
+end;
+$$;
+
+revoke all on function public.create_settlement(uuid, uuid[], numeric, uuid, text) from public, anon, authenticated;
+grant execute on function public.create_settlement(uuid, uuid[], numeric, uuid, text) to service_role;

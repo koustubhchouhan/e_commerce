@@ -15,6 +15,7 @@ import {
   listAdminProducts,
   setProductApproval,
   getPlatformLedger,
+  createSettlement,
   listReviews,
   updateReviewVisibility,
   deleteReview,
@@ -41,6 +42,7 @@ import {
   listApplicationsQuerySchema,
   reviewApplicationSchema,
   updateOrderStatusSchema,
+  createSettlementSchema,
 } from '../validators/seller.validators.js';
 import {
   adminProductsQuerySchema,
@@ -132,6 +134,13 @@ router.delete(
   deleteProduct
 );
 router.get('/admin/ledger', requireAuth, requireRole('admin'), getPlatformLedger);
+router.post(
+  '/admin/settlements',
+  requireAuth,
+  requireRole('admin'),
+  validate(createSettlementSchema),
+  createSettlement
+);
 
 router.get('/admin/reviews', requireAuth, requireRole('admin'), listReviews);
 router.patch(

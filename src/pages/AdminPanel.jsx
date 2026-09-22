@@ -90,6 +90,10 @@ export default function AdminPanel() {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [ledger, setLedger] = useState(null);
   const [loadingLedger, setLoadingLedger] = useState(true);
+  const [settleTarget, setSettleTarget] = useState(null);
+  const [settleSelection, setSettleSelection] = useState(new Set());
+  const [settleNote, setSettleNote] = useState('');
+  const [settling, setSettling] = useState(false);
   const [busy, setBusy] = useState(false);
   const [updating, setUpdating] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -290,6 +294,40 @@ export default function AdminPanel() {
     loadLedger();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const openSettle = (seller) => {
+    setSettleTarget(seller);
+    setSettleSelection(new Set((seller.unsettledOrders ?? []).map((o) => o.id)));
+    setSettleNote('');
+  };
+
+  const toggleSettleOrder = (orderId) => {
+    setSettleSelection((prev) => {
+      const next = new Set(prev);
+      if (next.has(orderId)) next.delete(orderId);
+      else next.add(orderId);
+      return next;
+    });
+  };
+
+  const confirmSettle = async () => {
+    if (!settleTarget || settleSelection.size === 0) return;
+    setSettling(true);
+    try {
+      await api.adminCreateSettlement(
+        settleTarget.id,
+        [...settleSelection],
+        settleNote.trim() || undefined,
+      );
+      addToast(`Payout recorded for ${settleTarget.name}.`, 'success');
+      setSettleTarget(null);
+      await loadLedger(false);
+    } catch (err) {
+      addToast(err.message || 'Could not record the payout.', 'error');
+    } finally {
+      setSettling(false);
+    }
+  };
 
   const handleToggleMessageRead = async (msg) => {
     try {
@@ -1228,7 +1266,7 @@ export default function AdminPanel() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                       <StatCard icon={<IndianRupee size={24} />} title="Gross Sales" value={inr(ledger.summary.grossSales)} trend={`${ledger.summary.orders} order${ledger.summary.orders === 1 ? '' : 's'}`} />
                       <StatCard icon={<Percent size={24} />} title="Platform Fees" value={inr(ledger.summary.platformFees)} trend={`${Math.round(ledger.feeRate * 100)}% commission`} />
-                      <StatCard icon={<Wallet size={24} />} title="Seller Payouts" value={inr(ledger.summary.sellerPayouts)} trend={`${ledger.sellers.length} seller${ledger.sellers.length === 1 ? '' : 's'}`} />
+                      <StatCard icon={<Wallet size={24} />} title="Seller Payouts" value={inr(ledger.summary.sellerPayouts)} trend={`${inr(ledger.summary.unsettledPayouts)} unsettled`} />
                       <StatCard icon={<ShoppingBag size={24} />} title="Units Sold" value={String(ledger.summary.unitsSold)} trend={`${ledger.summary.cancelledOrders} cancelled`} />
                     </div>
 
@@ -1326,23 +1364,87 @@ export default function AdminPanel() {
                               <th className="py-3 px-3 font-semibold text-right">Gross</th>
                               <th className="py-3 px-3 font-semibold text-right">Platform Fee</th>
                               <th className="py-3 px-3 font-semibold text-right">Payout</th>
+                              <th className="py-3 px-3 font-semibold text-right">Unsettled</th>
+                              <th className="py-3 px-3 font-semibold text-right">Action</th>
                             </tr>
                           </thead>
                           <tbody>
                             {ledger.sellers.map((s) => (
-                              <tr key={s.storeId} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                <td className="py-3 px-3 text-[#f1e7d7] font-semibold text-sm">{s.storeName}</td>
+                              <tr key={s.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                <td className="py-3 px-3 text-[#f1e7d7] font-semibold text-sm">{s.name}</td>
                                 <td className="py-3 px-3 text-[#9e8c73] text-sm">{s.sellerName ?? '—'}</td>
                                 <td className="py-3 px-3 text-center text-[#cbb89d] text-sm">{s.orderCount}</td>
                                 <td className="py-3 px-3 text-center text-[#cbb89d] text-sm">{s.units}</td>
                                 <td className="py-3 px-3 text-right text-[#fff4e6] text-sm">{inr(s.gross)}</td>
                                 <td className="py-3 px-3 text-right text-[#ffd27a] text-sm">{inr(s.fee)}</td>
                                 <td className="py-3 px-3 text-right text-[#9dd0a0] font-semibold text-sm">{inr(s.payout)}</td>
+                                <td className="py-3 px-3 text-right text-sm">
+                                  {s.unsettledGross > 0 ? (
+                                    <span className="text-[#ffbf66] font-semibold">{inr(s.unsettledPayout)}</span>
+                                  ) : (
+                                    <span className="text-[#6f6250]">—</span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-3 text-right">
+                                  {s.unsettledOrders?.length > 0 ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => openSettle(s)}
+                                      className="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-[#9dd0a0]/15 text-[#9dd0a0] border border-[#9dd0a0]/30 hover:bg-[#9dd0a0]/25 transition-colors"
+                                    >
+                                      Mark settled
+                                    </button>
+                                  ) : (
+                                    <span className="text-[11px] text-[#6f6250] uppercase tracking-wider">Settled</span>
+                                  )}
+                                </td>
                               </tr>
                             ))}
                             {ledger.sellers.length === 0 && (
                               <tr>
-                                <td colSpan={7} className="py-12 text-center text-[#9e8c73] text-sm">No seller revenue to show yet.</td>
+                                <td colSpan={9} className="py-12 text-center text-[#9e8c73] text-sm">No seller revenue to show yet.</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </GlassCard>
+
+                    <GlassCard className="mt-6 p-6 lg:p-8">
+                      <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-2 flex items-center gap-2">
+                        <Wallet size={20} className="text-[#9dd0a0]" /> Settlement History
+                      </h2>
+                      <p className="text-[#9e8c73] text-xs mb-6">
+                        Manual payouts already sent to sellers. Settled orders are excluded from the amounts still owed above.
+                      </p>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                              <th className="py-3 px-3 font-semibold">Date</th>
+                              <th className="py-3 px-3 font-semibold">Store</th>
+                              <th className="py-3 px-3 font-semibold text-center">Orders</th>
+                              <th className="py-3 px-3 font-semibold text-right">Gross</th>
+                              <th className="py-3 px-3 font-semibold text-right">Fee</th>
+                              <th className="py-3 px-3 font-semibold text-right">Paid</th>
+                              <th className="py-3 px-3 font-semibold">Note</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(ledger.settlements ?? []).map((st) => (
+                              <tr key={st.id} className="border-b border-white/5">
+                                <td className="py-3 px-3 text-[#9e8c73] text-xs whitespace-nowrap">{formatDate(st.createdAt)}</td>
+                                <td className="py-3 px-3 text-[#f1e7d7] text-sm font-semibold">{st.storeName}</td>
+                                <td className="py-3 px-3 text-center text-[#cbb89d] text-sm">{st.orderCount}</td>
+                                <td className="py-3 px-3 text-right text-[#fff4e6] text-sm">{inr(st.gross)}</td>
+                                <td className="py-3 px-3 text-right text-[#ffd27a] text-sm">{inr(st.fee)}</td>
+                                <td className="py-3 px-3 text-right text-[#9dd0a0] font-semibold text-sm">{inr(st.net)}</td>
+                                <td className="py-3 px-3 text-[#9e8c73] text-xs">{st.note ?? '—'}</td>
+                              </tr>
+                            ))}
+                            {(ledger.settlements ?? []).length === 0 && (
+                              <tr>
+                                <td colSpan={7} className="py-10 text-center text-[#9e8c73] text-sm">No payouts recorded yet.</td>
                               </tr>
                             )}
                           </tbody>
@@ -1365,6 +1467,102 @@ export default function AdminPanel() {
         )}
 
       </main>
+
+      {settleTarget && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+          onMouseDown={() => !settling && setSettleTarget(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Record seller payout"
+        >
+          <GlassCard hover={false} className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto">
+            <div onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8">
+              <div className="flex items-start justify-between gap-4 mb-6">
+                <div className="min-w-0">
+                  <h2 className="font-[Outfit] text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
+                    <Wallet size={22} className="text-[#9dd0a0]" /> Record Payout
+                  </h2>
+                  <p className="text-[#cbb89d] text-sm mt-1">{settleTarget.name}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => !settling && setSettleTarget(null)}
+                  className="w-9 h-9 rounded-full border border-white/10 text-[#cbb89d] flex items-center justify-center hover:bg-white/5 transition-colors shrink-0"
+                  aria-label="Close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <p className="text-[#9e8c73] text-xs mb-3">
+                Uncheck any order you are not paying now; it stays in the unsettled balance.
+              </p>
+
+              <div className="border border-white/10 rounded-lg divide-y divide-white/5 mb-5 max-h-72 overflow-y-auto">
+                {(settleTarget.unsettledOrders ?? []).map((o) => {
+                  const checked = settleSelection.has(o.id);
+                  return (
+                    <label key={o.id} className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/5">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleSettleOrder(o.id)}
+                        className="accent-[#9dd0a0] w-4 h-4"
+                      />
+                      <span className="font-mono text-xs text-[#cbb89d] flex-1">{shortId(o.id)}</span>
+                      <span className="text-[#9e8c73] text-xs whitespace-nowrap">{formatDate(o.createdAt)}</span>
+                      <span className="text-[#9dd0a0] text-sm font-semibold whitespace-nowrap">{inr(o.net)}</span>
+                    </label>
+                  );
+                })}
+              </div>
+
+              <label className="block mb-5">
+                <span className="text-[#cbb89d] text-xs uppercase tracking-wider">Note (optional)</span>
+                <input
+                  type="text"
+                  value={settleNote}
+                  onChange={(e) => setSettleNote(e.target.value)}
+                  placeholder="e.g. UPI transfer on 22 Sep"
+                  className="mt-2 w-full rounded-lg bg-black/30 border border-white/10 px-3 py-2 text-sm text-[#f1e7d7] focus:outline-none focus:border-[#9dd0a0]/50"
+                />
+              </label>
+
+              <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-4">
+                <div className="text-sm">
+                  <span className="text-[#cbb89d]">Paying now</span>
+                  <span className="text-[#9dd0a0] font-bold text-lg ml-3">
+                    {inr(
+                      (settleTarget.unsettledOrders ?? [])
+                        .filter((o) => settleSelection.has(o.id))
+                        .reduce((sum, o) => sum + o.net, 0),
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setSettleTarget(null)}
+                    disabled={settling}
+                    className="px-4 py-2 rounded-lg text-sm text-[#cbb89d] border border-white/10 hover:bg-white/5 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmSettle}
+                    disabled={settling || settleSelection.size === 0}
+                    className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#9dd0a0] text-[#1a1307] hover:bg-[#8cc392] disabled:opacity-50"
+                  >
+                    {settling ? 'Recording...' : 'Record payout'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </GlassCard>
+        </div>
+      )}
 
       {orderDetail && (
         <div

@@ -31,3 +31,14 @@ export const updateOrderStatusSchema = z.object({
 export const replyToReviewSchema = z.object({
   reply: z.string().trim().max(2000, 'Reply must be 2000 characters or fewer'),
 });
+
+// POST /admin/settlements body — one manual seller payout. The RPC re-checks
+// that every order belongs to the store and has not been settled already.
+export const createSettlementSchema = z.object({
+  store_id: z.string().uuid('Invalid store'),
+  order_ids: z
+    .array(z.string().uuid('Invalid order'))
+    .min(1, 'Pick at least one order')
+    .max(500, 'Too many orders in one settlement'),
+  note: z.string().trim().max(500, 'Note must be 500 characters or fewer').optional(),
+});
