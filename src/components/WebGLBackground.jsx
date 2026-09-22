@@ -48,19 +48,18 @@ export default function WebGLBackground() {
         float dist = distance(uv, mouse);
         float mouseInfluence = smoothstep(0.4, 0.0, dist) * 0.3;
 
-        // Bhagva (saffron) festive palette — orange neon
-        vec3 color1 = vec3(0.12, 0.04, 0.0);  // Warm ember base
-        vec3 color2 = vec3(1.0, 0.55, 0.15);  // Saffron neon
-        vec3 color3 = vec3(1.0, 0.36, 0.04);  // Deep festive orange
+        // Warm ivory / saffron palette — soft cream wash, red-gold undertones
+        vec3 color1 = vec3(0.992, 0.973, 0.941);  // Ivory page base
+        vec3 color2 = vec3(0.961, 0.925, 0.871);  // Warm sand
+        vec3 color3 = vec3(0.953, 0.890, 0.784);  // Saffron cream
 
         float t = noise * 0.5 + 0.5;
-        vec3 finalColor = mix(color1, color2, t);
-        // slow second wave adds deep-orange neon banding
+        vec3 finalColor = mix(color1, color2, t * 0.7);
+        // slow second wave adds faint saffron banding
         float band = sin(uv.y * 6.0 - u_time * 0.4) * 0.5 + 0.5;
-        finalColor = mix(finalColor, color3, band * 0.3);
-        // interactive gold glow near the cursor
-        finalColor = mix(finalColor, vec3(1.0, 0.82, 0.35), mouseInfluence);
-        finalColor *= 0.62;
+        finalColor = mix(finalColor, color3, band * 0.18);
+        // interactive warm glow near the cursor
+        finalColor = mix(finalColor, vec3(0.992, 0.973, 0.941), mouseInfluence);
 
         gl_FragColor = vec4(finalColor, 1.0);
       }
@@ -119,9 +118,9 @@ export default function WebGLBackground() {
   }, []);
 
   return (
-    <div className="fixed inset-0 w-full h-full -z-10 opacity-60">
+    <div className="fixed inset-0 w-full h-full -z-10 opacity-40">
       <canvas ref={canvasRef} className="block w-full h-full" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#170e03] pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#FDF8F0] pointer-events-none" />
     </div>
   );
 }

@@ -115,7 +115,7 @@ export default function Checkout() {
             email: user?.email,
           },
           notes: { order_ids: (order.orderIds ?? []).join(',') },
-          theme: { color: '#ff9933' },
+          theme: { color: '#B7322A' },
           handler: async (response) => {
             try {
               await api.verifyPayment(response);
@@ -158,20 +158,20 @@ export default function Checkout() {
 
   return (
     <div className="max-w-[1100px] mx-auto px-6 py-12 animate-fade-in-up">
-      <h1 className="font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Checkout</h1>
-      <p className="text-[#cbb89d] mb-10">Complete your purchase securely.</p>
+      <h1 className="font-[Outfit] text-4xl font-bold text-[#231A16] mb-2 text-glow">Checkout</h1>
+      <p className="text-[#7A6A5B] mb-10">Complete your purchase securely.</p>
 
       {/* Step Indicator */}
       <div className="flex items-center gap-0 mb-12">
         {STEPS.map((s, i) => (
           <div key={s} className="flex items-center flex-1">
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${i <= step ? 'bg-[#ff9933]/20 text-[#ff9933] border border-[#ff9933]/30' : 'text-[#9e8c73] border border-white/10'}`}>
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i < step ? 'bg-[#ff9933] text-[#2e1800]' : i === step ? 'bg-[#ff9933]/30 text-[#ff9933]' : 'bg-white/5 text-[#9e8c73]'}`}>
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${i <= step ? 'bg-[#B7322A]/20 text-[#B7322A] border border-[#B7322A]/30' : 'text-[#8A7B6B] border border-[#231a16]/10'}`}>
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i < step ? 'bg-[#B7322A] text-[#FDF8F0]' : i === step ? 'bg-[#B7322A]/30 text-[#B7322A]' : 'bg-[#231a16]/5 text-[#8A7B6B]'}`}>
                 {i < step ? <Check size={12} /> : i + 1}
               </span>
               {s}
             </div>
-            {i < STEPS.length - 1 && <div className={`h-px flex-1 mx-2 ${step > i ? 'bg-[#ff9933]/50' : 'bg-white/10'}`} />}
+            {i < STEPS.length - 1 && <div className={`h-px flex-1 mx-2 ${step > i ? 'bg-[#B7322A]/50' : 'bg-[#231a16]/10'}`} />}
           </div>
         ))}
       </div>
@@ -182,7 +182,7 @@ export default function Checkout() {
         <div className="lg:col-span-7">
           {step === 0 && (
             <GlassCard className="p-8 flex flex-col gap-5">
-              <h2 className="font-[Outfit] text-2xl font-semibold text-[#fff4e6] mb-2">Shipping Information</h2>
+              <h2 className="font-[Outfit] text-2xl font-semibold text-[#231A16] mb-2">Shipping Information</h2>
               <div className="grid grid-cols-2 gap-4">
                 <Field label="First Name" value={shipping_form.firstName} onChange={v => setShipping({...shipping_form, firstName: v})} placeholder="Alex" />
                 <Field label="Last Name" value={shipping_form.lastName} onChange={v => setShipping({...shipping_form, lastName: v})} placeholder="Mercer" />
@@ -193,7 +193,7 @@ export default function Checkout() {
                 <Field label="PIN / Zip Code" value={shipping_form.pin} onChange={v => setShipping({...shipping_form, pin: v})} placeholder="90210" />
               </div>
               <Field label="Phone Number" value={shipping_form.phone} onChange={v => setShipping({...shipping_form, phone: v})} placeholder="+1 (555) 000-0000" />
-              <button onClick={() => setStep(1)} className="w-full py-3.5 mt-4 rounded-xl bg-gradient-to-r from-[#9c5214] to-[#ff9933] text-[#2e1800] font-[Outfit] text-lg font-bold hover:shadow-[0_0_9px_rgba(255,153,51,0.17)] transition-all flex items-center justify-center gap-2">
+              <button onClick={() => setStep(1)} className="w-full py-3.5 mt-4 rounded-xl bg-gradient-to-r from-[#7A1F1A] to-[#B7322A] text-[#FDF8F0] font-[Outfit] text-lg font-bold hover:shadow-[0_0_9px_rgba(183,50,42,0.17)] transition-all flex items-center justify-center gap-2">
                 Continue to Payment <ArrowRight size={20} />
               </button>
             </GlassCard>
@@ -201,22 +201,22 @@ export default function Checkout() {
 
           {step === 1 && (
             <GlassCard className="p-8 flex flex-col gap-5">
-              <h2 className="font-[Outfit] text-2xl font-semibold text-[#fff4e6] mb-2">Payment</h2>
-              <div className="flex items-center gap-2 text-xs text-[#cbb89d] mb-2">
-                <CreditCard size={15} className="text-[#ffd27a]" /> All major credit & debit cards accepted
+              <h2 className="font-[Outfit] text-2xl font-semibold text-[#231A16] mb-2">Payment</h2>
+              <div className="flex items-center gap-2 text-xs text-[#7A6A5B] mb-2">
+                <CreditCard size={15} className="text-[#C8901A]" /> All major credit & debit cards accepted
               </div>
-              <div className="rounded-xl border border-white/10 bg-[#1a1307]/70 p-5 flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-[#f1e7d7] font-semibold">
-                  <Lock size={16} className="text-[#ffd27a]" /> Secure payment via Razorpay
+              <div className="rounded-xl border border-[#231a16]/10 bg-[#F5ECDE]/70 p-5 flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-[#2A211B] font-semibold">
+                  <Lock size={16} className="text-[#C8901A]" /> Secure payment via Razorpay
                 </div>
-                <p className="text-xs text-[#cbb89d] leading-relaxed">
+                <p className="text-xs text-[#7A6A5B] leading-relaxed">
                   Clicking Pay opens Razorpay's secure checkout. Your card details are entered there
                   and never touch NovaMarket's servers.
                 </p>
               </div>
               <div className="flex gap-3 mt-4">
-                <button onClick={() => setStep(0)} className="py-3.5 px-6 rounded-xl border border-white/10 text-[#f1e7d7] font-[Outfit] font-bold hover:bg-white/5 transition-all">← Back</button>
-                <button onClick={handlePlaceOrder} disabled={placing} className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-[#c98a12] to-[#ffb52e] text-white font-[Outfit] text-lg font-bold hover:shadow-[0_0_11px_rgba(201,138,18,0.22)] transition-all flex items-center justify-center gap-2 disabled:opacity-60">
+                <button onClick={() => setStep(0)} className="py-3.5 px-6 rounded-xl border border-[#231a16]/10 text-[#2A211B] font-[Outfit] font-bold hover:bg-[#231a16]/5 transition-all">← Back</button>
+                <button onClick={handlePlaceOrder} disabled={placing} className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-[#B8860B] to-[#E0A11C] text-[#231A16] font-[Outfit] text-lg font-bold hover:shadow-[0_0_11px_rgba(224,161,28,0.22)] transition-all flex items-center justify-center gap-2 disabled:opacity-60">
                   {placing ? 'Processing...' : `Pay ${inr(total)}`} {!placing && <ArrowRight size={20} />}
                 </button>
               </div>
@@ -227,38 +227,38 @@ export default function Checkout() {
         {/* Order Summary Sidebar */}
         <div className="lg:col-span-5">
           <GlassCard className="p-6 sticky top-28">
-            <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-5">Your Order</h2>
+            <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16] mb-5">Your Order</h2>
 
             {sellers.length > 1 && (
-              <div className="bg-[#ff9933]/10 border border-[#ff9933]/30 rounded-lg p-3 mb-4 text-xs text-[#ffd27a] leading-relaxed">
+              <div className="bg-[#B7322A]/10 border border-[#B7322A]/30 rounded-lg p-3 mb-4 text-xs text-[#C8901A] leading-relaxed">
                 Your cart has items from {sellers.length} stores. We'll automatically split it into {sellers.length} orders — each seller ships their own.
               </div>
             )}
 
             <div className="flex flex-col gap-3 mb-6 max-h-[300px] overflow-y-auto">
               {items.map(({ product, quantity }) => (
-                <div key={product.id} className="flex items-center gap-3 border-b border-white/5 pb-3">
-                  <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-white/10">
+                <div key={product.id} className="flex items-center gap-3 border-b border-[#231a16]/5 pb-3">
+                  <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-[#231a16]/10">
                     <img src={product.img} alt={product.title} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[#f1e7d7] text-sm font-semibold truncate">{product.title}</p>
-                    <p className="text-[#cbb89d] text-xs">
-                      {product.storeName && <span className="text-[#9e8c73] uppercase tracking-wider text-[10px]">by {product.storeName} · </span>}
+                    <p className="text-[#2A211B] text-sm font-semibold truncate">{product.title}</p>
+                    <p className="text-[#7A6A5B] text-xs">
+                      {product.storeName && <span className="text-[#8A7B6B] uppercase tracking-wider text-[10px]">by {product.storeName} · </span>}
                       Qty: {quantity}
                     </p>
                   </div>
-                  <span className="text-[#ff9933] text-sm font-bold shrink-0">{inr(product.price * quantity)}</span>
+                  <span className="text-[#B7322A] text-sm font-bold shrink-0">{inr(product.price * quantity)}</span>
                 </div>
               ))}
             </div>
-            <div className="flex flex-col gap-2 text-sm border-t border-white/10 pt-4">
-              <div className="flex justify-between text-[#cbb89d]"><span>Subtotal</span><span>{inr(subtotal)}</span></div>
-              <div className="flex justify-between text-[#fff4e6] font-bold text-lg pt-2 mt-1 border-t border-white/10"><span>Total</span><span>{inr(total)}</span></div>
+            <div className="flex flex-col gap-2 text-sm border-t border-[#231a16]/10 pt-4">
+              <div className="flex justify-between text-[#7A6A5B]"><span>Subtotal</span><span>{inr(subtotal)}</span></div>
+              <div className="flex justify-between text-[#231A16] font-bold text-lg pt-2 mt-1 border-t border-[#231a16]/10"><span>Total</span><span>{inr(total)}</span></div>
             </div>
             <div className="flex flex-col gap-2 mt-4">
-              <div className="flex items-center gap-2 text-xs text-[#cbb89d]"><ShieldCheck size={14} className="text-[#ff9933]" /> End-to-end encrypted</div>
-              <div className="flex items-center gap-2 text-xs text-[#cbb89d]"><CreditCard size={14} className="text-[#ffd27a]" /> All major credit & debit cards</div>
+              <div className="flex items-center gap-2 text-xs text-[#7A6A5B]"><ShieldCheck size={14} className="text-[#B7322A]" /> End-to-end encrypted</div>
+              <div className="flex items-center gap-2 text-xs text-[#7A6A5B]"><CreditCard size={14} className="text-[#C8901A]" /> All major credit & debit cards</div>
             </div>
           </GlassCard>
         </div>
@@ -270,13 +270,13 @@ export default function Checkout() {
 function Field({ label, value, onChange, placeholder }) {
   return (
     <div>
-      <label className="text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block">{label}</label>
+      <label className="text-xs text-[#7A6A5B] font-bold uppercase tracking-wider mb-2 block">{label}</label>
       <input
         type="text"
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-3 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors placeholder-[#4b3d29]"
+        className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-3 px-4 text-[#2A211B] outline-none focus:border-[#B7322A] transition-colors placeholder-[#A99883]"
       />
     </div>
   );

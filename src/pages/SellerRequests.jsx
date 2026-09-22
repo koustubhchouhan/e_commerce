@@ -6,9 +6,9 @@ import { useAuth } from '../context/AuthContext';
 import { useToastStore } from '../store/toastStore';
 
 const STATUS_META = {
-  pending: { label: 'Pending Review', icon: <Clock size={16} />, badge: 'bg-[#c98a12]/20 text-[#ffd27a] border-[#ffd27a]/30' },
-  approved: { label: 'Approved', icon: <CheckCircle size={16} />, badge: 'bg-[#ff9933]/10 text-[#ff9933] border-[#ff9933]/30' },
-  rejected: { label: 'Rejected', icon: <XCircle size={16} />, badge: 'bg-[#93000a]/20 text-[#ffb4ab] border-[#ffb4ab]/30' },
+  pending: { label: 'Pending Review', icon: <Clock size={16} />, badge: 'bg-[#B8860B]/20 text-[#C8901A] border-[#C8901A]/30' },
+  approved: { label: 'Approved', icon: <CheckCircle size={16} />, badge: 'bg-[#B7322A]/10 text-[#B7322A] border-[#B7322A]/30' },
+  rejected: { label: 'Rejected', icon: <XCircle size={16} />, badge: 'bg-[#FBE3E1]/20 text-[#B3261E] border-[#B3261E]/30' },
 };
 
 const formatDate = (iso) => {
@@ -75,8 +75,8 @@ export default function SellerRequests() {
   return (
     <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-12 animate-fade-in-up flex flex-col gap-8">
       <header>
-        <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">My Seller Applications</h1>
-        <p className="text-[#cbb89d]">Track the status of your requests to open a storefront.</p>
+        <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">My Seller Applications</h1>
+        <p className="text-[#7A6A5B]">Track the status of your requests to open a storefront.</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -86,35 +86,35 @@ export default function SellerRequests() {
 
           {/* Become a Seller form */}
           {canApply && (
-            <GlassCard className="p-8 border-t-4 border-t-[#ff9933]">
+            <GlassCard className="p-8 border-t-4 border-t-[#B7322A]">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-[#ff9933]/10 rounded-full border border-[#ff9933]/20">
-                  <Store className="text-[#ff9933]" size={22} />
+                <div className="p-2 bg-[#B7322A]/10 rounded-full border border-[#B7322A]/20">
+                  <Store className="text-[#B7322A]" size={22} />
                 </div>
                 <div>
-                  <h2 className="font-[Outfit] text-2xl font-semibold text-[#fff4e6]">Become a Seller</h2>
-                  <p className="text-[#cbb89d] text-sm">Set up your storefront and start listing products.</p>
+                  <h2 className="font-[Outfit] text-2xl font-semibold text-[#231A16]">Become a Seller</h2>
+                  <p className="text-[#7A6A5B] text-sm">Set up your storefront and start listing products.</p>
                 </div>
               </div>
               <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
                 <div>
-                  <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Store Name <span className="text-[#ffb4ab]">*</span></label>
+                  <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">Store Name <span className="text-[#B3261E]">*</span></label>
                   <input
                     type="text"
                     value={storeName}
                     onChange={(e) => setStoreName(e.target.value)}
                     placeholder="e.g. NeonTech Store"
-                    className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                    className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Contact Email <span className="text-[#ffb4ab]">*</span></label>
+                  <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">Contact Email <span className="text-[#B3261E]">*</span></label>
                   <input
                     type="email"
                     value={contactEmail}
                     onChange={(e) => setContactEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                    className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
                   />
                 </div>
                 <button
@@ -122,8 +122,8 @@ export default function SellerRequests() {
                   disabled={!storeName.trim() || !contactEmail.trim() || submitting}
                   className={`w-full py-3 rounded-lg font-[Outfit] text-base font-semibold flex items-center justify-center gap-2 transition-all ${
                     storeName.trim() && contactEmail.trim() && !submitting
-                      ? 'bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)]'
-                      : 'bg-[#34250f]/50 text-[#6f6048] cursor-not-allowed'
+                      ? 'bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]'
+                      : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'
                   }`}
                 >
                   <Send size={18} /> {submitting ? 'Submitting...' : 'Submit Application'}
@@ -133,39 +133,39 @@ export default function SellerRequests() {
           )}
 
           {loading && (
-            <GlassCard className="p-8 text-center text-[#cbb89d] text-sm">Loading applications...</GlassCard>
+            <GlassCard className="p-8 text-center text-[#7A6A5B] text-sm">Loading applications...</GlassCard>
           )}
 
           {!loading && error && (
-            <GlassCard className="p-8 text-center text-[#ffb4ab] text-sm">{error}</GlassCard>
+            <GlassCard className="p-8 text-center text-[#B3261E] text-sm">{error}</GlassCard>
           )}
 
           {!loading && !error && applications.length === 0 && (
             <GlassCard className="p-10 flex flex-col items-center gap-3 text-center">
-              <FileText size={36} className="text-[#4b3d2a]" />
-              <p className="text-[#f1e7d7] font-[Outfit] text-lg font-semibold">No applications yet</p>
-              <p className="text-[#cbb89d] text-sm">Fill in the form above to start selling on the platform.</p>
+              <FileText size={36} className="text-[#C4B5A2]" />
+              <p className="text-[#2A211B] font-[Outfit] text-lg font-semibold">No applications yet</p>
+              <p className="text-[#7A6A5B] text-sm">Fill in the form above to start selling on the platform.</p>
             </GlassCard>
           )}
 
           {applications.map((app) => {
-            const meta = STATUS_META[app.status] ?? { label: app.status, icon: null, badge: 'bg-white/10 text-[#cbb89d] border-white/10' };
+            const meta = STATUS_META[app.status] ?? { label: app.status, icon: null, badge: 'bg-[#231a16]/10 text-[#7A6A5B] border-[#231a16]/10' };
             return (
               <GlassCard key={app.id} className="p-6">
                 <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
                   <div className="flex items-start gap-4">
-                    <div className="mt-1 p-2 bg-[#ff9933]/10 rounded-full border border-[#ff9933]/20 shrink-0">
-                      <Store className="text-[#ff9933]" size={20} />
+                    <div className="mt-1 p-2 bg-[#B7322A]/10 rounded-full border border-[#B7322A]/20 shrink-0">
+                      <Store className="text-[#B7322A]" size={20} />
                     </div>
                     <div>
                       <div className="flex items-center gap-3 flex-wrap">
-                        <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6]">{app.storeName}</h2>
+                        <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16]">{app.storeName}</h2>
                         <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${meta.badge}`}>
                           {meta.icon} {meta.label}
                         </span>
                       </div>
-                      <p className="text-[#cbb89d] text-sm mt-1">Contact: <span className="text-[#f1e7d7]">{app.contactEmail}</span></p>
-                      <p className="text-[#9e8c73] text-xs mt-0.5">
+                      <p className="text-[#7A6A5B] text-sm mt-1">Contact: <span className="text-[#2A211B]">{app.contactEmail}</span></p>
+                      <p className="text-[#8A7B6B] text-xs mt-0.5">
                         Applied {formatDate(app.createdAt)}
                         {app.reviewedAt ? ` · Reviewed ${formatDate(app.reviewedAt)}` : ''}
                       </p>
@@ -174,20 +174,20 @@ export default function SellerRequests() {
                 </div>
 
                 {app.status === 'pending' && (
-                  <div className="bg-[#221708]/80 p-4 rounded-lg border border-[#ffd27a]/20 text-[#ffd27a] text-sm flex items-start gap-2">
+                  <div className="bg-[#F5ECDE]/80 p-4 rounded-lg border border-[#C8901A]/20 text-[#C8901A] text-sm flex items-start gap-2">
                     <Clock size={16} className="shrink-0 mt-0.5" />
                     <p>Your application is under review. You will be notified once an administrator makes a decision.</p>
                   </div>
                 )}
                 {app.status === 'approved' && (
-                  <div className="bg-[#221708]/80 p-4 rounded-lg border border-[#ff9933]/20 text-[#f1e7d7] text-sm flex items-start gap-2">
-                    <CheckCircle size={16} className="text-[#ff9933] shrink-0 mt-0.5" />
+                  <div className="bg-[#F5ECDE]/80 p-4 rounded-lg border border-[#B7322A]/20 text-[#2A211B] text-sm flex items-start gap-2">
+                    <CheckCircle size={16} className="text-[#B7322A] shrink-0 mt-0.5" />
                     <p>Congratulations! Your storefront has been approved. Head to the seller dashboard to start selling.</p>
                   </div>
                 )}
                 {app.status === 'rejected' && (
-                  <div className="bg-[#221708]/80 p-4 rounded-lg border border-[#ffb4ab]/20 text-[#f1e7d7] text-sm flex items-start gap-2">
-                    <PackageX size={16} className="text-[#ffb4ab] shrink-0 mt-0.5" />
+                  <div className="bg-[#F5ECDE]/80 p-4 rounded-lg border border-[#B3261E]/20 text-[#2A211B] text-sm flex items-start gap-2">
+                    <PackageX size={16} className="text-[#B3261E] shrink-0 mt-0.5" />
                     <p>Unfortunately your application was rejected. You may submit a new application at any time.</p>
                   </div>
                 )}
@@ -199,27 +199,27 @@ export default function SellerRequests() {
         {/* Right Column: Status Summary */}
         <div className="lg:col-span-1">
           <GlassCard className="p-8 sticky top-28">
-            <h2 className="font-[Outfit] text-2xl font-semibold text-[#fff4e6] mb-6">Application Overview</h2>
+            <h2 className="font-[Outfit] text-2xl font-semibold text-[#231A16] mb-6">Application Overview</h2>
 
             <div className="flex flex-col gap-6">
-              <div className="flex justify-between items-center border-b border-white/10 pb-4">
-                <span className="text-[#cbb89d] text-sm">Pending Review</span>
-                <span className="font-[Outfit] text-2xl font-bold text-[#ffd27a]">{loading ? '—' : pending}</span>
+              <div className="flex justify-between items-center border-b border-[#231a16]/10 pb-4">
+                <span className="text-[#7A6A5B] text-sm">Pending Review</span>
+                <span className="font-[Outfit] text-2xl font-bold text-[#C8901A]">{loading ? '—' : pending}</span>
               </div>
-              <div className="flex justify-between items-center border-b border-white/10 pb-4">
-                <span className="text-[#cbb89d] text-sm">Approved</span>
-                <span className="font-[Outfit] text-2xl font-bold text-[#ff9933]">{loading ? '—' : approved}</span>
+              <div className="flex justify-between items-center border-b border-[#231a16]/10 pb-4">
+                <span className="text-[#7A6A5B] text-sm">Approved</span>
+                <span className="font-[Outfit] text-2xl font-bold text-[#B7322A]">{loading ? '—' : approved}</span>
               </div>
               <div className="flex justify-between items-center pb-2">
-                <span className="text-[#cbb89d] text-sm">Rejected</span>
-                <span className="font-[Outfit] text-2xl font-bold text-[#ffb4ab]">{loading ? '—' : rejected}</span>
+                <span className="text-[#7A6A5B] text-sm">Rejected</span>
+                <span className="font-[Outfit] text-2xl font-bold text-[#B3261E]">{loading ? '—' : rejected}</span>
               </div>
             </div>
 
-            <div className="mt-8 p-4 bg-[#c98a12]/10 border border-[#ffd27a]/20 rounded-lg">
+            <div className="mt-8 p-4 bg-[#B8860B]/10 border border-[#C8901A]/20 rounded-lg">
               <div className="flex gap-3">
-                <Store className="text-[#ffd27a] shrink-0" size={20} />
-                <p className="text-[#f1e7d7] text-sm leading-relaxed">
+                <Store className="text-[#C8901A] shrink-0" size={20} />
+                <p className="text-[#2A211B] text-sm leading-relaxed">
                   {pending > 0
                     ? `You have ${pending} pending application${pending === 1 ? '' : 's'}. Decisions are typically made within a few days.`
                     : approved > 0

@@ -61,8 +61,8 @@ function App() {
   // route would otherwise bounce a logged-in user to /login on hard refresh).
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#170e03]">
-        <div className="animate-pulse font-[Outfit] text-xl text-[#cbb89d]">
+      <div className="flex items-center justify-center min-h-screen bg-[#FDF8F0]">
+        <div className="animate-pulse font-[Outfit] text-xl text-[#7A6A5B]">
           Loading…
         </div>
       </div>

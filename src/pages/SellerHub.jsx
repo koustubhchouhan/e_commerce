@@ -26,11 +26,11 @@ const formatDate = (iso) => {
 };
 
 const ORDER_STATUS_STYLES = {
-  delivered: 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30',
-  shipped: 'bg-[#ff9933]/20 text-[#ff9933] border-[#ff9933]/30',
-  paid: 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30',
-  pending: 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30',
-  cancelled: 'bg-[#ffb4ab]/20 text-[#ffb4ab] border-[#ffb4ab]/30',
+  delivered: 'bg-[#E0A11C]/20 text-[#E0A11C] border-[#E0A11C]/30',
+  shipped: 'bg-[#B7322A]/20 text-[#B7322A] border-[#B7322A]/30',
+  paid: 'bg-[#B7322A]/20 text-[#E0A11C] border-[#B7322A]/30',
+  pending: 'bg-[#C8901A]/20 text-[#C8901A] border-[#C8901A]/30',
+  cancelled: 'bg-[#B3261E]/20 text-[#B3261E] border-[#B3261E]/30',
 };
 
 export default function SellerHub() {
@@ -272,9 +272,9 @@ export default function SellerHub() {
 
   const approvalBadgeClass = (status) => {
     switch (status) {
-      case 'approved': return 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30';
-      case 'rejected': return 'bg-[#ffb4ab]/20 text-[#ffb4ab] border-[#ffb4ab]/30';
-      default: return 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30';
+      case 'approved': return 'bg-[#B7322A]/20 text-[#E0A11C] border-[#B7322A]/30';
+      case 'rejected': return 'bg-[#B3261E]/20 text-[#B3261E] border-[#B3261E]/30';
+      default: return 'bg-[#C8901A]/20 text-[#C8901A] border-[#C8901A]/30';
     }
   };
 
@@ -333,22 +333,22 @@ export default function SellerHub() {
       )}
       
       {/* ═══ Left Sidebar — slide-in drawer on mobile, static column on desktop ═══ */}
-      <aside className={`fixed inset-y-0 left-0 z-[100] w-[280px] max-w-[80vw] bg-[#221708] backdrop-blur-xl border-r border-white/5 p-6 flex flex-col shrink-0 overflow-y-auto transition-transform duration-300 lg:sticky lg:top-[80px] lg:h-[calc(100vh-80px)] lg:max-w-none lg:bg-[#221708]/90 lg:translate-x-0 ${navOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-[100] w-[280px] max-w-[80vw] bg-[#F5ECDE] backdrop-blur-xl border-r border-[#231a16]/5 p-6 flex flex-col shrink-0 overflow-y-auto transition-transform duration-300 lg:sticky lg:top-[80px] lg:h-[calc(100vh-80px)] lg:max-w-none lg:bg-[#F5ECDE]/90 lg:translate-x-0 ${navOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         
         {/* Profile Info */}
         <div className="flex flex-col items-center mb-10 text-center">
-          <div className="w-24 h-24 rounded-full bg-[#170e03] border-2 border-[#ff9933]/50 overflow-hidden mb-4 shadow-[0_0_7px_rgba(255,153,51,0.11)] flex items-center justify-center">
+          <div className="w-24 h-24 rounded-full bg-[#FDF8F0] border-2 border-[#B7322A]/50 overflow-hidden mb-4 shadow-[0_0_7px_rgba(183,50,42,0.11)] flex items-center justify-center">
             {user?.avatarUrl ? (
               <img src={user.avatarUrl} alt="Seller Profile" className="w-full h-full object-cover" />
             ) : (
-              <span className="font-[Outfit] text-3xl font-bold text-[#ff9933]">
+              <span className="font-[Outfit] text-3xl font-bold text-[#B7322A]">
                 {(user?.fullName || 'S').charAt(0).toUpperCase()}
               </span>
             )}
           </div>
-          <h2 className="font-[Outfit] text-xl font-bold text-[#fff4e6]">{user?.fullName || 'Seller'}</h2>
-          <p className="text-[#cbb89d] text-xs font-semibold tracking-wider uppercase mt-1">{store?.name || 'Your Store'}</p>
-          <span className="px-3 py-1 rounded-full bg-[#ffbf66]/10 text-[#ffbf66] text-[10px] font-bold uppercase tracking-wider mt-3 border border-[#ffbf66]/20">
+          <h2 className="font-[Outfit] text-xl font-bold text-[#231A16]">{user?.fullName || 'Seller'}</h2>
+          <p className="text-[#7A6A5B] text-xs font-semibold tracking-wider uppercase mt-1">{store?.name || 'Your Store'}</p>
+          <span className="px-3 py-1 rounded-full bg-[#E0A11C]/10 text-[#E0A11C] text-[10px] font-bold uppercase tracking-wider mt-3 border border-[#E0A11C]/20">
             Verified Seller
           </span>
         </div>
@@ -368,7 +368,7 @@ export default function SellerHub() {
         <button
           type="button"
           onClick={() => setNavOpen(true)}
-          className="lg:hidden flex items-center gap-2 mb-6 px-4 py-2.5 rounded-lg border border-white/10 bg-[#221708]/70 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors"
+          className="lg:hidden flex items-center gap-2 mb-6 px-4 py-2.5 rounded-lg border border-[#231a16]/10 bg-[#F5ECDE]/70 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors"
           aria-label="Open seller navigation"
         >
           <Menu size={18} /> Menu
@@ -377,8 +377,8 @@ export default function SellerHub() {
         {activeTab === 'overview' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Store Overview</h1>
-              <p className="text-[#cbb89d]">Monitor your recent analytics, add new products, and track inventory.</p>
+              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Store Overview</h1>
+              <p className="text-[#7A6A5B]">Monitor your recent analytics, add new products, and track inventory.</p>
             </header>
 
             {/* Analytics Row */}
@@ -398,15 +398,15 @@ export default function SellerHub() {
               {/* Inventory List */}
               <div className="xl:col-span-2">
                 <GlassCard className="p-6 lg:p-8 min-h-[500px]">
-                  <h2 className="font-[Outfit] text-2xl font-semibold text-[#fff4e6] mb-6">Your Inventory</h2>
+                  <h2 className="font-[Outfit] text-2xl font-semibold text-[#231A16] mb-6">Your Inventory</h2>
                   
                   {loadingProducts ? (
-                    <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading inventory...</div>
+                    <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading inventory...</div>
                   ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                        <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider">
                           <th className="py-4 px-4 font-semibold">Product</th>
                           <th className="py-4 px-4 font-semibold text-right">Price</th>
                           <th className="py-4 px-4 font-semibold text-center">Sales</th>
@@ -417,10 +417,10 @@ export default function SellerHub() {
                         {products.map((item) => {
                           const approval = item.approvalStatus ?? 'approved';
                           return (
-                          <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                            <td className="py-4 px-4 font-[Outfit] text-lg font-semibold text-[#f1e7d7]">{item.name}</td>
-                            <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">{inr(item.price)}</td>
-                            <td className="py-4 px-4 text-center text-[#fff4e6]">{salesByProduct[item.id] ?? 0}</td>
+                          <tr key={item.id} className="border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors">
+                            <td className="py-4 px-4 font-[Outfit] text-lg font-semibold text-[#2A211B]">{item.name}</td>
+                            <td className="py-4 px-4 text-right text-[#B7322A] font-semibold">{inr(item.price)}</td>
+                            <td className="py-4 px-4 text-center text-[#231A16]">{salesByProduct[item.id] ?? 0}</td>
                             <td className="py-4 px-4 text-right">
                               <div className="flex flex-col items-end gap-1.5">
                                 <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${approvalBadgeClass(approval)}`}>
@@ -429,20 +429,20 @@ export default function SellerHub() {
                                 {approval === 'rejected' && (
                                   <>
                                     {item.rejectionReason && (
-                                      <span className="text-[10px] text-[#ffb4ab]/80 max-w-[220px] text-right">{item.rejectionReason}</span>
+                                      <span className="text-[10px] text-[#B3261E]/80 max-w-[220px] text-right">{item.rejectionReason}</span>
                                     )}
                                     <button
                                       type="button"
                                       disabled={resubmittingId === item.id}
                                       onClick={() => handleResubmit(item)}
-                                      className="text-[10px] font-bold uppercase tracking-wider text-[#ff9933] hover:text-[#ffbf66] transition-colors disabled:opacity-50"
+                                      className="text-[10px] font-bold uppercase tracking-wider text-[#B7322A] hover:text-[#E0A11C] transition-colors disabled:opacity-50"
                                     >
                                       {resubmittingId === item.id ? 'Resubmitting...' : 'Resubmit'}
                                     </button>
                                   </>
                                 )}
                                 {item.status === 'out_of_stock' && (
-                                  <span className="text-[10px] text-[#9e8c73]">Out of stock</span>
+                                  <span className="text-[10px] text-[#8A7B6B]">Out of stock</span>
                                 )}
                               </div>
                             </td>
@@ -451,7 +451,7 @@ export default function SellerHub() {
                         })}
                         {products.length === 0 && (
                           <tr>
-                            <td colSpan={4} className="py-16 text-center text-[#9e8c73] text-sm">No products yet. Add your first one on the left.</td>
+                            <td colSpan={4} className="py-16 text-center text-[#8A7B6B] text-sm">No products yet. Add your first one on the left.</td>
                           </tr>
                         )}
                       </tbody>
@@ -467,22 +467,22 @@ export default function SellerHub() {
         {activeTab === 'orders' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Store Orders</h1>
-              <p className="text-[#cbb89d]">Products ordered from your store by customers.</p>
+              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Store Orders</h1>
+              <p className="text-[#7A6A5B]">Products ordered from your store by customers.</p>
             </header>
             
             <GlassCard className="p-6 lg:p-8">
               {loadingOrders && (
-                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading orders...</div>
+                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading orders...</div>
               )}
               {!loadingOrders && ordersError && (
-                <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{ordersError}</div>
+                <div className="flex items-center justify-center h-40 text-[#B3261E]">{ordersError}</div>
               )}
               {!loadingOrders && !ordersError && (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                    <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider">
                       <th className="py-4 px-4 font-semibold">Order ID</th>
                       <th className="py-4 px-4 font-semibold">Customer</th>
                       <th className="py-4 px-4 font-semibold">Items</th>
@@ -493,13 +493,13 @@ export default function SellerHub() {
                   </thead>
                   <tbody>
                     {orders.map(order => (
-                      <tr key={order.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{shortId(order.id)}</td>
-                        <td className="py-4 px-4 text-[#f1e7d7] font-semibold">{order.customerName || 'Customer'}</td>
-                        <td className="py-4 px-4 text-[#fff4e6]">{order.items?.map((i) => i.productName).join(', ') || '—'}</td>
-                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">{inr(order.total)}</td>
+                      <tr key={order.id} className="border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors">
+                        <td className="py-4 px-4 font-[Inter] text-sm text-[#7A6A5B] uppercase">{shortId(order.id)}</td>
+                        <td className="py-4 px-4 text-[#2A211B] font-semibold">{order.customerName || 'Customer'}</td>
+                        <td className="py-4 px-4 text-[#231A16]">{order.items?.map((i) => i.productName).join(', ') || '—'}</td>
+                        <td className="py-4 px-4 text-right text-[#B7322A] font-semibold">{inr(order.total)}</td>
                         <td className="py-4 px-4 text-right">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${ORDER_STATUS_STYLES[order.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${ORDER_STATUS_STYLES[order.status] ?? 'bg-[#231a16]/10 text-[#7A6A5B] border-[#231a16]/10'}`}>
                             {order.status}
                           </span>
                         </td>
@@ -513,8 +513,8 @@ export default function SellerHub() {
                                   onClick={() => handleOrderStatus(order, action.key)}
                                   className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                                     action.key === 'cancelled'
-                                      ? 'bg-[#ffb4ab]/10 text-[#ffb4ab] border-[#ffb4ab]/30 hover:bg-[#ffb4ab]/20'
-                                      : 'bg-[#ff9933]/10 text-[#ffbf66] border-[#ff9933]/30 hover:bg-[#ff9933]/20'
+                                      ? 'bg-[#B3261E]/10 text-[#B3261E] border-[#B3261E]/30 hover:bg-[#B3261E]/20'
+                                      : 'bg-[#B7322A]/10 text-[#E0A11C] border-[#B7322A]/30 hover:bg-[#B7322A]/20'
                                   }`}
                                 >
                                   <action.icon size={14} />
@@ -523,14 +523,14 @@ export default function SellerHub() {
                               ))}
                             </div>
                           ) : (
-                            <span className="text-[#4b3d2a] text-xs">—</span>
+                            <span className="text-[#C4B5A2] text-xs">—</span>
                           )}
                         </td>
                       </tr>
                     ))}
                     {orders.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="py-16 text-center text-[#9e8c73] text-sm">No orders for your store yet.</td>
+                        <td colSpan={6} className="py-16 text-center text-[#8A7B6B] text-sm">No orders for your store yet.</td>
                       </tr>
                     )}
                   </tbody>
@@ -544,8 +544,8 @@ export default function SellerHub() {
         {activeTab === 'messages' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Messages & Complaints</h1>
-              <p className="text-[#cbb89d]">
+              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Messages & Complaints</h1>
+              <p className="text-[#7A6A5B]">
                 {unreadMessages > 0
                   ? `${unreadMessages} unread message${unreadMessages === 1 ? '' : 's'} from customers.`
                   : 'Inquiries customers send about your products appear here.'}
@@ -554,16 +554,16 @@ export default function SellerHub() {
 
             <GlassCard className="p-6 lg:p-8">
               {messagesLoading && (
-                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading messages...</div>
+                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading messages...</div>
               )}
               {!messagesLoading && messagesError && (
-                <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{messagesError}</div>
+                <div className="flex items-center justify-center h-40 text-[#B3261E]">{messagesError}</div>
               )}
               {!messagesLoading && !messagesError && (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                    <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider">
                       <th className="py-4 px-4 font-semibold">From</th>
                       <th className="py-4 px-4 font-semibold">Message</th>
                       <th className="py-4 px-4 font-semibold">About</th>
@@ -577,25 +577,25 @@ export default function SellerHub() {
                       <tr
                         key={msg.id}
                         onClick={() => openMessage(msg)}
-                        className={`border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${msg.isRead && !msg.reply ? 'opacity-60' : ''}`}
+                        className={`border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors cursor-pointer ${msg.isRead && !msg.reply ? 'opacity-60' : ''}`}
                       >
                         <td className="py-4 px-4">
-                          <p className="text-[#f1e7d7] font-semibold">{msg.name}</p>
-                          <a href={`mailto:${msg.email}`} onClick={(e) => e.stopPropagation()} className="text-[#cbb89d] text-xs hover:text-[#ff9933] transition-colors">{msg.email}</a>
+                          <p className="text-[#2A211B] font-semibold">{msg.name}</p>
+                          <a href={`mailto:${msg.email}`} onClick={(e) => e.stopPropagation()} className="text-[#7A6A5B] text-xs hover:text-[#B7322A] transition-colors">{msg.email}</a>
                         </td>
                         <td className="py-4 px-4 max-w-md">
-                          <p className="text-[#fff4e6] font-semibold text-sm">{msg.subject}</p>
-                          <p className="text-[#9e8c73] text-sm line-clamp-2">{msg.message}</p>
+                          <p className="text-[#231A16] font-semibold text-sm">{msg.subject}</p>
+                          <p className="text-[#8A7B6B] text-sm line-clamp-2">{msg.message}</p>
                         </td>
-                        <td className="py-4 px-4 text-[#cbb89d] text-sm">{msg.productName || 'Store inquiry'}</td>
-                        <td className="py-4 px-4 text-[#cbb89d] text-sm whitespace-nowrap" title={formatDate(msg.createdAt)}>{timeAgo(msg.createdAt)}</td>
+                        <td className="py-4 px-4 text-[#7A6A5B] text-sm">{msg.productName || 'Store inquiry'}</td>
+                        <td className="py-4 px-4 text-[#7A6A5B] text-sm whitespace-nowrap" title={formatDate(msg.createdAt)}>{timeAgo(msg.createdAt)}</td>
                         <td className="py-4 px-4 text-center">
                           <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
                             msg.reply
-                              ? 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30'
+                              ? 'bg-[#E0A11C]/20 text-[#E0A11C] border-[#E0A11C]/30'
                               : msg.isRead
-                                ? 'bg-white/10 text-[#cbb89d] border-white/10'
-                                : 'bg-[#ff9933]/20 text-[#ffd27a] border-[#ff9933]/30'
+                                ? 'bg-[#231a16]/10 text-[#7A6A5B] border-[#231a16]/10'
+                                : 'bg-[#B7322A]/20 text-[#C8901A] border-[#B7322A]/30'
                           }`}>
                             {msg.reply ? 'Replied' : msg.isRead ? 'Read' : 'New'}
                           </span>
@@ -605,7 +605,7 @@ export default function SellerHub() {
                             <button
                               onClick={(e) => { e.stopPropagation(); openMessage(msg); }}
                               title={msg.reply ? 'View / edit reply' : 'Reply'}
-                              className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ff9933] hover:bg-[#ff9933]/20 transition-colors"
+                              className="p-2 rounded-lg bg-[#B7322A]/10 text-[#B7322A] hover:bg-[#B7322A]/20 transition-colors"
                             >
                               <Reply size={16} />
                             </button>
@@ -613,7 +613,7 @@ export default function SellerHub() {
                               onClick={(e) => { e.stopPropagation(); handleToggleMessageRead(msg); }}
                               disabled={togglingId === msg.id}
                               title={msg.isRead ? 'Mark as unread' : 'Mark as read'}
-                              className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ffbf66] hover:bg-[#ff9933]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="p-2 rounded-lg bg-[#B7322A]/10 text-[#E0A11C] hover:bg-[#B7322A]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {msg.isRead ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
@@ -623,7 +623,7 @@ export default function SellerHub() {
                     ))}
                     {messages.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="py-16 text-center text-[#9e8c73] text-sm">
+                        <td colSpan={6} className="py-16 text-center text-[#8A7B6B] text-sm">
                           No customer messages yet — questions sent from a product page land here.
                         </td>
                       </tr>
@@ -639,22 +639,22 @@ export default function SellerHub() {
         {activeTab === 'reviews' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Customer Reviews</h1>
-              <p className="text-[#cbb89d]">Reviews left on your products. Reply publicly to build trust with shoppers.</p>
+              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Customer Reviews</h1>
+              <p className="text-[#7A6A5B]">Reviews left on your products. Reply publicly to build trust with shoppers.</p>
             </header>
 
             {reviewsLoading && (
               <GlassCard className="p-6 lg:p-8">
-                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading reviews...</div>
+                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading reviews...</div>
               </GlassCard>
             )}
             {!reviewsLoading && reviewsError && (
               <GlassCard className="p-6 lg:p-8">
-                <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{reviewsError}</div>
+                <div className="flex items-center justify-center h-40 text-[#B3261E]">{reviewsError}</div>
               </GlassCard>
             )}
             {!reviewsLoading && !reviewsError && reviews.length === 0 && (
-              <div className="bg-[#34250f]/30 p-8 rounded-lg border border-dashed border-white/10 text-center text-[#9e8c73] text-sm">
+              <div className="bg-[#F0E7DA]/30 p-8 rounded-lg border border-dashed border-[#231a16]/10 text-center text-[#8A7B6B] text-sm">
                 No reviews on your products yet.
               </div>
             )}
@@ -664,28 +664,28 @@ export default function SellerHub() {
                   <GlassCard key={review.id} className="p-6">
                     <div className="flex flex-wrap justify-between items-start gap-4 mb-3">
                       <div>
-                        <p className="text-[#ff9933] text-xs font-bold uppercase tracking-wider">{review.productName ?? 'Product'}</p>
-                        <p className="text-[#f1e7d7] font-semibold">{review.author}</p>
-                        <p className="text-[#9e8c73] text-xs">{formatDate(review.createdAt)}</p>
+                        <p className="text-[#B7322A] text-xs font-bold uppercase tracking-wider">{review.productName ?? 'Product'}</p>
+                        <p className="text-[#2A211B] font-semibold">{review.author}</p>
+                        <p className="text-[#8A7B6B] text-xs">{formatDate(review.createdAt)}</p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-[#ff9933] font-semibold whitespace-nowrap">
+                        <span className="text-[#B7322A] font-semibold whitespace-nowrap">
                           {review.rating}<Star size={14} className="inline mb-0.5 ml-0.5" fill="currentColor" />
                         </span>
                         {review.isHidden && (
-                          <span className="px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border bg-[#ffb4ab]/20 text-[#ffb4ab] border-[#ffb4ab]/30">
+                          <span className="px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border bg-[#B3261E]/20 text-[#B3261E] border-[#B3261E]/30">
                             Hidden by admin
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <p className="text-[#cbb89d] text-sm leading-relaxed mb-4">{review.comment || 'No written comment.'}</p>
+                    <p className="text-[#7A6A5B] text-sm leading-relaxed mb-4">{review.comment || 'No written comment.'}</p>
 
                     {review.sellerReply && replyingId !== review.id && (
-                      <div className="mb-4 pl-4 border-l-2 border-[#ff9933]/40">
-                        <p className="text-[#ff9933] text-xs font-semibold uppercase tracking-wider mb-1">Your reply</p>
-                        <p className="text-[#cbb89d] text-sm">{review.sellerReply}</p>
+                      <div className="mb-4 pl-4 border-l-2 border-[#B7322A]/40">
+                        <p className="text-[#B7322A] text-xs font-semibold uppercase tracking-wider mb-1">Your reply</p>
+                        <p className="text-[#7A6A5B] text-sm">{review.sellerReply}</p>
                       </div>
                     )}
 
@@ -696,16 +696,16 @@ export default function SellerHub() {
                           value={replyDraft}
                           onChange={(e) => setReplyDraft(e.target.value)}
                           placeholder={`Reply to ${review.author}...`}
-                          className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all resize-none placeholder:text-[#6f6048]"
+                          className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all resize-none placeholder:text-[#8A7B6B]"
                         />
                         <div className="flex items-center justify-end gap-3">
-                          <button onClick={cancelReply} className="px-4 py-2 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors">
+                          <button onClick={cancelReply} className="px-4 py-2 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
                             Cancel
                           </button>
                           <button
                             onClick={() => handleSaveReply(review)}
                             disabled={savingReply}
-                            className="px-4 py-2 rounded-lg bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] text-sm font-bold transition-all disabled:opacity-50"
+                            className="px-4 py-2 rounded-lg bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] text-sm font-bold transition-all disabled:opacity-50"
                           >
                             {savingReply ? 'Saving...' : 'Save Reply'}
                           </button>
@@ -714,7 +714,7 @@ export default function SellerHub() {
                     ) : (
                       <button
                         onClick={() => startReply(review)}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#ff9933]/10 text-[#ffbf66] text-sm font-semibold hover:bg-[#ff9933]/20 transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#B7322A]/10 text-[#E0A11C] text-sm font-semibold hover:bg-[#B7322A]/20 transition-colors"
                       >
                         <MessageSquareWarning size={16} /> {review.sellerReply ? 'Edit Reply' : 'Reply'}
                       </button>
@@ -729,8 +729,8 @@ export default function SellerHub() {
         {activeTab === 'analytics' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Store Analytics</h1>
-              <p className="text-[#cbb89d]">Performance metrics computed from your store's live order data.</p>
+              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Store Analytics</h1>
+              <p className="text-[#7A6A5B]">Performance metrics computed from your store's live order data.</p>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -742,11 +742,11 @@ export default function SellerHub() {
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-6">
               <GlassCard className="xl:col-span-8 p-6 lg:p-8">
-                <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
-                  <BarChart3 size={20} className="text-[#ff9933]" /> Revenue — Last 6 Months
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
+                  <BarChart3 size={20} className="text-[#B7322A]" /> Revenue — Last 6 Months
                 </h2>
                 {orders.length === 0 ? (
-                  <div className="h-44 flex items-center justify-center text-[#9e8c73] text-sm">No order history yet.</div>
+                  <div className="h-44 flex items-center justify-center text-[#8A7B6B] text-sm">No order history yet.</div>
                 ) : (
                   <div className="flex items-end justify-between gap-3 h-44">
                     {months.map((m) => {
@@ -754,9 +754,9 @@ export default function SellerHub() {
                       const h = Math.max(4, Math.round((b.revenue / peakMonthRevenue) * 100));
                       return (
                         <div key={m.key} className="flex-1 flex flex-col items-center gap-2 group" title={`${inr(b.revenue)} across ${b.orders} order${b.orders === 1 ? '' : 's'}`}>
-                          <span className="text-[10px] text-[#cbb89d] opacity-0 group-hover:opacity-100 transition-opacity">${Math.round(b.revenue)}</span>
-                          <div className={`w-full max-w-[46px] rounded-t-lg bg-gradient-to-t from-[#ff7418]/40 to-[#ff9933] transition-all ${b.revenue > 0 ? '' : 'bg-white/5 to-white/5 from-white/5'}`} style={{ height: `${h}%` }} />
-                          <span className="text-[11px] text-[#9e8c73] uppercase tracking-wider">{m.label}</span>
+                          <span className="text-[10px] text-[#7A6A5B] opacity-0 group-hover:opacity-100 transition-opacity">${Math.round(b.revenue)}</span>
+                          <div className={`w-full max-w-[46px] rounded-t-lg bg-gradient-to-t from-[#8F2620]/40 to-[#B7322A] transition-all ${b.revenue > 0 ? '' : 'bg-[#231a16]/5 to-[#231a16]/5 from-[#231a16]/5'}`} style={{ height: `${h}%` }} />
+                          <span className="text-[11px] text-[#8A7B6B] uppercase tracking-wider">{m.label}</span>
                         </div>
                       );
                     })}
@@ -765,38 +765,38 @@ export default function SellerHub() {
               </GlassCard>
 
               <GlassCard className="xl:col-span-4 p-6 lg:p-8">
-                <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
-                  <ShoppingBag size={20} className="text-[#ffd27a]" /> Orders by Status
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
+                  <ShoppingBag size={20} className="text-[#C8901A]" /> Orders by Status
                 </h2>
                 <div className="flex flex-col gap-3">
                   {statusTotals.map(({ status, count, revenue: rev }) => (
                     <div key={status} className="flex items-center gap-3">
-                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${ORDER_STATUS_STYLES[status]?.split(' ')[0] ?? 'bg-white/20'}`} />
-                      <span className="text-sm text-[#cbb89d] capitalize w-24 shrink-0">{status}</span>
-                      <div className="flex-1 h-2 rounded-full bg-white/5 overflow-hidden">
-                        <div className="h-full rounded-full bg-gradient-to-r from-[#ff9933]/70 to-[#ff9933] transition-all" style={{ width: `${orders.length ? Math.round((count / orders.length) * 100) : 0}%` }} />
+                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${ORDER_STATUS_STYLES[status]?.split(' ')[0] ?? 'bg-[#231a16]/20'}`} />
+                      <span className="text-sm text-[#7A6A5B] capitalize w-24 shrink-0">{status}</span>
+                      <div className="flex-1 h-2 rounded-full bg-[#231a16]/5 overflow-hidden">
+                        <div className="h-full rounded-full bg-gradient-to-r from-[#B7322A]/70 to-[#B7322A] transition-all" style={{ width: `${orders.length ? Math.round((count / orders.length) * 100) : 0}%` }} />
                       </div>
-                      <span className="text-sm text-[#fff4e6] font-semibold w-6 text-right">{count}</span>
-                      <span className="text-[11px] text-[#9e8c73] w-16 text-right">${Math.round(rev)}</span>
+                      <span className="text-sm text-[#231A16] font-semibold w-6 text-right">{count}</span>
+                      <span className="text-[11px] text-[#8A7B6B] w-16 text-right">${Math.round(rev)}</span>
                     </div>
                   ))}
-                  {orders.length === 0 && <p className="text-[#9e8c73] text-sm text-center py-6">No orders yet.</p>}
+                  {orders.length === 0 && <p className="text-[#8A7B6B] text-sm text-center py-6">No orders yet.</p>}
                 </div>
               </GlassCard>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
               <GlassCard className="xl:col-span-7 p-6 lg:p-8">
-                <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
-                  <Package size={20} className="text-[#ffbf66]" /> Top Products by Revenue
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
+                  <Package size={20} className="text-[#E0A11C]" /> Top Products by Revenue
                 </h2>
                 {topProducts.length === 0 ? (
-                  <div className="h-40 flex items-center justify-center text-[#9e8c73] text-sm">No sales recorded yet.</div>
+                  <div className="h-40 flex items-center justify-center text-[#8A7B6B] text-sm">No sales recorded yet.</div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                        <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider">
                           <th className="py-3 px-3 font-semibold">Product</th>
                           <th className="py-3 px-3 font-semibold text-right">Price</th>
                           <th className="py-3 px-3 font-semibold text-center">Units</th>
@@ -805,14 +805,14 @@ export default function SellerHub() {
                       </thead>
                       <tbody>
                         {topProducts.map((p, idx) => (
-                          <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                            <td className="py-3 px-3 text-[#f1e7d7] font-semibold">
-                              <span className="text-[#9e8c73] text-xs mr-2 font-[Inter]">#{idx + 1}</span>
+                          <tr key={p.id} className="border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors">
+                            <td className="py-3 px-3 text-[#2A211B] font-semibold">
+                              <span className="text-[#8A7B6B] text-xs mr-2 font-[Inter]">#{idx + 1}</span>
                               {p.name}
                             </td>
-                            <td className="py-3 px-3 text-right text-[#cbb89d] text-sm">{inr(p.price)}</td>
-                            <td className="py-3 px-3 text-center text-[#fff4e6]">{p.units}</td>
-                            <td className="py-3 px-3 text-right text-[#ff9933] font-semibold">{inr(p.revenue)}</td>
+                            <td className="py-3 px-3 text-right text-[#7A6A5B] text-sm">{inr(p.price)}</td>
+                            <td className="py-3 px-3 text-center text-[#231A16]">{p.units}</td>
+                            <td className="py-3 px-3 text-right text-[#B7322A] font-semibold">{inr(p.revenue)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -822,26 +822,26 @@ export default function SellerHub() {
               </GlassCard>
 
               <GlassCard className="xl:col-span-5 p-6 lg:p-8">
-                <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
-                  <Clock size={20} className="text-[#ff7418]" /> Recent Orders
+                <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
+                  <Clock size={20} className="text-[#8F2620]" /> Recent Orders
                 </h2>
                 {orders.length === 0 ? (
-                  <div className="h-40 flex items-center justify-center text-[#9e8c73] text-sm">No orders yet.</div>
+                  <div className="h-40 flex items-center justify-center text-[#8A7B6B] text-sm">No orders yet.</div>
                 ) : (
-                  <div className="flex flex-col divide-y divide-white/5">
+                  <div className="flex flex-col divide-y divide-[#231a16]/5">
                     {orders.slice(0, 6).map((order) => {
                       const share = (order.items ?? []).reduce((s, it) => s + Number(it.lineTotal || 0), 0);
                       return (
                         <div key={order.id} className="py-3 flex items-center justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="font-[Inter] text-xs text-[#cbb89d] uppercase tracking-wider">ORDER #{shortId(order.id)}</p>
-                            <p className="text-[#f1e7d7] text-sm font-semibold truncate">
+                            <p className="font-[Inter] text-xs text-[#7A6A5B] uppercase tracking-wider">ORDER #{shortId(order.id)}</p>
+                            <p className="text-[#2A211B] text-sm font-semibold truncate">
                               {(order.items ?? []).map((i) => i.productName).join(', ') || '—'}
                             </p>
                           </div>
                           <div className="flex flex-col items-end shrink-0">
-                            <span className="text-[#fff4e6] font-[Outfit] font-bold text-sm">{inr(share)}</span>
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border mt-1 ${ORDER_STATUS_STYLES[order.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
+                            <span className="text-[#231A16] font-[Outfit] font-bold text-sm">{inr(share)}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border mt-1 ${ORDER_STATUS_STYLES[order.status] ?? 'bg-[#231a16]/10 text-[#7A6A5B] border-[#231a16]/10'}`}>
                               {order.status}
                             </span>
                           </div>
@@ -863,41 +863,41 @@ export default function SellerHub() {
             <form onSubmit={handleSendMessageReply} onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8 flex flex-col gap-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <h2 className="font-[Outfit] text-xl sm:text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
-                    <MessageSquareWarning className="text-[#ff9933] shrink-0" size={22} /> <span className="truncate">{messageModal.subject}</span>
+                  <h2 className="font-[Outfit] text-xl sm:text-2xl font-bold text-[#231A16] flex items-center gap-2">
+                    <MessageSquareWarning className="text-[#B7322A] shrink-0" size={22} /> <span className="truncate">{messageModal.subject}</span>
                   </h2>
-                  <p className="text-[#cbb89d] text-xs mt-1 break-all">{messageModal.name} · {messageModal.email}</p>
+                  <p className="text-[#7A6A5B] text-xs mt-1 break-all">{messageModal.name} · {messageModal.email}</p>
                 </div>
-                <button type="button" onClick={() => setMessageModal(null)} className="p-2 -mr-2 rounded-lg text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/5 transition-colors shrink-0" aria-label="Close">
+                <button type="button" onClick={() => setMessageModal(null)} className="p-2 -mr-2 rounded-lg text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors shrink-0" aria-label="Close">
                   <X size={22} />
                 </button>
               </div>
 
-              <div className="rounded-lg border border-white/10 bg-[#1a1307]/60 p-4">
-                <p className="text-[#9e8c73] text-xs font-semibold uppercase tracking-wider mb-2">{formatDate(messageModal.createdAt)}</p>
-                <p className="text-[#f1e7d7] text-sm whitespace-pre-wrap">{messageModal.message}</p>
-                {messageModal.productName && <p className="text-[#9e8c73] text-xs mt-3">About product: {messageModal.productName}</p>}
+              <div className="rounded-lg border border-[#231a16]/10 bg-[#F5ECDE]/60 p-4">
+                <p className="text-[#8A7B6B] text-xs font-semibold uppercase tracking-wider mb-2">{formatDate(messageModal.createdAt)}</p>
+                <p className="text-[#2A211B] text-sm whitespace-pre-wrap">{messageModal.message}</p>
+                {messageModal.productName && <p className="text-[#8A7B6B] text-xs mt-3">About product: {messageModal.productName}</p>}
               </div>
 
               <div>
-                <label className="text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block">{messageModal.reply ? 'Your Reply' : 'Reply'}</label>
+                <label className="text-xs text-[#7A6A5B] font-bold uppercase tracking-wider mb-2 block">{messageModal.reply ? 'Your Reply' : 'Reply'}</label>
                 <textarea
                   rows={4}
                   value={messageReplyDraft}
                   onChange={(e) => setMessageReplyDraft(e.target.value)}
                   placeholder="Type your response to the customer..."
-                  className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors resize-none"
+                  className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-[#2A211B] outline-none focus:border-[#B7322A] transition-colors resize-none"
                 />
                 {messageModal.repliedAt && (
-                  <p className="text-[#9e8c73] text-xs mt-2">Last replied {formatDate(messageModal.repliedAt)} — sending again updates it.</p>
+                  <p className="text-[#8A7B6B] text-xs mt-2">Last replied {formatDate(messageModal.repliedAt)} — sending again updates it.</p>
                 )}
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2 border-t border-white/10">
-                <button type="button" onClick={() => setMessageModal(null)} className="px-6 py-2.5 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors">
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#231a16]/10">
+                <button type="button" onClick={() => setMessageModal(null)} className="px-6 py-2.5 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
                   Close
                 </button>
-                <button type="submit" disabled={!messageReplyDraft.trim() || savingMessageReply} className="px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] disabled:bg-[#34250f]/50 disabled:text-[#6f6048] disabled:cursor-not-allowed">
+                <button type="submit" disabled={!messageReplyDraft.trim() || savingMessageReply} className="px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] disabled:bg-[#F0E7DA]/50 disabled:text-[#8A7B6B] disabled:cursor-not-allowed">
                   <Reply size={18} /> {savingMessageReply ? 'Sending...' : messageModal.reply ? 'Update Reply' : 'Send Reply'}
                 </button>
               </div>
@@ -915,14 +915,14 @@ function SidebarLink({ icon, label, active, onClick, badge }) {
       onClick={onClick}
       className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold tracking-wider transition-all duration-200 w-full text-left ${
         active 
-          ? 'bg-[#ff9933]/20 text-[#ff9933] border border-[#ff9933]/30 shadow-[0_0_7px_rgba(255,153,51,0.06)]' 
-          : 'text-[#cbb89d] hover:bg-[#34250f]/50 hover:text-[#f1e7d7]'
+          ? 'bg-[#B7322A]/20 text-[#B7322A] border border-[#B7322A]/30 shadow-[0_0_7px_rgba(183,50,42,0.06)]' 
+          : 'text-[#7A6A5B] hover:bg-[#F0E7DA]/50 hover:text-[#2A211B]'
       }`}
     >
       {icon}
       <span className="flex-1">{label}</span>
       {badge > 0 && (
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#ff9933] text-[#2e1800]">
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#B7322A] text-[#FDF8F0]">
           {badge}
         </span>
       )}
@@ -934,16 +934,16 @@ function StatCard({ icon, title, value, trend, negative }) {
   return (
     <GlassCard className="p-6">
       <div className="flex justify-between items-start mb-4">
-        <div className="text-[#ff9933] bg-[#ff9933]/10 p-3 rounded-lg border border-[#ff9933]/20">
+        <div className="text-[#B7322A] bg-[#B7322A]/10 p-3 rounded-lg border border-[#B7322A]/20">
           {icon}
         </div>
-        <span className={`text-xs font-bold tracking-wider px-2 py-1 rounded-full ${negative ? 'bg-[#ffb4ab]/20 text-[#ffb4ab]' : 'bg-[#ff9933]/20 text-[#ff9933]'}`}>
+        <span className={`text-xs font-bold tracking-wider px-2 py-1 rounded-full ${negative ? 'bg-[#B3261E]/20 text-[#B3261E]' : 'bg-[#B7322A]/20 text-[#B7322A]'}`}>
           {trend}
         </span>
       </div>
       <div>
-        <h3 className="text-[#cbb89d] text-sm font-semibold uppercase tracking-wider mb-1">{title}</h3>
-        <p className="font-[Outfit] text-3xl font-bold text-[#fff4e6]">{value}</p>
+        <h3 className="text-[#7A6A5B] text-sm font-semibold uppercase tracking-wider mb-1">{title}</h3>
+        <p className="font-[Outfit] text-3xl font-bold text-[#231A16]">{value}</p>
       </div>
     </GlassCard>
   );
@@ -991,13 +991,13 @@ function AddProductForm({ categories = [], onAdded }) {
     }
   };
 
-  const inputClass = 'w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-colors';
-  const labelClass = 'text-xs text-[#cbb89d] font-bold uppercase tracking-wider mb-2 block';
+  const inputClass = 'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-[#2A211B] outline-none focus:border-[#B7322A] transition-colors';
+  const labelClass = 'text-xs text-[#7A6A5B] font-bold uppercase tracking-wider mb-2 block';
 
   return (
     <GlassCard className="p-6 lg:p-8">
-      <h2 className="font-[Outfit] text-2xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
-        <PlusCircle className="text-[#ff9933]" /> Add Product
+      <h2 className="font-[Outfit] text-2xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
+        <PlusCircle className="text-[#B7322A]" /> Add Product
       </h2>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <div>
@@ -1032,14 +1032,14 @@ function AddProductForm({ categories = [], onAdded }) {
             accept="image/*"
             multiple
             onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-            className="text-xs text-[#9e8c73] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#ff9933]/10 file:text-[#ff9933] file:font-semibold file:cursor-pointer hover:file:bg-[#ff9933]/20 transition-colors"
+            className="text-xs text-[#8A7B6B] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#B7322A]/10 file:text-[#B7322A] file:font-semibold file:cursor-pointer hover:file:bg-[#B7322A]/20 transition-colors"
           />
           {files.length > 0 && (
-            <p className="text-[11px] text-[#cbb89d] mt-1.5 flex items-center gap-1"><UploadCloud size={13} /> {files.length} image{files.length === 1 ? '' : 's'} selected</p>
+            <p className="text-[11px] text-[#7A6A5B] mt-1.5 flex items-center gap-1"><UploadCloud size={13} /> {files.length} image{files.length === 1 ? '' : 's'} selected</p>
           )}
         </div>
 
-        <button type="submit" disabled={!canSubmit} className={`w-full py-3 rounded-lg font-[Outfit] text-lg font-semibold mt-2 transition-all flex items-center justify-center gap-2 ${canSubmit ? 'bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_7px_rgba(255,153,51,0.22)]' : 'bg-[#34250f]/50 text-[#6f6048] cursor-not-allowed'}`}>
+        <button type="submit" disabled={!canSubmit} className={`w-full py-3 rounded-lg font-[Outfit] text-lg font-semibold mt-2 transition-all flex items-center justify-center gap-2 ${canSubmit ? 'bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_7px_rgba(183,50,42,0.22)]' : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'}`}>
           <PlusCircle size={20} /> {busy ? 'Submitting...' : 'Submit for Approval'}
         </button>
       </form>

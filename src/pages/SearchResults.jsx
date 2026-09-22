@@ -36,34 +36,34 @@ export default function SearchResults() {
   return (
     <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-12 animate-fade-in-up">
       <div className="flex items-center gap-3 mb-10">
-        <div className="w-12 h-12 rounded-full bg-[#ff9933]/10 text-[#ff9933] flex items-center justify-center shrink-0 border border-[#ff9933]/20">
+        <div className="w-12 h-12 rounded-full bg-[#B7322A]/10 text-[#B7322A] flex items-center justify-center shrink-0 border border-[#B7322A]/20">
           <Search size={22} />
         </div>
         <div>
-          <h1 className="font-[Outfit] text-3xl font-bold text-[#fff4e6]">
-            Search Results for <span className="text-[#ff9933]">"{query}"</span>
+          <h1 className="font-[Outfit] text-3xl font-bold text-[#231A16]">
+            Search Results for <span className="text-[#B7322A]">"{query}"</span>
           </h1>
-          <p className="text-[#cbb89d] text-sm mt-1">
+          <p className="text-[#7A6A5B] text-sm mt-1">
             {loading ? 'Searching...' : error || (results.length === 0 ? 'No products found.' : `${results.length} product${results.length > 1 ? 's' : ''} found.`)}
           </p>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-24 text-[#cbb89d]">Loading...</div>
+        <div className="flex items-center justify-center py-24 text-[#7A6A5B]">Loading...</div>
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
-          <Search size={60} className="text-[#34250f]" />
-          <p className="text-[#ffb4ab] text-xl">{error}</p>
+          <Search size={60} className="text-[#F0E7DA]" />
+          <p className="text-[#B3261E] text-xl">{error}</p>
         </div>
       ) : results.length > 0 ? (
         <ProductGrid items={results} adminMode={false} />
       ) : (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
-          <Search size={60} className="text-[#34250f]" />
-          <p className="text-[#cbb89d] text-xl">No results for <span className="text-[#fff4e6] font-semibold">"{query}"</span></p>
-          <p className="text-[#9e8c73] text-sm">Try a different keyword or browse our catalog.</p>
-          <Link to="/home" className="mt-2 px-6 py-3 rounded-lg bg-[#34250f]/50 border border-white/10 text-[#f1e7d7] font-[Outfit] font-semibold text-base hover:bg-white/5 transition-all">
+          <Search size={60} className="text-[#F0E7DA]" />
+          <p className="text-[#7A6A5B] text-xl">No results for <span className="text-[#231A16] font-semibold">"{query}"</span></p>
+          <p className="text-[#8A7B6B] text-sm">Try a different keyword or browse our catalog.</p>
+          <Link to="/home" className="mt-2 px-6 py-3 rounded-lg bg-[#F0E7DA]/50 border border-[#231a16]/10 text-[#2A211B] font-[Outfit] font-semibold text-base hover:bg-[#231a16]/5 transition-all">
             Browse All Products
           </Link>
         </div>

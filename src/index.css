@@ -1,43 +1,44 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #170e03;
-  --color-surface: #170e03;
-  --color-surface-dim: #170e03;
-  --color-surface-bright: #3b2a14;
-  --color-surface-container-lowest: #100901;
-  --color-surface-container-low: #1c1206;
-  --color-surface-container: #221708;
-  --color-surface-container-high: #2b1d0d;
-  --color-surface-container-highest: #34250f;
-  --color-surface-variant: #34250f;
+  --color-background: #FDF8F0;
+  --color-surface: #FDF8F0;
+  --color-surface-dim: #FDF8F0;
+  --color-surface-bright: #EDE2D2;
+  --color-surface-container-lowest: #FDF8F0;
+  --color-surface-container-low: #F5ECDE;
+  --color-surface-container: #F5ECDE;
+  --color-surface-container-high: #F0E7DA;
+  --color-surface-container-highest: #F0E7DA;
+  --color-surface-variant: #F0E7DA;
 
-  --color-on-surface: #f1e7d7;
-  --color-on-surface-variant: #cbb89d;
-  --color-on-background: #f1e7d7;
+  --color-on-surface: #2A211B;
+  --color-on-surface-variant: #7A6A5B;
+  --color-on-background: #2A211B;
 
-  --color-primary: #fff4e6;
-  --color-primary-container: #ff9933;
-  --color-primary-fixed: #ffbf66;
-  --color-primary-fixed-dim: #ff7418;
-  --color-on-primary: #4a2a08;
-  --color-on-primary-container: #a85510;
-  --color-on-primary-fixed: #2e1800;
-  --color-inverse-primary: #9c5214;
+  --color-primary: #B7322A;
+  --color-primary-container: #B7322A;
+  --color-primary-fixed: #E0A11C;
+  --color-primary-fixed-dim: #8F2620;
+  --color-on-primary: #FDF8F0;
+  --color-on-primary-container: #7A1F1A;
+  --color-on-primary-fixed: #FDF8F0;
+  --color-inverse-primary: #7A1F1A;
 
-  --color-secondary: #ffd27a;
-  --color-secondary-container: #c98a12;
-  --color-secondary-fixed: #fff1d4;
-  --color-secondary-fixed-dim: #ffd27a;
-  --color-on-secondary: #5c3f05;
-  --color-on-secondary-container: #fff1d4;
+  --color-secondary: #C8901A;
+  --color-secondary-container: #B8860B;
+  --color-secondary-fixed: #FCF0D7;
+  --color-secondary-fixed-dim: #C8901A;
+  --color-on-secondary: #231A16;
+  --color-on-secondary-container: #231A16;
 
-  --color-error: #ffb4ab;
-  --color-error-container: #93000a;
-  --color-on-error: #690005;
+  --color-error: #B3261E;
+  --color-error-container: #FBE3E1;
+  --color-on-error: #FDF8F0;
+  --color-on-error-container: #7A1F1A;
 
-  --color-outline: #9e8c73;
-  --color-outline-variant: #4b3d2a;
+  --color-outline: #8A7B6B;
+  --color-outline-variant: #C4B5A2;
 
   --font-display: 'Outfit', sans-serif;
   --font-body: 'Inter', sans-serif;
@@ -80,28 +81,28 @@
 
 @layer utilities {
   .glass-panel {
-    background: rgba(26, 19, 7, 0.7);
+    background: rgba(253, 248, 240, 0.72);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(35, 26, 22, 0.1);
   }
 
   .glass-panel-hover:hover {
-    background: rgba(42, 34, 18, 0.9);
-    border-color: rgba(255, 153, 51, 0.25);
-    box-shadow: 0 0 10px rgba(255, 153, 51, 0.08);
+    background: rgba(245, 236, 222, 0.9);
+    border-color: rgba(183, 50, 42, 0.25);
+    box-shadow: 0 8px 22px rgba(35, 26, 22, 0.08);
   }
 
   .neon-glow {
-    box-shadow: 0 0 10px rgba(255, 153, 51, 0.15);
+    box-shadow: 0 6px 18px rgba(183, 50, 42, 0.12);
   }
 
   .neon-glow-hover:hover {
-    box-shadow: 0 0 14px rgba(255, 153, 51, 0.22);
+    box-shadow: 0 8px 24px rgba(183, 50, 42, 0.18);
   }
 
   .text-glow {
-    text-shadow: 0 0 6px rgba(255, 153, 51, 0.25);
+    text-shadow: 0 1px 2px rgba(35, 26, 22, 0.08);
   }
 
   .hide-scrollbar {
@@ -177,7 +178,7 @@
   font-family: var(--font-display);
   font-size: 1.3rem;
   font-weight: 700;
-  color: #fff4e6;
+  color: #231A16;
   margin: 2rem 0 0.75rem;
 }
 

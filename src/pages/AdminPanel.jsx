@@ -27,11 +27,11 @@ const formatDate = (iso) => {
 const shortId = (id) => (id ? String(id).slice(0, 8).toUpperCase() : '');
 
 const ORDER_STATUS_STYLES = {
-  delivered: 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30',
-  shipped: 'bg-[#ff9933]/20 text-[#ff9933] border-[#ff9933]/30',
-  paid: 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30',
-  pending: 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30',
-  cancelled: 'bg-[#ffb4ab]/20 text-[#ffb4ab] border-[#ffb4ab]/30',
+  delivered: 'bg-[#E0A11C]/20 text-[#E0A11C] border-[#E0A11C]/30',
+  shipped: 'bg-[#B7322A]/20 text-[#B7322A] border-[#B7322A]/30',
+  paid: 'bg-[#B7322A]/20 text-[#E0A11C] border-[#B7322A]/30',
+  pending: 'bg-[#C8901A]/20 text-[#C8901A] border-[#C8901A]/30',
+  cancelled: 'bg-[#B3261E]/20 text-[#B3261E] border-[#B3261E]/30',
 };
 
 const ORDER_STATUS_TABS = ['all', 'pending', 'paid', 'shipped', 'delivered', 'cancelled'];
@@ -52,8 +52,8 @@ const EMPTY_SLIDE = {
 // Small labelled section inside the admin order-detail modal.
 function OrderDetailBlock({ title, children }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-[#1a1307]/40 p-4">
-      <h3 className="text-[#ff9933] text-xs font-bold uppercase tracking-wider mb-2">{title}</h3>
+    <div className="rounded-lg border border-[#231a16]/10 bg-[#F5ECDE]/40 p-4">
+      <h3 className="text-[#B7322A] text-xs font-bold uppercase tracking-wider mb-2">{title}</h3>
       {children}
     </div>
   );
@@ -616,8 +616,8 @@ export default function AdminPanel() {
       )}
 
       {/* Sidebar Navigation — slide-in drawer on mobile, static column on desktop */}
-      <aside className={`fixed inset-y-0 left-0 z-[100] w-[280px] max-w-[80vw] bg-[#221708] backdrop-blur-xl border-r border-white/5 p-6 flex flex-col shrink-0 overflow-y-auto transition-transform duration-300 lg:sticky lg:top-[80px] lg:h-[calc(100vh-80px)] lg:max-w-none lg:bg-[#221708]/90 lg:translate-x-0 ${navOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <h2 className="font-[Outfit] text-2xl font-bold text-[#ff9933] mb-8 px-4">Admin Dashboard</h2>
+      <aside className={`fixed inset-y-0 left-0 z-[100] w-[280px] max-w-[80vw] bg-[#F5ECDE] backdrop-blur-xl border-r border-[#231a16]/5 p-6 flex flex-col shrink-0 overflow-y-auto transition-transform duration-300 lg:sticky lg:top-[80px] lg:h-[calc(100vh-80px)] lg:max-w-none lg:bg-[#F5ECDE]/90 lg:translate-x-0 ${navOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <h2 className="font-[Outfit] text-2xl font-bold text-[#B7322A] mb-8 px-4">Admin Dashboard</h2>
         
         <nav className="flex flex-col gap-2 flex-1">
           <SidebarLink icon={<Grid size={20} />} label="Products" active={activeTab === 'products'} onClick={() => selectTab('products')} />
@@ -638,7 +638,7 @@ export default function AdminPanel() {
         <button
           type="button"
           onClick={() => setNavOpen(true)}
-          className="lg:hidden flex items-center gap-2 mb-6 px-4 py-2.5 rounded-lg border border-white/10 bg-[#221708]/70 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors"
+          className="lg:hidden flex items-center gap-2 mb-6 px-4 py-2.5 rounded-lg border border-[#231a16]/10 bg-[#F5ECDE]/70 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors"
           aria-label="Open admin navigation"
         >
           <Menu size={18} /> Menu
@@ -649,25 +649,25 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-10">
               <div>
-                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">All Approved Products</h1>
-                <p className="text-[#cbb89d]">Complete catalog of all approved products listed by sellers across the platform.</p>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">All Approved Products</h1>
+                <p className="text-[#7A6A5B]">Complete catalog of all approved products listed by sellers across the platform.</p>
               </div>
               <div className="relative w-full sm:w-72 shrink-0">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6f6048] pointer-events-none" />
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A7B6B] pointer-events-none" />
                 <input
                   type="search"
                   value={productSearch}
                   onChange={(e) => setProductSearch(e.target.value)}
                   placeholder="Search products..."
                   aria-label="Search products by name, category, or seller"
-                  className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 pl-9 pr-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                  className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 pl-9 pr-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
                 />
               </div>
             </div>
             <ProductGrid items={allApprovedProducts} adminMode={true} adminOnDelete={handleRemoveProduct} />
-            {loadingProducts && <div className="text-center py-16 text-[#cbb89d]">Loading products...</div>}
+            {loadingProducts && <div className="text-center py-16 text-[#7A6A5B]">Loading products...</div>}
             {!loadingProducts && productSearchTerm && allApprovedProducts.length === 0 && (
-              <div className="text-center py-16 text-[#cbb89d]">No products match "{productSearch.trim()}".</div>
+              <div className="text-center py-16 text-[#7A6A5B]">No products match "{productSearch.trim()}".</div>
             )}
           </div>
         )}
@@ -676,22 +676,22 @@ export default function AdminPanel() {
         {activeTab === 'approvals' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Product Approvals</h1>
-              <p className="text-[#cbb89d]">Review new and resubmitted listings before they appear on the storefront.</p>
+              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Product Approvals</h1>
+              <p className="text-[#7A6A5B]">Review new and resubmitted listings before they appear on the storefront.</p>
             </header>
 
             {loadingApprovals ? (
-              <div className="text-center py-16 text-[#cbb89d]">Loading pending products...</div>
+              <div className="text-center py-16 text-[#7A6A5B]">Loading pending products...</div>
             ) : pendingProducts.length === 0 ? (
               <GlassCard className="p-10 text-center">
-                <ClipboardCheck size={40} className="mx-auto text-[#4b3d2a] mb-3" />
-                <p className="text-[#cbb89d]">No products are waiting for approval.</p>
+                <ClipboardCheck size={40} className="mx-auto text-[#C4B5A2] mb-3" />
+                <p className="text-[#7A6A5B]">No products are waiting for approval.</p>
               </GlassCard>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                    <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider">
                       <th className="py-4 px-4 font-semibold">Product</th>
                       <th className="py-4 px-4 font-semibold">Seller</th>
                       <th className="py-4 px-4 font-semibold text-right">Price</th>
@@ -701,33 +701,33 @@ export default function AdminPanel() {
                   </thead>
                   <tbody>
                     {pendingProducts.map((product) => (
-                      <tr key={product.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                      <tr key={product.id} className="border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors">
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-11 h-11 rounded-lg overflow-hidden bg-[#100901]/60 border border-white/10 flex items-center justify-center shrink-0">
+                            <div className="w-11 h-11 rounded-lg overflow-hidden bg-[#FDF8F0]/60 border border-[#231a16]/10 flex items-center justify-center shrink-0">
                               {product.coverImage
                                 ? <img src={product.coverImage} alt={product.name} className="w-full h-full object-cover" />
-                                : <ImageIcon size={18} className="text-[#4b3d2a]" />}
+                                : <ImageIcon size={18} className="text-[#C4B5A2]" />}
                             </div>
-                            <span className="font-[Outfit] text-base font-semibold text-[#f1e7d7]">{product.name}</span>
+                            <span className="font-[Outfit] text-base font-semibold text-[#2A211B]">{product.name}</span>
                           </div>
                         </td>
-                        <td className="py-4 px-4 text-sm text-[#cbb89d]">{product.storeName || '—'}</td>
-                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">{inr(product.price)}</td>
-                        <td className="py-4 px-4 text-sm text-[#9e8c73]">{timeAgo(product.createdAt)}</td>
+                        <td className="py-4 px-4 text-sm text-[#7A6A5B]">{product.storeName || '—'}</td>
+                        <td className="py-4 px-4 text-right text-[#B7322A] font-semibold">{inr(product.price)}</td>
+                        <td className="py-4 px-4 text-sm text-[#8A7B6B]">{timeAgo(product.createdAt)}</td>
                         <td className="py-4 px-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-2">
                             <button
                               disabled={savingApproval}
                               onClick={() => handleApproval(product, 'approve')}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border border-[#ff9933]/30 bg-[#ff9933]/10 text-[#ffbf66] hover:bg-[#ff9933]/20 transition-colors disabled:opacity-50"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border border-[#B7322A]/30 bg-[#B7322A]/10 text-[#E0A11C] hover:bg-[#B7322A]/20 transition-colors disabled:opacity-50"
                             >
                               <Check size={13} /> Approve
                             </button>
                             <button
                               disabled={savingApproval}
                               onClick={() => { setRejecting(product); setRejectReason(''); }}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border border-[#ffb4ab]/30 bg-[#93000a]/20 text-[#ffb4ab] hover:bg-[#93000a]/40 transition-colors disabled:opacity-50"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border border-[#B3261E]/30 bg-[#FBE3E1]/20 text-[#B3261E] hover:bg-[#FBE3E1]/40 transition-colors disabled:opacity-50"
                             >
                               <X size={13} /> Reject
                             </button>
@@ -747,12 +747,12 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-center mb-10">
               <div>
-                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Featured Products</h1>
-                <p className="text-[#cbb89d]">These products are currently being showcased on the customer homescreen.</p>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Featured Products</h1>
+                <p className="text-[#7A6A5B]">These products are currently being showcased on the customer homescreen.</p>
               </div>
             </div>
             <ProductGrid items={featuredProducts} adminMode={true} adminOnDelete={handleRemoveProduct} />
-            {loadingProducts && <div className="text-center py-16 text-[#cbb89d]">Loading products...</div>}
+            {loadingProducts && <div className="text-center py-16 text-[#7A6A5B]">Loading products...</div>}
           </div>
         )}
 
@@ -761,8 +761,8 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-center mb-10">
               <div>
-                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Global Order Tracking</h1>
-                <p className="text-[#cbb89d]">Monitor and manage all customer orders placed across every seller storefront.</p>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Global Order Tracking</h1>
+                <p className="text-[#7A6A5B]">Monitor and manage all customer orders placed across every seller storefront.</p>
               </div>
             </div>
             
@@ -773,8 +773,8 @@ export default function AdminPanel() {
                   onClick={() => setStatusFilter(tab)}
                   className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all ${
                     statusFilter === tab
-                      ? 'bg-[#ff9933]/20 text-[#ff9933] border-[#ff9933]/30'
-                      : 'text-[#cbb89d] border-white/10 hover:bg-white/5'
+                      ? 'bg-[#B7322A]/20 text-[#B7322A] border-[#B7322A]/30'
+                      : 'text-[#7A6A5B] border-[#231a16]/10 hover:bg-[#231a16]/5'
                   }`}
                 >
                   {tab === 'all' ? 'All' : tab}
@@ -784,13 +784,13 @@ export default function AdminPanel() {
 
             <GlassCard className="p-6 lg:p-8">
               {loadingOrders && (
-                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading orders...</div>
+                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading orders...</div>
               )}
               {!loadingOrders && (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                    <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider">
                       <th className="py-4 px-4 font-semibold">Order ID</th>
                       <th className="py-4 px-4 font-semibold">Customer</th>
                       <th className="py-4 px-4 font-semibold">Items</th>
@@ -805,24 +805,24 @@ export default function AdminPanel() {
                       <tr
                         key={order.id}
                         onClick={() => openOrderDetail(order)}
-                        className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
+                        className="border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors cursor-pointer"
                       >
-                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">
+                        <td className="py-4 px-4 font-[Inter] text-sm text-[#7A6A5B] uppercase">
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); openOrderDetail(order); }}
-                            className="hover:text-[#ff9933] transition-colors uppercase"
+                            className="hover:text-[#B7322A] transition-colors uppercase"
                             title="View order details"
                           >
                             {shortId(order.id)}
                           </button>
                         </td>
-                        <td className="py-4 px-4 text-[#f1e7d7] font-semibold">{order.customerName || 'Customer'}</td>
-                        <td className="py-4 px-4 text-[#fff4e6]">{order.items?.map((i) => i.productName).join(', ') || '—'}</td>
-                        <td className="py-4 px-4 text-[#cbb89d] text-sm">{formatDate(order.createdAt)}</td>
-                        <td className="py-4 px-4 text-right text-[#ff9933] font-semibold">{inr(order.total)}</td>
+                        <td className="py-4 px-4 text-[#2A211B] font-semibold">{order.customerName || 'Customer'}</td>
+                        <td className="py-4 px-4 text-[#231A16]">{order.items?.map((i) => i.productName).join(', ') || '—'}</td>
+                        <td className="py-4 px-4 text-[#7A6A5B] text-sm">{formatDate(order.createdAt)}</td>
+                        <td className="py-4 px-4 text-right text-[#B7322A] font-semibold">{inr(order.total)}</td>
                         <td className="py-4 px-4 text-right">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${ORDER_STATUS_STYLES[order.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${ORDER_STATUS_STYLES[order.status] ?? 'bg-[#231a16]/10 text-[#7A6A5B] border-[#231a16]/10'}`}>
                             {order.status}
                           </span>
                         </td>
@@ -838,8 +838,8 @@ export default function AdminPanel() {
                                     onClick={(e) => { e.stopPropagation(); handleOrderStatus(order, action.key); }}
                                     className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
                                       action.key === 'cancelled'
-                                        ? 'bg-[#ffb4ab]/10 text-[#ffb4ab] border-[#ffb4ab]/30 hover:bg-[#ffb4ab]/20'
-                                        : 'bg-[#ff9933]/10 text-[#ffbf66] border-[#ff9933]/30 hover:bg-[#ff9933]/20'
+                                        ? 'bg-[#B3261E]/10 text-[#B3261E] border-[#B3261E]/30 hover:bg-[#B3261E]/20'
+                                        : 'bg-[#B7322A]/10 text-[#E0A11C] border-[#B7322A]/30 hover:bg-[#B7322A]/20'
                                     }`}
                                   >
                                     {active ? (
@@ -853,14 +853,14 @@ export default function AdminPanel() {
                               })}
                             </div>
                           ) : (
-                            <span className="text-[#4b3d2a] text-xs">—</span>
+                            <span className="text-[#C4B5A2] text-xs">—</span>
                           )}
                         </td>
                       </tr>
                     ))}
                     {visibleOrders.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="py-16 text-center text-[#9e8c73] text-sm">
+                        <td colSpan={7} className="py-16 text-center text-[#8A7B6B] text-sm">
                           {statusFilter === 'all' ? 'No orders have been placed yet.' : `No ${statusFilter} orders right now.`}
                         </td>
                       </tr>
@@ -878,25 +878,25 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-center mb-10">
               <div>
-                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Support Inbox</h1>
-                <p className="text-[#cbb89d]">Messages submitted through the public Contact page.</p>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Support Inbox</h1>
+                <p className="text-[#7A6A5B]">Messages submitted through the public Contact page.</p>
               </div>
             </div>
 
             <GlassCard className="p-6 lg:p-8">
               {loadingMessages && (
-                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading messages...</div>
+                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading messages...</div>
               )}
               {!loadingMessages && messagesError && (
                 <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-                  <Inbox className="text-[#ffb4ab]" size={40} />
+                  <Inbox className="text-[#B3261E]" size={40} />
                   <div>
-                    <p className="text-[#ffdad6] font-semibold">Could not load support messages</p>
-                    <p className="text-[#9e8c73] text-sm mt-1 break-words max-w-md">{messagesError}</p>
+                    <p className="text-[#B3261E] font-semibold">Could not load support messages</p>
+                    <p className="text-[#8A7B6B] text-sm mt-1 break-words max-w-md">{messagesError}</p>
                   </div>
                   <button
                     onClick={() => loadMessages()}
-                    className="px-5 py-2.5 rounded-lg font-[Outfit] text-sm font-bold bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] transition-all"
+                    className="px-5 py-2.5 rounded-lg font-[Outfit] text-sm font-bold bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all"
                   >
                     Retry
                   </button>
@@ -906,7 +906,7 @@ export default function AdminPanel() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                    <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider">
                       <th className="py-4 px-4 font-semibold">From</th>
                       <th className="py-4 px-4 font-semibold">Message</th>
                       <th className="py-4 px-4 font-semibold">Date</th>
@@ -919,24 +919,24 @@ export default function AdminPanel() {
                       <tr
                         key={msg.id}
                         onClick={() => openMessage(msg)}
-                        className={`border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${msg.isRead && !msg.reply ? 'opacity-60' : ''}`}
+                        className={`border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors cursor-pointer ${msg.isRead && !msg.reply ? 'opacity-60' : ''}`}
                       >
                         <td className="py-4 px-4">
-                          <p className="text-[#f1e7d7] font-semibold">{msg.name}</p>
-                          <a href={`mailto:${msg.email}`} onClick={(e) => e.stopPropagation()} className="text-[#cbb89d] text-xs hover:text-[#ff9933] transition-colors">{msg.email}</a>
+                          <p className="text-[#2A211B] font-semibold">{msg.name}</p>
+                          <a href={`mailto:${msg.email}`} onClick={(e) => e.stopPropagation()} className="text-[#7A6A5B] text-xs hover:text-[#B7322A] transition-colors">{msg.email}</a>
                         </td>
                         <td className="py-4 px-4 max-w-md">
-                          <p className="text-[#fff4e6] font-semibold text-sm">{msg.subject}</p>
-                          <p className="text-[#9e8c73] text-sm line-clamp-2">{msg.message}</p>
+                          <p className="text-[#231A16] font-semibold text-sm">{msg.subject}</p>
+                          <p className="text-[#8A7B6B] text-sm line-clamp-2">{msg.message}</p>
                         </td>
-                        <td className="py-4 px-4 text-[#cbb89d] text-sm whitespace-nowrap">{formatDate(msg.createdAt)}</td>
+                        <td className="py-4 px-4 text-[#7A6A5B] text-sm whitespace-nowrap">{formatDate(msg.createdAt)}</td>
                         <td className="py-4 px-4 text-center">
                           <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
                             msg.reply
-                              ? 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30'
+                              ? 'bg-[#E0A11C]/20 text-[#E0A11C] border-[#E0A11C]/30'
                               : msg.isRead
-                                ? 'bg-white/10 text-[#cbb89d] border-white/10'
-                                : 'bg-[#ff9933]/20 text-[#ffd27a] border-[#ff9933]/30'
+                                ? 'bg-[#231a16]/10 text-[#7A6A5B] border-[#231a16]/10'
+                                : 'bg-[#B7322A]/20 text-[#C8901A] border-[#B7322A]/30'
                           }`}>
                             {msg.reply ? 'Replied' : msg.isRead ? 'Read' : 'New'}
                           </span>
@@ -946,14 +946,14 @@ export default function AdminPanel() {
                             <button
                               onClick={(e) => { e.stopPropagation(); openMessage(msg); }}
                               title={msg.reply ? 'View / edit reply' : 'Reply'}
-                              className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ff9933] hover:bg-[#ff9933]/20 transition-colors"
+                              className="p-2 rounded-lg bg-[#B7322A]/10 text-[#B7322A] hover:bg-[#B7322A]/20 transition-colors"
                             >
                               <Reply size={16} />
                             </button>
                             <button
                               onClick={(e) => { e.stopPropagation(); handleToggleMessageRead(msg); }}
                               title={msg.isRead ? 'Mark as unread' : 'Mark as read'}
-                              className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ffbf66] hover:bg-[#ff9933]/20 transition-colors"
+                              className="p-2 rounded-lg bg-[#B7322A]/10 text-[#E0A11C] hover:bg-[#B7322A]/20 transition-colors"
                             >
                               {msg.isRead ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
@@ -961,7 +961,7 @@ export default function AdminPanel() {
                               onClick={(e) => { e.stopPropagation(); handleDeleteMessage(msg); }}
                               disabled={busy}
                               title="Delete"
-                              className="p-2 rounded-lg bg-[#ffb4ab]/10 text-[#ffb4ab] hover:bg-[#ffb4ab]/20 transition-colors disabled:opacity-50"
+                              className="p-2 rounded-lg bg-[#B3261E]/10 text-[#B3261E] hover:bg-[#B3261E]/20 transition-colors disabled:opacity-50"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -971,7 +971,7 @@ export default function AdminPanel() {
                     ))}
                     {messages.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="py-16 text-center text-[#9e8c73] text-sm">
+                        <td colSpan={5} className="py-16 text-center text-[#8A7B6B] text-sm">
                           No messages yet — submissions from the Contact page will show up here.
                         </td>
                       </tr>
@@ -989,20 +989,20 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-center mb-10">
               <div>
-                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Review Moderation</h1>
-                <p className="text-[#cbb89d]">Hide abusive reviews from the storefront or remove them permanently.</p>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Review Moderation</h1>
+                <p className="text-[#7A6A5B]">Hide abusive reviews from the storefront or remove them permanently.</p>
               </div>
             </div>
 
             <GlassCard className="p-6 lg:p-8">
               {loadingReviews && (
-                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading reviews...</div>
+                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading reviews...</div>
               )}
               {!loadingReviews && (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                    <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider">
                       <th className="py-4 px-4 font-semibold">Product</th>
                       <th className="py-4 px-4 font-semibold">Reviewer</th>
                       <th className="py-4 px-4 font-semibold text-center">Rating</th>
@@ -1013,25 +1013,25 @@ export default function AdminPanel() {
                   </thead>
                   <tbody>
                     {reviews.map((review) => (
-                      <tr key={review.id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${review.isHidden ? 'opacity-60' : ''}`}>
+                      <tr key={review.id} className={`border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors ${review.isHidden ? 'opacity-60' : ''}`}>
                         <td className="py-4 px-4">
-                          <p className="text-[#f1e7d7] font-semibold">{review.productName ?? '—'}</p>
-                          {review.storeName && <p className="text-[#9e8c73] text-xs">{review.storeName}</p>}
+                          <p className="text-[#2A211B] font-semibold">{review.productName ?? '—'}</p>
+                          {review.storeName && <p className="text-[#8A7B6B] text-xs">{review.storeName}</p>}
                         </td>
-                        <td className="py-4 px-4 text-[#cbb89d] text-sm">{review.author}</td>
+                        <td className="py-4 px-4 text-[#7A6A5B] text-sm">{review.author}</td>
                         <td className="py-4 px-4 text-center">
-                          <span className="text-[#ff9933] font-semibold whitespace-nowrap">
+                          <span className="text-[#B7322A] font-semibold whitespace-nowrap">
                             {review.rating}<Star size={13} className="inline mb-0.5 ml-0.5" fill="currentColor" />
                           </span>
                         </td>
                         <td className="py-4 px-4 max-w-md">
-                          <p className="text-[#9e8c73] text-sm line-clamp-2">{review.comment || 'No written comment.'}</p>
+                          <p className="text-[#8A7B6B] text-sm line-clamp-2">{review.comment || 'No written comment.'}</p>
                           {review.sellerReply && (
-                            <p className="text-[#cbb89d] text-xs mt-1 line-clamp-1">Reply: {review.sellerReply}</p>
+                            <p className="text-[#7A6A5B] text-xs mt-1 line-clamp-1">Reply: {review.sellerReply}</p>
                           )}
                         </td>
                         <td className="py-4 px-4 text-center">
-                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${review.isHidden ? 'bg-[#ffb4ab]/20 text-[#ffb4ab] border-[#ffb4ab]/30' : 'bg-[#ff9933]/20 text-[#ffd27a] border-[#ff9933]/30'}`}>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${review.isHidden ? 'bg-[#B3261E]/20 text-[#B3261E] border-[#B3261E]/30' : 'bg-[#B7322A]/20 text-[#C8901A] border-[#B7322A]/30'}`}>
                             {review.isHidden ? 'Hidden' : 'Visible'}
                           </span>
                         </td>
@@ -1041,7 +1041,7 @@ export default function AdminPanel() {
                               onClick={() => handleToggleReviewHidden(review)}
                               disabled={busy}
                               title={review.isHidden ? 'Unhide review' : 'Hide review'}
-                              className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ffbf66] hover:bg-[#ff9933]/20 transition-colors disabled:opacity-50"
+                              className="p-2 rounded-lg bg-[#B7322A]/10 text-[#E0A11C] hover:bg-[#B7322A]/20 transition-colors disabled:opacity-50"
                             >
                               {review.isHidden ? <Eye size={16} /> : <EyeOff size={16} />}
                             </button>
@@ -1049,7 +1049,7 @@ export default function AdminPanel() {
                               onClick={() => handleDeleteReview(review)}
                               disabled={busy}
                               title="Delete"
-                              className="p-2 rounded-lg bg-[#ffb4ab]/10 text-[#ffb4ab] hover:bg-[#ffb4ab]/20 transition-colors disabled:opacity-50"
+                              className="p-2 rounded-lg bg-[#B3261E]/10 text-[#B3261E] hover:bg-[#B3261E]/20 transition-colors disabled:opacity-50"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -1059,7 +1059,7 @@ export default function AdminPanel() {
                     ))}
                     {reviews.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="py-16 text-center text-[#9e8c73] text-sm">
+                        <td colSpan={6} className="py-16 text-center text-[#8A7B6B] text-sm">
                           No reviews have been submitted yet.
                         </td>
                       </tr>
@@ -1077,37 +1077,37 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up max-w-5xl">
             <div className="flex justify-between items-center mb-10">
               <div>
-                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Seller Approvals</h1>
-                <p className="text-[#cbb89d]">Review and approve users requesting to open a storefront.</p>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Seller Approvals</h1>
+                <p className="text-[#7A6A5B]">Review and approve users requesting to open a storefront.</p>
               </div>
             </div>
 
             <div className="flex flex-col gap-6">
               {loadingRequests && (
-                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading seller requests...</div>
+                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading seller requests...</div>
               )}
               {!loadingRequests && sellerRequests.length === 0 && (
-                <div className="bg-[#34250f]/30 p-8 rounded-lg border border-dashed border-white/10 text-center text-[#9e8c73] text-sm">
+                <div className="bg-[#F0E7DA]/30 p-8 rounded-lg border border-dashed border-[#231a16]/10 text-center text-[#8A7B6B] text-sm">
                   No pending seller requests — you're all caught up.
                 </div>
               )}
               {sellerRequests.map((req) => (
                 <GlassCard key={req.id} className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#ff9933]/10 text-[#ff9933] flex items-center justify-center shrink-0 border border-[#ff9933]/20">
+                    <div className="w-12 h-12 rounded-full bg-[#B7322A]/10 text-[#B7322A] flex items-center justify-center shrink-0 border border-[#B7322A]/20">
                       <Users size={24} />
                     </div>
                     <div>
-                      <h3 className="font-[Outfit] text-xl font-semibold text-[#fff4e6]">{req.storeName}</h3>
-                      <p className="text-[#cbb89d] text-sm mt-1">Applicant: <span className="text-[#f1e7d7]">{req.user}</span> ({req.email})</p>
-                      <p className="text-[#9e8c73] text-xs mt-1">Applied: {req.date}</p>
+                      <h3 className="font-[Outfit] text-xl font-semibold text-[#231A16]">{req.storeName}</h3>
+                      <p className="text-[#7A6A5B] text-sm mt-1">Applicant: <span className="text-[#2A211B]">{req.user}</span> ({req.email})</p>
+                      <p className="text-[#8A7B6B] text-xs mt-1">Applied: {req.date}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 w-full md:w-auto">
-                    <button onClick={() => handleReview(req.id, 'approve')} disabled={busy} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#9c5214]/50 hover:bg-[#ff9933]/20 border border-[#ff9933]/30 text-[#fff4e6] text-sm font-semibold transition-all disabled:opacity-50">
+                    <button onClick={() => handleReview(req.id, 'approve')} disabled={busy} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#7A1F1A]/50 hover:bg-[#B7322A]/20 border border-[#B7322A]/30 text-[#231A16] text-sm font-semibold transition-all disabled:opacity-50">
                       <Check size={16} /> Approve
                     </button>
-                    <button onClick={() => handleReview(req.id, 'reject')} disabled={busy} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#690005]/50 hover:bg-[#ffb4ab]/20 border border-[#ffb4ab]/30 text-[#ffdad6] text-sm font-semibold transition-all disabled:opacity-50">
+                    <button onClick={() => handleReview(req.id, 'reject')} disabled={busy} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#F7D5D2]/50 hover:bg-[#B3261E]/20 border border-[#B3261E]/30 text-[#B3261E] text-sm font-semibold transition-all disabled:opacity-50">
                       <X size={16} /> Reject
                     </button>
                   </div>
@@ -1122,23 +1122,23 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-end mb-10">
               <div>
-                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Platform Categories</h1>
-                <p className="text-[#cbb89d]">Manage the main product categories available across the platform.</p>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Platform Categories</h1>
+                <p className="text-[#7A6A5B]">Manage the main product categories available across the platform.</p>
               </div>
-              <button onClick={() => setCategoryModal(true)} className="py-3 px-6 rounded-lg bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] font-[Outfit] text-base font-semibold hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] transition-all flex items-center gap-2">
+              <button onClick={() => setCategoryModal(true)} className="py-3 px-6 rounded-lg bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] font-[Outfit] text-base font-semibold hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all flex items-center gap-2">
                 <PlusCircle size={20} /> Add Category
               </button>
             </div>
             
             <GlassCard className="p-6 lg:p-8">
               {loadingCategories && (
-                <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading categories...</div>
+                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading categories...</div>
               )}
               {!loadingCategories && (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                    <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider">
                       <th className="py-4 px-4 font-semibold">Category ID</th>
                       <th className="py-4 px-4 font-semibold">Name</th>
                       <th className="py-4 px-4 font-semibold">Slug</th>
@@ -1148,13 +1148,13 @@ export default function AdminPanel() {
                   </thead>
                   <tbody>
                     {categories.map(cat => (
-                      <tr key={cat.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <td className="py-4 px-4 font-[Inter] text-sm text-[#cbb89d] uppercase">{shortId(cat.id)}</td>
-                        <td className="py-4 px-4 text-[#fff4e6] font-semibold text-lg">{cat.name}</td>
-                        <td className="py-4 px-4 text-[#9e8c73] text-sm">{cat.slug}</td>
-                        <td className="py-4 px-4 text-center text-[#f1e7d7] font-semibold">{cat.productCount}</td>
+                      <tr key={cat.id} className="border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors">
+                        <td className="py-4 px-4 font-[Inter] text-sm text-[#7A6A5B] uppercase">{shortId(cat.id)}</td>
+                        <td className="py-4 px-4 text-[#231A16] font-semibold text-lg">{cat.name}</td>
+                        <td className="py-4 px-4 text-[#8A7B6B] text-sm">{cat.slug}</td>
+                        <td className="py-4 px-4 text-center text-[#2A211B] font-semibold">{cat.productCount}</td>
                         <td className="py-4 px-4 flex justify-end gap-2">
-                          <button onClick={() => handleDeleteCategory(cat.id)} disabled={busy} className="p-2 rounded-lg bg-[#ffb4ab]/10 text-[#ffb4ab] hover:bg-[#ffb4ab]/20 transition-colors disabled:opacity-50" title="Delete">
+                          <button onClick={() => handleDeleteCategory(cat.id)} disabled={busy} className="p-2 rounded-lg bg-[#B3261E]/10 text-[#B3261E] hover:bg-[#B3261E]/20 transition-colors disabled:opacity-50" title="Delete">
                             <Trash2 size={16} />
                           </button>
                         </td>
@@ -1162,7 +1162,7 @@ export default function AdminPanel() {
                     ))}
                     {categories.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="py-16 text-center text-[#9e8c73] text-sm">No categories yet.</td>
+                        <td colSpan={5} className="py-16 text-center text-[#8A7B6B] text-sm">No categories yet.</td>
                       </tr>
                     )}
                   </tbody>
@@ -1178,24 +1178,24 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-10">
               <div>
-                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Homepage Hero Slides</h1>
-                <p className="text-[#cbb89d]">Add as many slides as you like; they rotate in the homepage carousel. Lower position numbers appear first.</p>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Homepage Hero Slides</h1>
+                <p className="text-[#7A6A5B]">Add as many slides as you like; they rotate in the homepage carousel. Lower position numbers appear first.</p>
               </div>
-              <button onClick={openCreateSlide} className="py-3 px-6 rounded-lg bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] font-[Outfit] text-base font-semibold hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] transition-all flex items-center gap-2 w-fit">
+              <button onClick={openCreateSlide} className="py-3 px-6 rounded-lg bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] font-[Outfit] text-base font-semibold hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all flex items-center gap-2 w-fit">
                 <PlusCircle size={20} /> Add Slide
               </button>
             </div>
 
             {loadingSlides && (
-              <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading slides...</div>
+              <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading slides...</div>
             )}
 
             {!loadingSlides && slides.length === 0 && (
               <GlassCard className="p-6 lg:p-8">
                 <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-                  <ImageIcon size={40} className="text-[#34250f]" />
-                  <p className="text-[#f1e7d7] font-[Outfit] text-lg font-semibold">No hero slides yet</p>
-                  <p className="text-[#cbb89d] text-sm max-w-md">Add your first slide to populate the homepage carousel.</p>
+                  <ImageIcon size={40} className="text-[#F0E7DA]" />
+                  <p className="text-[#2A211B] font-[Outfit] text-lg font-semibold">No hero slides yet</p>
+                  <p className="text-[#7A6A5B] text-sm max-w-md">Add your first slide to populate the homepage carousel.</p>
                 </div>
               </GlassCard>
             )}
@@ -1206,24 +1206,24 @@ export default function AdminPanel() {
                   <GlassCard key={slide.id} className="overflow-hidden flex flex-col">
                     <div className="relative h-44">
                       <img src={slide.imageUrl} alt={slide.title} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#100901]/90 to-transparent" />
-                      <span className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${slide.isActive ? 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30' : 'bg-black/50 text-[#cbb89d] border-white/10'}`}>
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#FDF8F0]/90 to-transparent" />
+                      <span className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${slide.isActive ? 'bg-[#E0A11C]/20 text-[#E0A11C] border-[#E0A11C]/30' : 'bg-[#F0E7DA] text-[#7A6A5B] border-[#231a16]/10'}`}>
                         {slide.isActive ? 'Visible' : 'Hidden'}
                       </span>
-                      <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black/50 text-[#f1e7d7] border border-white/10">#{slide.position}</span>
+                      <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#231A16]/70 text-[#FDF8F0] border border-[#231a16]/10">#{slide.position}</span>
                     </div>
                     <div className="p-5 flex flex-col flex-1">
-                      {slide.eyebrow && <p className="text-[#ff9933] text-[10px] font-bold uppercase tracking-widest mb-1">{slide.eyebrow}</p>}
-                      <h3 className="font-[Outfit] text-lg font-semibold text-[#f1e7d7] mb-1 line-clamp-1">{slide.title}</h3>
-                      {slide.description && <p className="text-[#cbb89d] text-xs leading-relaxed line-clamp-2 mb-4 flex-1">{slide.description}</p>}
+                      {slide.eyebrow && <p className="text-[#B7322A] text-[10px] font-bold uppercase tracking-widest mb-1">{slide.eyebrow}</p>}
+                      <h3 className="font-[Outfit] text-lg font-semibold text-[#2A211B] mb-1 line-clamp-1">{slide.title}</h3>
+                      {slide.description && <p className="text-[#7A6A5B] text-xs leading-relaxed line-clamp-2 mb-4 flex-1">{slide.description}</p>}
                       <div className="flex items-center gap-2 mt-auto pt-3">
-                        <button onClick={() => openEditSlide(slide)} className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-white/5 border border-white/10 text-[#f1e7d7] text-xs font-semibold hover:bg-white/10 transition-colors">
+                        <button onClick={() => openEditSlide(slide)} className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-[#231a16]/5 border border-[#231a16]/10 text-[#2A211B] text-xs font-semibold hover:bg-[#231a16]/10 transition-colors">
                           <Pencil size={14} /> Edit
                         </button>
-                        <button onClick={() => handleToggleSlideActive(slide)} disabled={busy} className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/10 transition-colors disabled:opacity-50" title={slide.isActive ? 'Hide slide' : 'Show slide'}>
+                        <button onClick={() => handleToggleSlideActive(slide)} disabled={busy} className="px-3 py-2 rounded-lg bg-[#231a16]/5 border border-[#231a16]/10 text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/10 transition-colors disabled:opacity-50" title={slide.isActive ? 'Hide slide' : 'Show slide'}>
                           {slide.isActive ? <EyeOff size={14} /> : <Eye size={14} />}
                         </button>
-                        <button onClick={() => handleDeleteSlide(slide)} disabled={busy} className="px-3 py-2 rounded-lg bg-[#ffb4ab]/10 text-[#ffb4ab] hover:bg-[#ffb4ab]/20 transition-colors disabled:opacity-50" title="Delete slide">
+                        <button onClick={() => handleDeleteSlide(slide)} disabled={busy} className="px-3 py-2 rounded-lg bg-[#B3261E]/10 text-[#B3261E] hover:bg-[#B3261E]/20 transition-colors disabled:opacity-50" title="Delete slide">
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -1240,13 +1240,13 @@ export default function AdminPanel() {
           <div className="animate-fade-in-up">
             <div className="flex justify-between items-center mb-10">
               <div>
-                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Platform Payments & Ledger</h1>
-                <p className="text-[#cbb89d]">Gross sales, platform fees and seller payouts computed live from real order data.</p>
+                <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Platform Payments & Ledger</h1>
+                <p className="text-[#7A6A5B]">Gross sales, platform fees and seller payouts computed live from real order data.</p>
               </div>
             </div>
 
             {loadingLedger && (
-              <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading ledger...</div>
+              <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading ledger...</div>
             )}
 
             {!loadingLedger && ledger && ledger.summary && (
@@ -1254,9 +1254,9 @@ export default function AdminPanel() {
                 {ledger.summary.orders === 0 ? (
                   <GlassCard className="p-6 lg:p-8">
                     <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-                      <CreditCard size={40} className="text-[#34250f]" />
-                      <p className="text-[#f1e7d7] font-[Outfit] text-lg font-semibold">No settled payments yet</p>
-                      <p className="text-[#cbb89d] text-sm max-w-md">
+                      <CreditCard size={40} className="text-[#F0E7DA]" />
+                      <p className="text-[#2A211B] font-[Outfit] text-lg font-semibold">No settled payments yet</p>
+                      <p className="text-[#7A6A5B] text-sm max-w-md">
                         Revenue appears here once orders are paid, shipped, or delivered. Pending and cancelled orders are excluded.
                       </p>
                     </div>
@@ -1272,13 +1272,13 @@ export default function AdminPanel() {
 
                     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-6">
                       <GlassCard className="xl:col-span-8 p-6 lg:p-8">
-                        <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
-                          <TrendingUp size={20} className="text-[#ff9933]" /> Recent Transactions
+                        <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
+                          <TrendingUp size={20} className="text-[#B7322A]" /> Recent Transactions
                         </h2>
                         <div className="overflow-x-auto">
                           <table className="w-full text-left border-collapse">
                             <thead>
-                              <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                              <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider">
                                 <th className="py-3 px-3 font-semibold">Order</th>
                                 <th className="py-3 px-3 font-semibold">Customer</th>
                                 <th className="py-3 px-3 font-semibold">Date</th>
@@ -1290,18 +1290,18 @@ export default function AdminPanel() {
                             </thead>
                             <tbody>
                               {ledger.transactions.slice(0, 25).map((t) => (
-                                <tr key={t.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                  <td className="py-3 px-3 text-[#ff9933] font-mono text-xs font-semibold">{shortId(t.id)}</td>
-                                  <td className="py-3 px-3 text-[#f1e7d7] text-sm">{t.customerName ?? '—'}</td>
-                                  <td className="py-3 px-3 text-[#9e8c73] text-xs whitespace-nowrap">{formatDate(t.createdAt)}</td>
+                                <tr key={t.id} className="border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors">
+                                  <td className="py-3 px-3 text-[#B7322A] font-mono text-xs font-semibold">{shortId(t.id)}</td>
+                                  <td className="py-3 px-3 text-[#2A211B] text-sm">{t.customerName ?? '—'}</td>
+                                  <td className="py-3 px-3 text-[#8A7B6B] text-xs whitespace-nowrap">{formatDate(t.createdAt)}</td>
                                   <td className="py-3 px-3 text-center">
-                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${ORDER_STATUS_STYLES[t.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
+                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${ORDER_STATUS_STYLES[t.status] ?? 'bg-[#231a16]/10 text-[#7A6A5B] border-[#231a16]/10'}`}>
                                       {t.status}
                                     </span>
                                   </td>
-                                  <td className="py-3 px-3 text-right text-[#fff4e6] font-semibold text-sm">{inr(t.total)}</td>
-                                  <td className="py-3 px-3 text-right text-[#ffd27a] text-sm">{inr(t.fee)}</td>
-                                  <td className="py-3 px-3 text-right text-[#9dd0a0] text-sm">{inr(t.payout)}</td>
+                                  <td className="py-3 px-3 text-right text-[#231A16] font-semibold text-sm">{inr(t.total)}</td>
+                                  <td className="py-3 px-3 text-right text-[#C8901A] text-sm">{inr(t.fee)}</td>
+                                  <td className="py-3 px-3 text-right text-[#2E7D32] text-sm">{inr(t.payout)}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -1310,8 +1310,8 @@ export default function AdminPanel() {
                       </GlassCard>
 
                       <GlassCard className="xl:col-span-4 p-6 lg:p-8">
-                        <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-6 flex items-center gap-2">
-                          <Percent size={20} className="text-[#ffd27a]" /> Fee Split
+                        <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
+                          <Percent size={20} className="text-[#C8901A]" /> Fee Split
                         </h2>
                         {(() => {
                           const gross = ledger.summary.grossSales;
@@ -1319,24 +1319,24 @@ export default function AdminPanel() {
                           const payPct = gross ? (ledger.summary.sellerPayouts / gross) * 100 : 0;
                           return (
                             <>
-                              <div className="flex h-3 rounded-full overflow-hidden bg-white/5 mb-6">
-                                <div className="bg-[#ffd27a] transition-all" style={{ width: `${feePct}%` }} title={`Platform ${inr(ledger.summary.platformFees)}`} />
-                                <div className="bg-[#9dd0a0] transition-all" style={{ width: `${payPct}%` }} title={`Sellers ${inr(ledger.summary.sellerPayouts)}`} />
+                              <div className="flex h-3 rounded-full overflow-hidden bg-[#231a16]/5 mb-6">
+                                <div className="bg-[#C8901A] transition-all" style={{ width: `${feePct}%` }} title={`Platform ${inr(ledger.summary.platformFees)}`} />
+                                <div className="bg-[#2E7D32] transition-all" style={{ width: `${payPct}%` }} title={`Sellers ${inr(ledger.summary.sellerPayouts)}`} />
                               </div>
                               <div className="flex flex-col gap-3">
                                 <div className="flex items-center gap-3">
-                                  <span className="w-2.5 h-2.5 rounded-full bg-[#ffd27a] shrink-0" />
-                                  <span className="text-sm text-[#cbb89d] flex-1">Platform commission</span>
-                                  <span className="text-sm text-[#fff4e6] font-semibold">{inr(ledger.summary.platformFees)}</span>
+                                  <span className="w-2.5 h-2.5 rounded-full bg-[#C8901A] shrink-0" />
+                                  <span className="text-sm text-[#7A6A5B] flex-1">Platform commission</span>
+                                  <span className="text-sm text-[#231A16] font-semibold">{inr(ledger.summary.platformFees)}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <span className="w-2.5 h-2.5 rounded-full bg-[#9dd0a0] shrink-0" />
-                                  <span className="text-sm text-[#cbb89d] flex-1">Net to sellers</span>
-                                  <span className="text-sm text-[#fff4e6] font-semibold">{inr(ledger.summary.sellerPayouts)}</span>
+                                  <span className="w-2.5 h-2.5 rounded-full bg-[#2E7D32] shrink-0" />
+                                  <span className="text-sm text-[#7A6A5B] flex-1">Net to sellers</span>
+                                  <span className="text-sm text-[#231A16] font-semibold">{inr(ledger.summary.sellerPayouts)}</span>
                                 </div>
                               </div>
                               {ledger.grossUnattributed > 0.009 && (
-                                <p className="text-[11px] text-[#9e8c73] mt-5 leading-relaxed">
+                                <p className="text-[11px] text-[#8A7B6B] mt-5 leading-relaxed">
                                   Includes {inr(ledger.grossUnattributed)} from orders whose products were removed afterwards.
                                 </p>
                               )}
@@ -1347,16 +1347,16 @@ export default function AdminPanel() {
                     </div>
 
                     <GlassCard className="p-6 lg:p-8">
-                      <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-2 flex items-center gap-2">
-                        <Wallet size={20} className="text-[#ffbf66]" /> Revenue by Seller
+                      <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16] mb-2 flex items-center gap-2">
+                        <Wallet size={20} className="text-[#E0A11C]" /> Revenue by Seller
                       </h2>
-                      <p className="text-[#9e8c73] text-xs mb-6">
+                      <p className="text-[#8A7B6B] text-xs mb-6">
                         Each line item is attributed back to the store that sold it. {Math.round(ledger.feeRate * 100)}% commission is deducted from each store's gross before payout.
                       </p>
                       <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                           <thead>
-                            <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                            <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider">
                               <th className="py-3 px-3 font-semibold">Store</th>
                               <th className="py-3 px-3 font-semibold">Seller</th>
                               <th className="py-3 px-3 font-semibold text-center">Orders</th>
@@ -1370,19 +1370,19 @@ export default function AdminPanel() {
                           </thead>
                           <tbody>
                             {ledger.sellers.map((s) => (
-                              <tr key={s.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                <td className="py-3 px-3 text-[#f1e7d7] font-semibold text-sm">{s.name}</td>
-                                <td className="py-3 px-3 text-[#9e8c73] text-sm">{s.sellerName ?? '—'}</td>
-                                <td className="py-3 px-3 text-center text-[#cbb89d] text-sm">{s.orderCount}</td>
-                                <td className="py-3 px-3 text-center text-[#cbb89d] text-sm">{s.units}</td>
-                                <td className="py-3 px-3 text-right text-[#fff4e6] text-sm">{inr(s.gross)}</td>
-                                <td className="py-3 px-3 text-right text-[#ffd27a] text-sm">{inr(s.fee)}</td>
-                                <td className="py-3 px-3 text-right text-[#9dd0a0] font-semibold text-sm">{inr(s.payout)}</td>
+                              <tr key={s.id} className="border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors">
+                                <td className="py-3 px-3 text-[#2A211B] font-semibold text-sm">{s.name}</td>
+                                <td className="py-3 px-3 text-[#8A7B6B] text-sm">{s.sellerName ?? '—'}</td>
+                                <td className="py-3 px-3 text-center text-[#7A6A5B] text-sm">{s.orderCount}</td>
+                                <td className="py-3 px-3 text-center text-[#7A6A5B] text-sm">{s.units}</td>
+                                <td className="py-3 px-3 text-right text-[#231A16] text-sm">{inr(s.gross)}</td>
+                                <td className="py-3 px-3 text-right text-[#C8901A] text-sm">{inr(s.fee)}</td>
+                                <td className="py-3 px-3 text-right text-[#2E7D32] font-semibold text-sm">{inr(s.payout)}</td>
                                 <td className="py-3 px-3 text-right text-sm">
                                   {s.unsettledGross > 0 ? (
-                                    <span className="text-[#ffbf66] font-semibold">{inr(s.unsettledPayout)}</span>
+                                    <span className="text-[#E0A11C] font-semibold">{inr(s.unsettledPayout)}</span>
                                   ) : (
-                                    <span className="text-[#6f6250]">—</span>
+                                    <span className="text-[#8A7B6B]">—</span>
                                   )}
                                 </td>
                                 <td className="py-3 px-3 text-right">
@@ -1390,19 +1390,19 @@ export default function AdminPanel() {
                                     <button
                                       type="button"
                                       onClick={() => openSettle(s)}
-                                      className="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-[#9dd0a0]/15 text-[#9dd0a0] border border-[#9dd0a0]/30 hover:bg-[#9dd0a0]/25 transition-colors"
+                                      className="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-[#2E7D32]/15 text-[#2E7D32] border border-[#2E7D32]/30 hover:bg-[#2E7D32]/25 transition-colors"
                                     >
                                       Mark settled
                                     </button>
                                   ) : (
-                                    <span className="text-[11px] text-[#6f6250] uppercase tracking-wider">Settled</span>
+                                    <span className="text-[11px] text-[#8A7B6B] uppercase tracking-wider">Settled</span>
                                   )}
                                 </td>
                               </tr>
                             ))}
                             {ledger.sellers.length === 0 && (
                               <tr>
-                                <td colSpan={9} className="py-12 text-center text-[#9e8c73] text-sm">No seller revenue to show yet.</td>
+                                <td colSpan={9} className="py-12 text-center text-[#8A7B6B] text-sm">No seller revenue to show yet.</td>
                               </tr>
                             )}
                           </tbody>
@@ -1411,16 +1411,16 @@ export default function AdminPanel() {
                     </GlassCard>
 
                     <GlassCard className="mt-6 p-6 lg:p-8">
-                      <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6] mb-2 flex items-center gap-2">
-                        <Wallet size={20} className="text-[#9dd0a0]" /> Settlement History
+                      <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16] mb-2 flex items-center gap-2">
+                        <Wallet size={20} className="text-[#2E7D32]" /> Settlement History
                       </h2>
-                      <p className="text-[#9e8c73] text-xs mb-6">
+                      <p className="text-[#8A7B6B] text-xs mb-6">
                         Manual payouts already sent to sellers. Settled orders are excluded from the amounts still owed above.
                       </p>
                       <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                           <thead>
-                            <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider">
+                            <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider">
                               <th className="py-3 px-3 font-semibold">Date</th>
                               <th className="py-3 px-3 font-semibold">Store</th>
                               <th className="py-3 px-3 font-semibold text-center">Orders</th>
@@ -1432,19 +1432,19 @@ export default function AdminPanel() {
                           </thead>
                           <tbody>
                             {(ledger.settlements ?? []).map((st) => (
-                              <tr key={st.id} className="border-b border-white/5">
-                                <td className="py-3 px-3 text-[#9e8c73] text-xs whitespace-nowrap">{formatDate(st.createdAt)}</td>
-                                <td className="py-3 px-3 text-[#f1e7d7] text-sm font-semibold">{st.storeName}</td>
-                                <td className="py-3 px-3 text-center text-[#cbb89d] text-sm">{st.orderCount}</td>
-                                <td className="py-3 px-3 text-right text-[#fff4e6] text-sm">{inr(st.gross)}</td>
-                                <td className="py-3 px-3 text-right text-[#ffd27a] text-sm">{inr(st.fee)}</td>
-                                <td className="py-3 px-3 text-right text-[#9dd0a0] font-semibold text-sm">{inr(st.net)}</td>
-                                <td className="py-3 px-3 text-[#9e8c73] text-xs">{st.note ?? '—'}</td>
+                              <tr key={st.id} className="border-b border-[#231a16]/5">
+                                <td className="py-3 px-3 text-[#8A7B6B] text-xs whitespace-nowrap">{formatDate(st.createdAt)}</td>
+                                <td className="py-3 px-3 text-[#2A211B] text-sm font-semibold">{st.storeName}</td>
+                                <td className="py-3 px-3 text-center text-[#7A6A5B] text-sm">{st.orderCount}</td>
+                                <td className="py-3 px-3 text-right text-[#231A16] text-sm">{inr(st.gross)}</td>
+                                <td className="py-3 px-3 text-right text-[#C8901A] text-sm">{inr(st.fee)}</td>
+                                <td className="py-3 px-3 text-right text-[#2E7D32] font-semibold text-sm">{inr(st.net)}</td>
+                                <td className="py-3 px-3 text-[#8A7B6B] text-xs">{st.note ?? '—'}</td>
                               </tr>
                             ))}
                             {(ledger.settlements ?? []).length === 0 && (
                               <tr>
-                                <td colSpan={7} className="py-10 text-center text-[#9e8c73] text-sm">No payouts recorded yet.</td>
+                                <td colSpan={7} className="py-10 text-center text-[#8A7B6B] text-sm">No payouts recorded yet.</td>
                               </tr>
                             )}
                           </tbody>
@@ -1461,8 +1461,8 @@ export default function AdminPanel() {
         {/* Placeholder for remaining tabs */}
         {activeTab !== 'products' && activeTab !== 'approvals' && activeTab !== 'featured' && activeTab !== 'hero' && activeTab !== 'seller-requests' && activeTab !== 'categories' && activeTab !== 'payments' && activeTab !== 'orders' && activeTab !== 'messages' && activeTab !== 'reviews' && (
           <div className="h-[600px] flex flex-col items-center justify-center animate-fade-in-up opacity-70">
-            <h2 className="font-[Outfit] text-3xl font-bold text-[#fff4e6] mb-2 capitalize">{activeTab.replace('-', ' ')}</h2>
-            <p className="text-[#cbb89d]">This admin module is currently under construction.</p>
+            <h2 className="font-[Outfit] text-3xl font-bold text-[#231A16] mb-2 capitalize">{activeTab.replace('-', ' ')}</h2>
+            <p className="text-[#7A6A5B]">This admin module is currently under construction.</p>
           </div>
         )}
 
@@ -1480,59 +1480,59 @@ export default function AdminPanel() {
             <div onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8">
               <div className="flex items-start justify-between gap-4 mb-6">
                 <div className="min-w-0">
-                  <h2 className="font-[Outfit] text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
-                    <Wallet size={22} className="text-[#9dd0a0]" /> Record Payout
+                  <h2 className="font-[Outfit] text-2xl font-bold text-[#231A16] flex items-center gap-2">
+                    <Wallet size={22} className="text-[#2E7D32]" /> Record Payout
                   </h2>
-                  <p className="text-[#cbb89d] text-sm mt-1">{settleTarget.name}</p>
+                  <p className="text-[#7A6A5B] text-sm mt-1">{settleTarget.name}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => !settling && setSettleTarget(null)}
-                  className="w-9 h-9 rounded-full border border-white/10 text-[#cbb89d] flex items-center justify-center hover:bg-white/5 transition-colors shrink-0"
+                  className="w-9 h-9 rounded-full border border-[#231a16]/10 text-[#7A6A5B] flex items-center justify-center hover:bg-[#231a16]/5 transition-colors shrink-0"
                   aria-label="Close"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              <p className="text-[#9e8c73] text-xs mb-3">
+              <p className="text-[#8A7B6B] text-xs mb-3">
                 Uncheck any order you are not paying now; it stays in the unsettled balance.
               </p>
 
-              <div className="border border-white/10 rounded-lg divide-y divide-white/5 mb-5 max-h-72 overflow-y-auto">
+              <div className="border border-[#231a16]/10 rounded-lg divide-y divide-[#231a16]/5 mb-5 max-h-72 overflow-y-auto">
                 {(settleTarget.unsettledOrders ?? []).map((o) => {
                   const checked = settleSelection.has(o.id);
                   return (
-                    <label key={o.id} className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/5">
+                    <label key={o.id} className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-[#231a16]/5">
                       <input
                         type="checkbox"
                         checked={checked}
                         onChange={() => toggleSettleOrder(o.id)}
-                        className="accent-[#9dd0a0] w-4 h-4"
+                        className="accent-[#2E7D32] w-4 h-4"
                       />
-                      <span className="font-mono text-xs text-[#cbb89d] flex-1">{shortId(o.id)}</span>
-                      <span className="text-[#9e8c73] text-xs whitespace-nowrap">{formatDate(o.createdAt)}</span>
-                      <span className="text-[#9dd0a0] text-sm font-semibold whitespace-nowrap">{inr(o.net)}</span>
+                      <span className="font-mono text-xs text-[#7A6A5B] flex-1">{shortId(o.id)}</span>
+                      <span className="text-[#8A7B6B] text-xs whitespace-nowrap">{formatDate(o.createdAt)}</span>
+                      <span className="text-[#2E7D32] text-sm font-semibold whitespace-nowrap">{inr(o.net)}</span>
                     </label>
                   );
                 })}
               </div>
 
               <label className="block mb-5">
-                <span className="text-[#cbb89d] text-xs uppercase tracking-wider">Note (optional)</span>
+                <span className="text-[#7A6A5B] text-xs uppercase tracking-wider">Note (optional)</span>
                 <input
                   type="text"
                   value={settleNote}
                   onChange={(e) => setSettleNote(e.target.value)}
                   placeholder="e.g. UPI transfer on 22 Sep"
-                  className="mt-2 w-full rounded-lg bg-black/30 border border-white/10 px-3 py-2 text-sm text-[#f1e7d7] focus:outline-none focus:border-[#9dd0a0]/50"
+                  className="mt-2 w-full rounded-lg bg-[#F5ECDE] border border-[#231a16]/10 px-3 py-2 text-sm text-[#2A211B] focus:outline-none focus:border-[#2E7D32]/50"
                 />
               </label>
 
-              <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-4">
+              <div className="flex items-center justify-between gap-4 border-t border-[#231a16]/10 pt-4">
                 <div className="text-sm">
-                  <span className="text-[#cbb89d]">Paying now</span>
-                  <span className="text-[#9dd0a0] font-bold text-lg ml-3">
+                  <span className="text-[#7A6A5B]">Paying now</span>
+                  <span className="text-[#2E7D32] font-bold text-lg ml-3">
                     {inr(
                       (settleTarget.unsettledOrders ?? [])
                         .filter((o) => settleSelection.has(o.id))
@@ -1545,7 +1545,7 @@ export default function AdminPanel() {
                     type="button"
                     onClick={() => setSettleTarget(null)}
                     disabled={settling}
-                    className="px-4 py-2 rounded-lg text-sm text-[#cbb89d] border border-white/10 hover:bg-white/5 disabled:opacity-50"
+                    className="px-4 py-2 rounded-lg text-sm text-[#7A6A5B] border border-[#231a16]/10 hover:bg-[#231a16]/5 disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -1553,7 +1553,7 @@ export default function AdminPanel() {
                     type="button"
                     onClick={confirmSettle}
                     disabled={settling || settleSelection.size === 0}
-                    className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#9dd0a0] text-[#1a1307] hover:bg-[#8cc392] disabled:opacity-50"
+                    className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#2E7D32] text-[#F5ECDE] hover:bg-[#2E7D32] disabled:opacity-50"
                   >
                     {settling ? 'Recording...' : 'Record payout'}
                   </button>
@@ -1576,19 +1576,19 @@ export default function AdminPanel() {
             <div onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8">
               <div className="flex items-start justify-between gap-4 mb-6">
                 <div className="min-w-0">
-                  <h2 className="font-[Outfit] text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
-                    <ShoppingBag size={22} className="text-[#ff9933]" /> Order Details
+                  <h2 className="font-[Outfit] text-2xl font-bold text-[#231A16] flex items-center gap-2">
+                    <ShoppingBag size={22} className="text-[#B7322A]" /> Order Details
                   </h2>
-                  <p className="text-[#cbb89d] text-xs mt-1 font-mono break-all">{orderDetail.id}</p>
+                  <p className="text-[#7A6A5B] text-xs mt-1 font-mono break-all">{orderDetail.id}</p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${ORDER_STATUS_STYLES[orderDetail.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${ORDER_STATUS_STYLES[orderDetail.status] ?? 'bg-[#231a16]/10 text-[#7A6A5B] border-[#231a16]/10'}`}>
                     {orderDetail.status}
                   </span>
                   <button
                     type="button"
                     onClick={() => setOrderDetail(null)}
-                    className="w-9 h-9 rounded-full border border-white/10 text-[#cbb89d] flex items-center justify-center hover:bg-white/5 transition-colors"
+                    className="w-9 h-9 rounded-full border border-[#231a16]/10 text-[#7A6A5B] flex items-center justify-center hover:bg-[#231a16]/5 transition-colors"
                     aria-label="Close order details"
                   >
                     <X size={18} />
@@ -1597,33 +1597,33 @@ export default function AdminPanel() {
               </div>
 
               {loadingOrderDetail ? (
-                <div className="flex items-center justify-center h-40 text-[#cbb89d] gap-2">
+                <div className="flex items-center justify-center h-40 text-[#7A6A5B] gap-2">
                   <Loader2 size={18} className="animate-spin" /> Loading order details...
                 </div>
               ) : (
                 <div className="flex flex-col gap-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <OrderDetailBlock title="Customer">
-                      <p className="text-[#f1e7d7] font-semibold">{orderDetail.customer?.name || 'Customer'}</p>
+                      <p className="text-[#2A211B] font-semibold">{orderDetail.customer?.name || 'Customer'}</p>
                       {orderDetail.customer?.email && (
-                        <p className="text-[#cbb89d] text-sm break-all">{orderDetail.customer.email}</p>
+                        <p className="text-[#7A6A5B] text-sm break-all">{orderDetail.customer.email}</p>
                       )}
                       {orderDetail.customer?.phone && (
-                        <p className="text-[#cbb89d] text-sm">{orderDetail.customer.phone}</p>
+                        <p className="text-[#7A6A5B] text-sm">{orderDetail.customer.phone}</p>
                       )}
                     </OrderDetailBlock>
 
                     <OrderDetailBlock title="Order">
-                      <p className="text-[#cbb89d] text-sm">Placed {formatDate(orderDetail.createdAt)}</p>
-                      <p className="text-[#cbb89d] text-sm">
-                        Seller store: <span className="text-[#f1e7d7]">{orderDetail.store || '—'}</span>
+                      <p className="text-[#7A6A5B] text-sm">Placed {formatDate(orderDetail.createdAt)}</p>
+                      <p className="text-[#7A6A5B] text-sm">
+                        Seller store: <span className="text-[#2A211B]">{orderDetail.store || '—'}</span>
                       </p>
                     </OrderDetailBlock>
                   </div>
 
                   <OrderDetailBlock title="Shipping Address">
                     {orderDetail.shippingAddress ? (
-                      <p className="text-[#cbb89d] text-sm leading-relaxed">
+                      <p className="text-[#7A6A5B] text-sm leading-relaxed">
                         {[orderDetail.shippingAddress.firstName, orderDetail.shippingAddress.lastName]
                           .filter(Boolean)
                           .join(' ')}
@@ -1641,16 +1641,16 @@ export default function AdminPanel() {
                         )}
                       </p>
                     ) : (
-                      <p className="text-[#9e8c73] text-sm">No shipping address on this order.</p>
+                      <p className="text-[#8A7B6B] text-sm">No shipping address on this order.</p>
                     )}
                   </OrderDetailBlock>
 
                   <div>
-                    <h3 className="text-[#ff9933] text-xs font-bold uppercase tracking-wider mb-3">Items</h3>
-                    <div className="border border-white/10 rounded-lg overflow-hidden">
+                    <h3 className="text-[#B7322A] text-xs font-bold uppercase tracking-wider mb-3">Items</h3>
+                    <div className="border border-[#231a16]/10 rounded-lg overflow-hidden">
                       <table className="w-full text-left border-collapse text-sm">
                         <thead>
-                          <tr className="border-b border-white/10 text-[#cbb89d] text-[11px] uppercase tracking-wider">
+                          <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-[11px] uppercase tracking-wider">
                             <th className="py-2.5 px-4 font-semibold">Product</th>
                             <th className="py-2.5 px-4 font-semibold text-center">Qty</th>
                             <th className="py-2.5 px-4 font-semibold text-right">Price</th>
@@ -1659,16 +1659,16 @@ export default function AdminPanel() {
                         </thead>
                         <tbody>
                           {(orderDetail.items ?? []).map((item) => (
-                            <tr key={item.id} className="border-b border-white/5 last:border-0">
-                              <td className="py-2.5 px-4 text-[#fff4e6]">{item.productName}</td>
-                              <td className="py-2.5 px-4 text-center text-[#cbb89d]">{item.quantity}</td>
-                              <td className="py-2.5 px-4 text-right text-[#cbb89d]">{inr(item.unitPrice)}</td>
-                              <td className="py-2.5 px-4 text-right text-[#f1e7d7] font-semibold">{inr(item.lineTotal)}</td>
+                            <tr key={item.id} className="border-b border-[#231a16]/5 last:border-0">
+                              <td className="py-2.5 px-4 text-[#231A16]">{item.productName}</td>
+                              <td className="py-2.5 px-4 text-center text-[#7A6A5B]">{item.quantity}</td>
+                              <td className="py-2.5 px-4 text-right text-[#7A6A5B]">{inr(item.unitPrice)}</td>
+                              <td className="py-2.5 px-4 text-right text-[#2A211B] font-semibold">{inr(item.lineTotal)}</td>
                             </tr>
                           ))}
                           {(orderDetail.items ?? []).length === 0 && (
                             <tr>
-                              <td colSpan={4} className="py-6 text-center text-[#9e8c73] text-sm">No items on this order.</td>
+                              <td colSpan={4} className="py-6 text-center text-[#8A7B6B] text-sm">No items on this order.</td>
                             </tr>
                           )}
                         </tbody>
@@ -1676,14 +1676,14 @@ export default function AdminPanel() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-1 border-t border-white/10 pt-4">
+                  <div className="flex flex-col items-end gap-1 border-t border-[#231a16]/10 pt-4">
                     <div className="flex items-center justify-between w-full sm:w-64 text-sm">
-                      <span className="text-[#cbb89d]">Subtotal</span>
-                      <span className="text-[#f1e7d7]">{inr(orderDetail.subtotal)}</span>
+                      <span className="text-[#7A6A5B]">Subtotal</span>
+                      <span className="text-[#2A211B]">{inr(orderDetail.subtotal)}</span>
                     </div>
                     <div className="flex items-center justify-between w-full sm:w-64 text-base">
-                      <span className="text-[#cbb89d] font-semibold">Total</span>
-                      <span className="text-[#ff9933] font-bold">{inr(orderDetail.total)}</span>
+                      <span className="text-[#7A6A5B] font-semibold">Total</span>
+                      <span className="text-[#B7322A] font-bold">{inr(orderDetail.total)}</span>
                     </div>
                   </div>
                 </div>
@@ -1703,26 +1703,26 @@ export default function AdminPanel() {
         >
           <GlassCard hover={false} className="relative w-full max-w-md p-6 md:p-8">
             <div onMouseDown={(e) => e.stopPropagation()}>
-              <h2 className="font-[Outfit] text-2xl font-bold text-[#fff4e6] mb-2 flex items-center gap-2">
-                <X size={22} className="text-[#ffb4ab]" /> Reject Product
+              <h2 className="font-[Outfit] text-2xl font-bold text-[#231A16] mb-2 flex items-center gap-2">
+                <X size={22} className="text-[#B3261E]" /> Reject Product
               </h2>
-              <p className="text-[#cbb89d] text-sm mb-5">
-                Rejecting <span className="text-[#f1e7d7] font-semibold">{rejecting.name}</span>. The seller will see your reason and can resubmit.
+              <p className="text-[#7A6A5B] text-sm mb-5">
+                Rejecting <span className="text-[#2A211B] font-semibold">{rejecting.name}</span>. The seller will see your reason and can resubmit.
               </p>
-              <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Reason (optional)</label>
+              <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">Reason (optional)</label>
               <textarea
                 rows={3}
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 placeholder="e.g. Images are low quality or the description is misleading."
-                className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all resize-none"
+                className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all resize-none"
               />
               <div className="flex items-center justify-end gap-3 mt-6">
                 <button
                   type="button"
                   disabled={savingApproval}
                   onClick={() => { setRejecting(null); setRejectReason(''); }}
-                  className="px-5 py-2.5 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -1730,7 +1730,7 @@ export default function AdminPanel() {
                   type="button"
                   disabled={savingApproval}
                   onClick={() => handleApproval(rejecting, 'reject', rejectReason)}
-                  className="px-5 py-2.5 rounded-lg bg-[#93000a]/40 border border-[#ffb4ab]/40 text-[#ffb4ab] text-sm font-bold flex items-center gap-2 hover:bg-[#93000a]/60 transition-colors disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-lg bg-[#FBE3E1]/40 border border-[#B3261E]/40 text-[#B3261E] text-sm font-bold flex items-center gap-2 hover:bg-[#FBE3E1]/60 transition-colors disabled:opacity-50"
                 >
                   {savingApproval ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />}
                   {savingApproval ? 'Rejecting...' : 'Reject Product'}
@@ -1747,31 +1747,31 @@ export default function AdminPanel() {
             <form onSubmit={handleCreateCategory} onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8 flex flex-col gap-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="font-[Outfit] text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
-                    <PlusCircle className="text-[#ff9933]" size={24} /> Add Category
+                  <h2 className="font-[Outfit] text-2xl font-bold text-[#231A16] flex items-center gap-2">
+                    <PlusCircle className="text-[#B7322A]" size={24} /> Add Category
                   </h2>
-                  <p className="text-[#cbb89d] text-xs mt-1">Create a new product category for the platform.</p>
+                  <p className="text-[#7A6A5B] text-xs mt-1">Create a new product category for the platform.</p>
                 </div>
-                <button type="button" onClick={() => setCategoryModal(false)} className="p-2 -mr-2 rounded-lg text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/5 transition-colors" aria-label="Close">
+                <button type="button" onClick={() => setCategoryModal(false)} className="p-2 -mr-2 rounded-lg text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors" aria-label="Close">
                   <X size={22} />
                 </button>
               </div>
               <div>
-                <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Category Name</label>
+                <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">Category Name</label>
                 <input
                   type="text"
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
                   placeholder="e.g. Wearables"
                   autoFocus
-                  className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                  className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
                 />
               </div>
-              <div className="flex items-center justify-end gap-3 pt-2 border-t border-white/10">
-                <button type="button" onClick={() => setCategoryModal(false)} className="px-6 py-2.5 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors">
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#231a16]/10">
+                <button type="button" onClick={() => setCategoryModal(false)} className="px-6 py-2.5 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={!newCategory.trim() || busy} className="px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] disabled:bg-[#34250f]/50 disabled:text-[#6f6048] disabled:cursor-not-allowed">
+                <button type="submit" disabled={!newCategory.trim() || busy} className="px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] disabled:bg-[#F0E7DA]/50 disabled:text-[#8A7B6B] disabled:cursor-not-allowed">
                   <PlusCircle size={18} /> {busy ? 'Creating...' : 'Create Category'}
                 </button>
               </div>
@@ -1786,33 +1786,33 @@ export default function AdminPanel() {
             <form onSubmit={handleSaveSlide} onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8 flex flex-col gap-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="font-[Outfit] text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
-                    <ImageIcon className="text-[#ff9933]" size={24} /> {slideModal.id ? 'Edit Hero Slide' : 'Add Hero Slide'}
+                  <h2 className="font-[Outfit] text-2xl font-bold text-[#231A16] flex items-center gap-2">
+                    <ImageIcon className="text-[#B7322A]" size={24} /> {slideModal.id ? 'Edit Hero Slide' : 'Add Hero Slide'}
                   </h2>
-                  <p className="text-[#cbb89d] text-xs mt-1">This slide appears in the homepage carousel.</p>
+                  <p className="text-[#7A6A5B] text-xs mt-1">This slide appears in the homepage carousel.</p>
                 </div>
-                <button type="button" onClick={closeSlideModal} className="p-2 -mr-2 rounded-lg text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/5 transition-colors" aria-label="Close">
+                <button type="button" onClick={closeSlideModal} className="p-2 -mr-2 rounded-lg text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors" aria-label="Close">
                   <X size={22} />
                 </button>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Eyebrow</label>
+                  <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">Eyebrow</label>
                   <input
                     type="text"
                     value={slideModal.eyebrow ?? ''}
                     onChange={(e) => setSlideModal({ ...slideModal, eyebrow: e.target.value })}
                     placeholder="e.g. New Arrivals"
-                    className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                    className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Theme</label>
+                  <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">Theme</label>
                   <select
                     value={slideModal.theme ?? 'orange'}
                     onChange={(e) => setSlideModal({ ...slideModal, theme: e.target.value })}
-                    className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all"
+                    className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all"
                   >
                     <option value="orange">Orange</option>
                     <option value="gold">Gold</option>
@@ -1821,100 +1821,100 @@ export default function AdminPanel() {
               </div>
 
               <div>
-                <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Title *</label>
+                <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">Title *</label>
                 <input
                   type="text"
                   value={slideModal.title ?? ''}
                   onChange={(e) => setSlideModal({ ...slideModal, title: e.target.value })}
                   placeholder="e.g. Dominate Your Arena"
                   autoFocus
-                  className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                  className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
                 />
               </div>
 
               <div>
-                <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Description</label>
+                <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">Description</label>
                 <textarea
                   rows={3}
                   value={slideModal.description ?? ''}
                   onChange={(e) => setSlideModal({ ...slideModal, description: e.target.value })}
                   placeholder="A short supporting line shown under the title."
-                  className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048] resize-none"
+                  className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B] resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Image *</label>
+                <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">Image *</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setSlideImageFile(e.target.files?.[0] ?? null)}
-                  className="w-full text-xs text-[#cbb89d] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#34250f] file:text-[#f1e7d7] file:text-xs file:font-semibold hover:file:bg-[#3f2c11] file:cursor-pointer"
+                  className="w-full text-xs text-[#7A6A5B] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#F0E7DA] file:text-[#2A211B] file:text-xs file:font-semibold hover:file:bg-[#E0A11C] file:cursor-pointer"
                 />
                 <input
                   type="url"
                   value={slideModal.imageUrl ?? ''}
                   onChange={(e) => setSlideModal({ ...slideModal, imageUrl: e.target.value })}
                   placeholder="...or paste an image URL"
-                  className="w-full mt-3 bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                  className="w-full mt-3 bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
                 />
                 {slideImageFile ? (
-                  <p className="text-[#cbb89d] text-xs mt-2">Selected: {slideImageFile.name}</p>
+                  <p className="text-[#7A6A5B] text-xs mt-2">Selected: {slideImageFile.name}</p>
                 ) : slideModal.imageUrl ? (
-                  <img src={slideModal.imageUrl} alt="Slide preview" className="mt-3 w-full h-32 object-cover rounded-lg border border-white/10" />
+                  <img src={slideModal.imageUrl} alt="Slide preview" className="mt-3 w-full h-32 object-cover rounded-lg border border-[#231a16]/10" />
                 ) : null}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Button Label</label>
+                  <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">Button Label</label>
                   <input
                     type="text"
                     value={slideModal.buttonLabel ?? ''}
                     onChange={(e) => setSlideModal({ ...slideModal, buttonLabel: e.target.value })}
                     placeholder="Shop Now"
-                    className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                    className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Button Link</label>
+                  <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">Button Link</label>
                   <input
                     type="text"
                     value={slideModal.buttonLink ?? ''}
                     onChange={(e) => setSlideModal({ ...slideModal, buttonLink: e.target.value })}
                     placeholder="/search?q=keyboard or https://..."
-                    className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+                    className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:items-end">
                 <div>
-                  <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">Position</label>
+                  <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">Position</label>
                   <input
                     type="number"
                     min="0"
                     value={slideModal.position ?? 0}
                     onChange={(e) => setSlideModal({ ...slideModal, position: e.target.value })}
-                    className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all"
+                    className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all"
                   />
                 </div>
-                <label className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/5 border border-white/10 cursor-pointer">
+                <label className="flex items-center gap-3 px-4 py-3 rounded-lg bg-[#231a16]/5 border border-[#231a16]/10 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={!!slideModal.isActive}
                     onChange={(e) => setSlideModal({ ...slideModal, isActive: e.target.checked })}
-                    className="w-4 h-4 accent-[#ff9933]"
+                    className="w-4 h-4 accent-[#B7322A]"
                   />
-                  <span className="text-[#f1e7d7] text-sm font-semibold">Visible on homepage</span>
+                  <span className="text-[#2A211B] text-sm font-semibold">Visible on homepage</span>
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2 border-t border-white/10">
-                <button type="button" onClick={closeSlideModal} className="px-6 py-2.5 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors">
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#231a16]/10">
+                <button type="button" onClick={closeSlideModal} className="px-6 py-2.5 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={savingSlide || !(slideModal.title ?? '').trim()} className="px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] disabled:bg-[#34250f]/50 disabled:text-[#6f6048] disabled:cursor-not-allowed">
+                <button type="submit" disabled={savingSlide || !(slideModal.title ?? '').trim()} className="px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] disabled:bg-[#F0E7DA]/50 disabled:text-[#8A7B6B] disabled:cursor-not-allowed">
                   <PlusCircle size={18} /> {savingSlide ? 'Saving...' : slideModal.id ? 'Save Changes' : 'Add Slide'}
                 </button>
               </div>
@@ -1929,25 +1929,25 @@ export default function AdminPanel() {
             <form onSubmit={handleSendReply} onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8 flex flex-col gap-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <h2 className="font-[Outfit] text-xl sm:text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
-                    <Inbox className="text-[#ff9933] shrink-0" size={22} /> <span className="truncate">{messageModal.subject}</span>
+                  <h2 className="font-[Outfit] text-xl sm:text-2xl font-bold text-[#231A16] flex items-center gap-2">
+                    <Inbox className="text-[#B7322A] shrink-0" size={22} /> <span className="truncate">{messageModal.subject}</span>
                   </h2>
-                  <p className="text-[#cbb89d] text-xs mt-1 break-all">{messageModal.name} · {messageModal.email}</p>
+                  <p className="text-[#7A6A5B] text-xs mt-1 break-all">{messageModal.name} · {messageModal.email}</p>
                 </div>
-                <button type="button" onClick={() => setMessageModal(null)} className="p-2 -mr-2 rounded-lg text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/5 transition-colors shrink-0" aria-label="Close">
+                <button type="button" onClick={() => setMessageModal(null)} className="p-2 -mr-2 rounded-lg text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors shrink-0" aria-label="Close">
                   <X size={22} />
                 </button>
               </div>
 
-              <div className="rounded-lg border border-white/10 bg-[#1a1307]/60 p-4">
-                <p className="text-[#9e8c73] text-xs font-semibold uppercase tracking-wider mb-2">{formatDate(messageModal.createdAt)}</p>
-                <p className="text-[#f1e7d7] text-sm whitespace-pre-wrap">{messageModal.message}</p>
-                {messageModal.productName && <p className="text-[#9e8c73] text-xs mt-3">About product: {messageModal.productName}</p>}
-                {messageModal.storeName && <p className="text-[#9e8c73] text-xs mt-1">Store: {messageModal.storeName}</p>}
+              <div className="rounded-lg border border-[#231a16]/10 bg-[#F5ECDE]/60 p-4">
+                <p className="text-[#8A7B6B] text-xs font-semibold uppercase tracking-wider mb-2">{formatDate(messageModal.createdAt)}</p>
+                <p className="text-[#2A211B] text-sm whitespace-pre-wrap">{messageModal.message}</p>
+                {messageModal.productName && <p className="text-[#8A7B6B] text-xs mt-3">About product: {messageModal.productName}</p>}
+                {messageModal.storeName && <p className="text-[#8A7B6B] text-xs mt-1">Store: {messageModal.storeName}</p>}
               </div>
 
               <div>
-                <label className="block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">
+                <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">
                   {messageModal.reply ? 'Your Reply' : 'Reply'}
                 </label>
                 <textarea
@@ -1955,18 +1955,18 @@ export default function AdminPanel() {
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   placeholder="Type your response to the customer..."
-                  className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all resize-none placeholder:text-[#6f6048]"
+                  className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all resize-none placeholder:text-[#8A7B6B]"
                 />
                 {messageModal.repliedAt && (
-                  <p className="text-[#9e8c73] text-xs mt-2">Last replied {formatDate(messageModal.repliedAt)} — sending again updates it.</p>
+                  <p className="text-[#8A7B6B] text-xs mt-2">Last replied {formatDate(messageModal.repliedAt)} — sending again updates it.</p>
                 )}
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2 border-t border-white/10">
-                <button type="button" onClick={() => setMessageModal(null)} className="px-6 py-2.5 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors">
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#231a16]/10">
+                <button type="button" onClick={() => setMessageModal(null)} className="px-6 py-2.5 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
                   Close
                 </button>
-                <button type="submit" disabled={!replyText.trim() || replying} className="px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] disabled:bg-[#34250f]/50 disabled:text-[#6f6048] disabled:cursor-not-allowed">
+                <button type="submit" disabled={!replyText.trim() || replying} className="px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] disabled:bg-[#F0E7DA]/50 disabled:text-[#8A7B6B] disabled:cursor-not-allowed">
                   <Reply size={18} /> {replying ? 'Sending...' : messageModal.reply ? 'Update Reply' : 'Send Reply'}
                 </button>
               </div>
@@ -1982,16 +1982,16 @@ function StatCard({ icon, title, value, trend }) {
   return (
     <GlassCard className="p-6">
       <div className="flex justify-between items-start mb-4">
-        <div className="text-[#ff9933] bg-[#ff9933]/10 p-3 rounded-lg border border-[#ff9933]/20">
+        <div className="text-[#B7322A] bg-[#B7322A]/10 p-3 rounded-lg border border-[#B7322A]/20">
           {icon}
         </div>
-        <span className="text-xs font-bold tracking-wider px-2 py-1 rounded-full bg-[#ff9933]/20 text-[#ff9933]">
+        <span className="text-xs font-bold tracking-wider px-2 py-1 rounded-full bg-[#B7322A]/20 text-[#B7322A]">
           {trend}
         </span>
       </div>
       <div>
-        <h3 className="text-[#cbb89d] text-sm font-semibold uppercase tracking-wider mb-1">{title}</h3>
-        <p className="font-[Outfit] text-3xl font-bold text-[#fff4e6]">{value}</p>
+        <h3 className="text-[#7A6A5B] text-sm font-semibold uppercase tracking-wider mb-1">{title}</h3>
+        <p className="font-[Outfit] text-3xl font-bold text-[#231A16]">{value}</p>
       </div>
     </GlassCard>
   );
@@ -2003,13 +2003,13 @@ function SidebarLink({ icon, label, active, onClick, badge }) {
       onClick={onClick}
       className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold tracking-wider transition-all duration-200 w-full text-left ${
         active 
-          ? 'bg-[#ff9933]/20 text-[#ff9933] border border-[#ff9933]/30 shadow-[0_0_7px_rgba(255,153,51,0.06)]' 
-          : 'text-[#cbb89d] hover:bg-[#34250f]/50 hover:text-[#f1e7d7]'
+          ? 'bg-[#B7322A]/20 text-[#B7322A] border border-[#B7322A]/30 shadow-[0_0_7px_rgba(183,50,42,0.06)]' 
+          : 'text-[#7A6A5B] hover:bg-[#F0E7DA]/50 hover:text-[#2A211B]'
       }`}
     >
       {icon} <span className="flex-1">{label}</span>
       {badge > 0 && (
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#ff9933]/20 text-[#ffd27a] border border-[#ff9933]/30">
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#B7322A]/20 text-[#C8901A] border border-[#B7322A]/30">
           {badge}
         </span>
       )}
