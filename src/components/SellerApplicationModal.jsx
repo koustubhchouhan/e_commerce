@@ -5,8 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { useToastStore } from '../store/toastStore';
 
 const inputClass =
-  'w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]';
-const labelClass = 'block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2';
+  'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]';
+const labelClass = 'block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2';
 
 // Customer-facing "Become a Seller" flow. Opened from the customer profile;
 // submits a seller_application which an admin reviews in Seller Approvals.
@@ -71,19 +71,19 @@ export default function SellerApplicationModal({ onClose, onChange }) {
         className="glass-panel rounded-xl w-full max-w-lg animate-scale-in overflow-hidden"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between px-6 py-5 border-b border-white/10">
+        <div className="flex items-start justify-between px-6 py-5 border-b border-[#231a16]/10">
           <div>
-            <h2 className="font-[Outfit] text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
-              <Store className="text-[#ff9933]" size={24} /> Become a Seller
+            <h2 className="font-[Outfit] text-2xl font-bold text-[#231A16] flex items-center gap-2">
+              <Store className="text-[#B7322A]" size={24} /> Become a Seller
             </h2>
-            <p className="text-[#cbb89d] text-xs mt-1">
+            <p className="text-[#7A6A5B] text-xs mt-1">
               Open your storefront and start listing products.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 -mr-2 rounded-lg text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/5 transition-colors"
+            className="p-2 -mr-2 rounded-lg text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors"
             aria-label="Close"
           >
             <X size={22} />
@@ -92,7 +92,7 @@ export default function SellerApplicationModal({ onClose, onChange }) {
 
         <div className="px-6 py-6">
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-[#cbb89d] text-sm">
+            <div className="flex items-center justify-center gap-2 py-10 text-[#7A6A5B] text-sm">
               <Loader2 size={18} className="animate-spin" /> Checking your applications...
             </div>
           ) : existing ? (
@@ -100,18 +100,18 @@ export default function SellerApplicationModal({ onClose, onChange }) {
               <div
                 className={`flex items-start gap-3 rounded-lg border p-4 text-sm ${
                   existing.status === 'approved'
-                    ? 'border-[#ff9933]/30 bg-[#ff9933]/10 text-[#f1e7d7]'
-                    : 'border-[#ffd27a]/30 bg-[#c98a12]/10 text-[#f1e7d7]'
+                    ? 'border-[#B7322A]/30 bg-[#B7322A]/10 text-[#2A211B]'
+                    : 'border-[#C8901A]/30 bg-[#B8860B]/10 text-[#2A211B]'
                 }`}
               >
                 {existing.status === 'approved' ? (
-                  <CheckCircle size={18} className="text-[#ff9933] shrink-0 mt-0.5" />
+                  <CheckCircle size={18} className="text-[#B7322A] shrink-0 mt-0.5" />
                 ) : (
-                  <Clock size={18} className="text-[#ffd27a] shrink-0 mt-0.5" />
+                  <Clock size={18} className="text-[#C8901A] shrink-0 mt-0.5" />
                 )}
                 <div>
                   <p className="font-semibold">{existing.storeName}</p>
-                  <p className="text-[#cbb89d] text-xs mt-1">
+                  <p className="text-[#7A6A5B] text-xs mt-1">
                     {existing.status === 'approved'
                       ? 'Approved. Your storefront is live.'
                       : 'Under review. An admin will approve your storefront shortly.'}
@@ -122,7 +122,7 @@ export default function SellerApplicationModal({ onClose, onChange }) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-6 py-2.5 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors"
+                  className="px-6 py-2.5 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors"
                 >
                   Close
                 </button>
@@ -132,7 +132,7 @@ export default function SellerApplicationModal({ onClose, onChange }) {
             <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
               <div>
                 <label className={labelClass}>
-                  Store Name <span className="text-[#ffb4ab]">*</span>
+                  Store Name <span className="text-[#B3261E]">*</span>
                 </label>
                 <input
                   type="text"
@@ -144,7 +144,7 @@ export default function SellerApplicationModal({ onClose, onChange }) {
               </div>
               <div>
                 <label className={labelClass}>
-                  Contact Email <span className="text-[#ffb4ab]">*</span>
+                  Contact Email <span className="text-[#B3261E]">*</span>
                 </label>
                 <input
                   type="email"
@@ -154,14 +154,14 @@ export default function SellerApplicationModal({ onClose, onChange }) {
                   className={inputClass}
                 />
               </div>
-              <p className="text-[#9e8c73] text-xs -mt-1">
+              <p className="text-[#8A7B6B] text-xs -mt-1">
                 Seller accounts need admin approval before you can list products.
               </p>
-              <div className="flex items-center justify-end gap-3 border-t border-white/10 pt-4">
+              <div className="flex items-center justify-end gap-3 border-t border-[#231a16]/10 pt-4">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-6 py-2.5 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors"
+                  className="px-6 py-2.5 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors"
                 >
                   Cancel
                 </button>
@@ -170,8 +170,8 @@ export default function SellerApplicationModal({ onClose, onChange }) {
                   disabled={!storeName.trim() || !contactEmail.trim() || submitting}
                   className={`px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all ${
                     storeName.trim() && contactEmail.trim() && !submitting
-                      ? 'bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)]'
-                      : 'bg-[#34250f]/50 text-[#6f6048] cursor-not-allowed'
+                      ? 'bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]'
+                      : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'
                   }`}
                 >
                   {submitting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}

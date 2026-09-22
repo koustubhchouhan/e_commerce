@@ -71,23 +71,23 @@ export default function SignUp() {
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 py-12">
       {/* Ambient glows inside the page context */}
-      <div className="absolute w-[500px] h-[500px] bg-[#ff9933]/5 rounded-full blur-[80px] top-[10%] right-[10%] mix-blend-screen pointer-events-none animate-pulse" />
-      <div className="absolute w-[600px] h-[600px] bg-[#c98a12]/5 rounded-full blur-[80px] bottom-[10%] left-[10%] mix-blend-screen pointer-events-none" />
+      <div className="absolute w-[500px] h-[500px] bg-[#B7322A]/5 rounded-full blur-[80px] top-[10%] right-[10%] mix-blend-screen pointer-events-none animate-pulse" />
+      <div className="absolute w-[600px] h-[600px] bg-[#B8860B]/5 rounded-full blur-[80px] bottom-[10%] left-[10%] mix-blend-screen pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-10">
-          <h1 className="text-glow font-[Outfit] text-4xl font-bold text-[#fff4e6] mb-2">
+          <h1 className="text-glow font-[Outfit] text-4xl font-bold text-[#231A16] mb-2">
             Create Account
           </h1>
-          <p className="text-[#cbb89d]">Join the Future-Ready Commerce Platform</p>
+          <p className="text-[#7A6A5B]">Join the Future-Ready Commerce Platform</p>
         </div>
 
         <div className="glass-panel rounded-2xl p-10 relative overflow-hidden">
           {/* Top edge glow */}
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#ff9933]/50 to-transparent" />
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#B7322A]/50 to-transparent" />
 
           {error && (
-            <div className="flex items-start gap-2 mb-6 rounded-lg border border-[#ffb4ab]/30 bg-[#93000a]/20 px-4 py-3 text-sm text-[#ffb4ab]">
+            <div className="flex items-start gap-2 mb-6 rounded-lg border border-[#B3261E]/30 bg-[#FBE3E1]/20 px-4 py-3 text-sm text-[#B3261E]">
               <AlertCircle size={18} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -96,31 +96,31 @@ export default function SignUp() {
           {/* Form */}
           <form onSubmit={handleSignUp}>
             <div className="relative mb-6">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#cbb89d]" size={20} />
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7A6A5B]" size={20} />
               <input
                 type="text"
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Full Name"
-                className="w-full bg-[#1a1307] border border-white/20 rounded-lg py-3 pl-12 pr-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] focus:shadow-[0_0_5px_rgba(255,153,51,0.11)] transition-all"
+                className="w-full bg-[#F5ECDE] border border-[#231a16]/20 rounded-lg py-3 pl-12 pr-4 text-[#2A211B] outline-none focus:border-[#B7322A] focus:shadow-[0_0_5px_rgba(183,50,42,0.11)] transition-all"
               />
             </div>
 
             <div className="relative mb-6">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#cbb89d]" size={20} />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7A6A5B]" size={20} />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email Address"
-                className="w-full bg-[#1a1307] border border-white/20 rounded-lg py-3 pl-12 pr-4 text-[#f1e7d7] outline-none focus:border-[#ff9933] focus:shadow-[0_0_5px_rgba(255,153,51,0.11)] transition-all"
+                className="w-full bg-[#F5ECDE] border border-[#231a16]/20 rounded-lg py-3 pl-12 pr-4 text-[#2A211B] outline-none focus:border-[#B7322A] focus:shadow-[0_0_5px_rgba(183,50,42,0.11)] transition-all"
               />
             </div>
 
             <div className="relative mb-8">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#cbb89d]" size={20} />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7A6A5B]" size={20} />
               <input
                 type={showPassword ? "text" : "password"}
                 required
@@ -128,12 +128,12 @@ export default function SignUp() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password (min 8 characters)"
-                className="w-full bg-[#1a1307] border border-white/20 rounded-lg py-3 pl-12 pr-12 text-[#f1e7d7] outline-none focus:border-[#ff9933] focus:shadow-[0_0_5px_rgba(255,153,51,0.11)] transition-all"
+                className="w-full bg-[#F5ECDE] border border-[#231a16]/20 rounded-lg py-3 pl-12 pr-12 text-[#2A211B] outline-none focus:border-[#B7322A] focus:shadow-[0_0_5px_rgba(183,50,42,0.11)] transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#cbb89d] hover:text-[#ff9933] transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#7A6A5B] hover:text-[#B7322A] transition-colors"
               >
                 {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
               </button>
@@ -141,7 +141,7 @@ export default function SignUp() {
 
             {/* Account type — admin is never offered here */}
             <div className="mb-6">
-              <p className="text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2">
+              <p className="text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">
                 I want to sign up as
               </p>
               <div className="flex flex-col gap-2">
@@ -154,23 +154,23 @@ export default function SignUp() {
                       onClick={() => setRole(r.key)}
                       className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg border text-left transition-all ${
                         active
-                          ? 'bg-[#ff9933]/15 border-[#ff9933]/50 text-[#fff4e6]'
-                          : 'bg-white/5 border-white/10 text-[#cbb89d] hover:bg-white/10 hover:text-[#f1e7d7]'
+                          ? 'bg-[#B7322A]/15 border-[#B7322A]/50 text-[#231A16]'
+                          : 'bg-[#231a16]/5 border-[#231a16]/10 text-[#7A6A5B] hover:bg-[#231a16]/10 hover:text-[#2A211B]'
                       }`}
                     >
                       <span className="flex items-center gap-2 font-[Outfit] font-semibold text-sm">
-                        <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${active ? 'border-[#ff9933]' : 'border-white/25'}`}>
-                          {active && <span className="w-2 h-2 rounded-full bg-[#ff9933]" />}
+                        <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${active ? 'border-[#B7322A]' : 'border-[#231a16]/25'}`}>
+                          {active && <span className="w-2 h-2 rounded-full bg-[#B7322A]" />}
                         </span>
                         {r.label}
                       </span>
-                      <span className={`text-[11px] ${active ? 'text-[#cbb89d]' : 'text-[#9e8c73]'}`}>{r.hint}</span>
+                      <span className={`text-[11px] ${active ? 'text-[#7A6A5B]' : 'text-[#8A7B6B]'}`}>{r.hint}</span>
                     </button>
                   );
                 })}
               </div>
               {role === 'seller' && (
-                <p className="text-[#ffd27a] text-xs mt-2">
+                <p className="text-[#C8901A] text-xs mt-2">
                   Seller accounts need admin approval before you can list products.
                 </p>
               )}
@@ -179,18 +179,18 @@ export default function SignUp() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3.5 rounded-lg bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] font-[Outfit] text-xl font-semibold flex items-center justify-center gap-2 hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] transition-all relative overflow-hidden group disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full py-3.5 rounded-lg bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] font-[Outfit] text-xl font-semibold flex items-center justify-center gap-2 hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all relative overflow-hidden group disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <span className="relative z-10">{submitting ? 'Creating…' : 'Create Account'}</span>
               {!submitting && <ArrowRight size={20} className="relative z-10 group-hover:translate-x-1 transition-transform" />}
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform" />
+              <div className="absolute inset-0 bg-[#231a16]/20 translate-y-full group-hover:translate-y-0 transition-transform" />
             </button>
           </form>
 
           {/* Divider */}
           <div className="relative flex items-center justify-center my-8">
-            <div className="absolute w-full h-[1px] bg-white/10" />
-            <span className="relative px-3 py-1 rounded-full text-[10px] font-semibold tracking-wider text-[#cbb89d] uppercase bg-[#2a2212]">
+            <div className="absolute w-full h-[1px] bg-[#231a16]/10" />
+            <span className="relative px-3 py-1 rounded-full text-[10px] font-semibold tracking-wider text-[#7A6A5B] uppercase bg-[#EDE2D2]">
               Or sign up with
             </span>
           </div>
@@ -201,27 +201,27 @@ export default function SignUp() {
               type="button"
               onClick={handleGoogle}
               disabled={googleBusy || submitting}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white/5 border border-white/10 text-[#f1e7d7] text-sm hover:bg-white/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#231a16]/5 border border-[#231a16]/10 text-[#2A211B] text-sm hover:bg-[#231a16]/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <Globe size={18} /> {googleBusy ? 'Redirecting…' : 'Google'}
             </button>
           </div>
           {role === 'seller' && (
-            <p className="text-[10px] text-[#9e8c73] mt-3 leading-relaxed text-center">
+            <p className="text-[10px] text-[#8A7B6B] mt-3 leading-relaxed text-center">
               Signing up as a Seller with Google still requires admin approval before you can list products.
             </p>
           )}
           {!isGoogleOAuthConfigured && (
-            <p className="text-[10px] text-[#c98a12] mt-2 leading-relaxed">
+            <p className="text-[10px] text-[#B8860B] mt-2 leading-relaxed">
               Google sign-up needs VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY set, plus the provider
               enabled in Supabase.
             </p>
           )}
         </div>
 
-        <p className="text-center mt-8 text-[#cbb89d] text-sm">
+        <p className="text-center mt-8 text-[#7A6A5B] text-sm">
           Already have an account?{' '}
-          <Link to="/login" className="text-[#ff9933] font-semibold underline decoration-[#ff9933]/30 hover:decoration-[#ff9933] transition-all">
+          <Link to="/login" className="text-[#B7322A] font-semibold underline decoration-[#B7322A]/30 hover:decoration-[#B7322A] transition-all">
             Authenticate Here
           </Link>
         </p>

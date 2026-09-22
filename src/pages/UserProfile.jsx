@@ -8,11 +8,11 @@ import AccountSettingsModal from '../components/AccountSettingsModal';
 import SellerApplicationModal from '../components/SellerApplicationModal';
 
 const STATUS_BADGES = {
-  pending: 'bg-[#ffd27a]/20 text-[#ffd27a] border-[#ffd27a]/30',
-  paid: 'bg-[#ff9933]/20 text-[#ffbf66] border-[#ff9933]/30',
-  shipped: 'bg-[#ff9933]/20 text-[#ff9933] border-[#ff9933]/30',
-  delivered: 'bg-[#ffbf66]/20 text-[#ffbf66] border-[#ffbf66]/30',
-  cancelled: 'bg-[#ffb4ab]/20 text-[#ffb4ab] border-[#ffb4ab]/30',
+  pending: 'bg-[#C8901A]/20 text-[#C8901A] border-[#C8901A]/30',
+  paid: 'bg-[#B7322A]/20 text-[#E0A11C] border-[#B7322A]/30',
+  shipped: 'bg-[#B7322A]/20 text-[#B7322A] border-[#B7322A]/30',
+  delivered: 'bg-[#E0A11C]/20 text-[#E0A11C] border-[#E0A11C]/30',
+  cancelled: 'bg-[#B3261E]/20 text-[#B3261E] border-[#B3261E]/30',
 };
 
 const formatDate = (iso) => {
@@ -87,7 +87,7 @@ export default function UserProfile() {
 
       {/* ═══ Profile Header Section ═══ */}
       <section className="w-full flex flex-col md:flex-row items-start md:items-center gap-6 glass-panel p-6 rounded-xl">
-        <div className="w-24 h-24 rounded-full bg-[#2b1d0d] border border-[#4b3d2a] flex items-center justify-center overflow-hidden shrink-0">
+        <div className="w-24 h-24 rounded-full bg-[#F0E7DA] border border-[#C4B5A2] flex items-center justify-center overflow-hidden shrink-0">
           {user?.avatarUrl ? (
             <img
               className="w-full h-full object-cover"
@@ -95,18 +95,18 @@ export default function UserProfile() {
               alt="User avatar"
             />
           ) : (
-            <span className="font-[Outfit] text-4xl font-bold text-[#ff9933]">
+            <span className="font-[Outfit] text-4xl font-bold text-[#B7322A]">
               {(user?.fullName || 'N').charAt(0).toUpperCase()}
             </span>
           )}
         </div>
         <div className="flex-grow">
-          <h1 className="font-[Outfit] text-4xl md:text-5xl font-bold text-[#fff4e6] tracking-tight">{user?.fullName || 'Customer'}</h1>
-          <p className="font-[Inter] text-lg text-[#cbb89d]">{user?.email || 'NovaMarket member'}</p>
+          <h1 className="font-[Outfit] text-4xl md:text-5xl font-bold text-[#231A16] tracking-tight">{user?.fullName || 'Customer'}</h1>
+          <p className="font-[Inter] text-lg text-[#7A6A5B]">{user?.email || 'NovaMarket member'}</p>
         </div>
         <button
           onClick={() => openSettings('profile')}
-          className="px-6 py-3 bg-gradient-to-r from-[#9c5214] to-[#ff9933] text-[#2e1800] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-lg hover:shadow-[0_0_9px_rgba(255,153,51,0.17)] transition-all duration-300 whitespace-nowrap"
+          className="px-6 py-3 bg-gradient-to-r from-[#7A1F1A] to-[#B7322A] text-[#FDF8F0] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-lg hover:shadow-[0_0_9px_rgba(183,50,42,0.17)] transition-all duration-300 whitespace-nowrap"
         >
           Edit Profile
         </button>
@@ -118,29 +118,29 @@ export default function UserProfile() {
         {/* Your Orders — 8 cols */}
         <div className="lg:col-span-8 glass-panel p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 min-h-[280px]">
           <div className="flex justify-between items-start mb-6">
-            <div className="flex items-center gap-3 text-[#fff4e6]">
+            <div className="flex items-center gap-3 text-[#231A16]">
               <Package size={28} className="group-hover:scale-110 transition-transform" />
               <h2 className="font-[Outfit] text-2xl font-semibold">Your Orders</h2>
             </div>
-            <span className="text-xs text-[#9e8c73] font-[Inter]">{loading ? '' : `${orders.length} order${orders.length === 1 ? '' : 's'}`}</span>
+            <span className="text-xs text-[#8A7B6B] font-[Inter]">{loading ? '' : `${orders.length} order${orders.length === 1 ? '' : 's'}`}</span>
           </div>
 
           {loading && (
-            <div className="bg-[#34250f]/30 p-4 rounded-lg border border-dashed border-white/10 text-center text-[#9e8c73] text-sm">
+            <div className="bg-[#F0E7DA]/30 p-4 rounded-lg border border-dashed border-[#231a16]/10 text-center text-[#8A7B6B] text-sm">
               Loading orders...
             </div>
           )}
 
           {!loading && error && (
-            <div className="bg-[#34250f]/30 p-4 rounded-lg border border-dashed border-white/10 text-center text-[#ffb4ab] text-sm">
+            <div className="bg-[#F0E7DA]/30 p-4 rounded-lg border border-dashed border-[#231a16]/10 text-center text-[#B3261E] text-sm">
               {error}
             </div>
           )}
 
           {!loading && !error && orders.length === 0 && (
-            <div className="bg-[#34250f]/30 p-6 rounded-lg border border-dashed border-white/10 text-center flex flex-col items-center gap-2">
-              <PackageX size={28} className="text-[#4b3d2a]" />
-              <p className="text-[#9e8c73] text-sm">No orders yet. Head to the storefront to place your first order.</p>
+            <div className="bg-[#F0E7DA]/30 p-6 rounded-lg border border-dashed border-[#231a16]/10 text-center flex flex-col items-center gap-2">
+              <PackageX size={28} className="text-[#C4B5A2]" />
+              <p className="text-[#8A7B6B] text-sm">No orders yet. Head to the storefront to place your first order.</p>
             </div>
           )}
 
@@ -150,24 +150,24 @@ export default function UserProfile() {
                 <Link
                   key={order.id}
                   to={`/orders/${order.id}`}
-                  className="bg-[#34250f]/50 p-4 rounded-lg border border-white/5 hover:bg-[#34250f] hover:border-[#ff9933]/30 transition-colors group"
+                  className="bg-[#F0E7DA]/50 p-4 rounded-lg border border-[#231a16]/5 hover:bg-[#F0E7DA] hover:border-[#B7322A]/30 transition-colors group"
                 >
                   <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
-                    <span className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#cbb89d] uppercase">ORDER #{shortId(order.id)}</span>
-                    <span className={`px-2 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider border ${STATUS_BADGES[order.status] ?? 'bg-white/10 text-[#cbb89d] border-white/10'}`}>
+                    <span className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#7A6A5B] uppercase">ORDER #{shortId(order.id)}</span>
+                    <span className={`px-2 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider border ${STATUS_BADGES[order.status] ?? 'bg-[#231a16]/10 text-[#7A6A5B] border-[#231a16]/10'}`}>
                       {order.status}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="text-[#f1e7d7] text-sm font-semibold truncate">
+                      <p className="text-[#2A211B] text-sm font-semibold truncate">
                         {order.items?.map((i) => i.productName).join(', ') || 'Order items'}
                       </p>
-                      <p className="text-[#cbb89d] text-xs mt-0.5">{formatDate(order.createdAt)}</p>
+                      <p className="text-[#7A6A5B] text-xs mt-0.5">{formatDate(order.createdAt)}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[#ff9933] font-[Outfit] text-base font-bold">{inr(order.total)}</span>
-                      <ChevronRight size={18} className="text-[#cbb89d] group-hover:text-[#ff9933] group-hover:translate-x-0.5 transition-all" />
+                      <span className="text-[#B7322A] font-[Outfit] text-base font-bold">{inr(order.total)}</span>
+                      <ChevronRight size={18} className="text-[#7A6A5B] group-hover:text-[#B7322A] group-hover:translate-x-0.5 transition-all" />
                     </div>
                   </div>
                 </Link>
@@ -179,18 +179,18 @@ export default function UserProfile() {
         {/* Login & Security — 4 cols */}
         <button type="button" onClick={() => openSettings('security')} className="lg:col-span-4 glass-panel p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 min-h-[280px] w-full text-left">
           <div className="flex justify-between items-start mb-6">
-            <div className="flex flex-col gap-2 text-[#ffd27a]">
+            <div className="flex flex-col gap-2 text-[#C8901A]">
               <Shield size={28} className="group-hover:scale-110 transition-transform" />
               <h2 className="font-[Outfit] text-2xl font-semibold mt-2">Login & Security</h2>
             </div>
-            <ChevronRight size={24} className="text-[#cbb89d] group-hover:text-[#ffd27a] transition-colors" />
+            <ChevronRight size={24} className="text-[#7A6A5B] group-hover:text-[#C8901A] transition-colors" />
           </div>
           <div className="space-y-3">
-            <div className="flex items-center gap-3 text-[#cbb89d]">
+            <div className="flex items-center gap-3 text-[#7A6A5B]">
               <Lock size={16} />
               <span className="font-[Inter] text-sm">Signed in via email / Google</span>
             </div>
-            <div className="flex items-center gap-3 text-[#cbb89d]">
+            <div className="flex items-center gap-3 text-[#7A6A5B]">
               <ShieldCheck size={16} />
               <span className="font-[Inter] text-sm">Manage email & password</span>
             </div>
@@ -200,47 +200,47 @@ export default function UserProfile() {
         {/* Addresses — 6 cols */}
         <button type="button" onClick={() => openSettings('profile')} className="lg:col-span-6 glass-panel p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 min-h-[200px] w-full text-left">
           <div className="flex justify-between items-start mb-4">
-            <div className="flex items-center gap-3 text-[#ff7418]">
+            <div className="flex items-center gap-3 text-[#8F2620]">
               <MapPin size={28} className="group-hover:scale-110 transition-transform" />
               <h2 className="font-[Outfit] text-xl font-semibold">Addresses</h2>
             </div>
-            <ChevronRight size={24} className="text-[#cbb89d] group-hover:text-[#ff7418] transition-colors" />
+            <ChevronRight size={24} className="text-[#7A6A5B] group-hover:text-[#8F2620] transition-colors" />
           </div>
-          <div className="bg-[#34250f]/30 p-3 rounded-lg border border-white/5">
-            <p className="font-[Inter] text-sm text-[#f1e7d7]">
+          <div className="bg-[#F0E7DA]/30 p-3 rounded-lg border border-[#231a16]/5">
+            <p className="font-[Inter] text-sm text-[#2A211B]">
               {user?.shippingAddress?.address
                 ? `${user.shippingAddress.firstName ?? ''} ${user.shippingAddress.address}, ${user.shippingAddress.city ?? ''}`
                 : 'No default shipping address saved yet.'}
             </p>
-            <p className="text-[#cbb89d] text-xs mt-1">Click to set your default shipping address.</p>
+            <p className="text-[#7A6A5B] text-xs mt-1">Click to set your default shipping address.</p>
           </div>
         </button>
 
         {/* Payment Options — 6 cols */}
         <div className="lg:col-span-6 glass-panel p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 min-h-[200px]">
           <div className="flex justify-between items-start mb-4">
-            <div className="flex items-center gap-3 text-[#fffaf0]">
+            <div className="flex items-center gap-3 text-[#231A16]">
               <CreditCard size={28} className="group-hover:scale-110 transition-transform" />
               <h2 className="font-[Outfit] text-xl font-semibold">Payment Options</h2>
             </div>
-            <ChevronRight size={24} className="text-[#cbb89d]" />
+            <ChevronRight size={24} className="text-[#7A6A5B]" />
           </div>
-          <div className="bg-[#34250f]/30 p-3 rounded-lg border border-white/5">
-            <p className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#cbb89d] uppercase mb-1.5">PAYMENT METHOD</p>
-            <p className="font-[Inter] text-sm text-[#f1e7d7]">Pay by card at checkout.</p>
-            <p className="text-[#cbb89d] text-xs mt-1">No wallet balance on this account.</p>
+          <div className="bg-[#F0E7DA]/30 p-3 rounded-lg border border-[#231a16]/5">
+            <p className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#7A6A5B] uppercase mb-1.5">PAYMENT METHOD</p>
+            <p className="font-[Inter] text-sm text-[#2A211B]">Pay by card at checkout.</p>
+            <p className="text-[#7A6A5B] text-xs mt-1">No wallet balance on this account.</p>
           </div>
         </div>
 
         {/* Become a Seller — 12 cols */}
         <div className="lg:col-span-12 glass-panel p-6 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-5 transition-all duration-300">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-[#ff9933]/10 rounded-full border border-[#ff9933]/20 text-[#ff9933] shrink-0">
+            <div className="p-3 bg-[#B7322A]/10 rounded-full border border-[#B7322A]/20 text-[#B7322A] shrink-0">
               {sellerApp?.status === 'pending' ? <Clock size={26} /> : sellerApp?.status === 'approved' ? <CheckCircle size={26} /> : <Store size={26} />}
             </div>
             <div>
-              <h2 className="font-[Outfit] text-xl font-semibold text-[#fff4e6]">Become a Seller</h2>
-              <p className="font-[Inter] text-sm text-[#cbb89d] mt-1 max-w-2xl">
+              <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16]">Become a Seller</h2>
+              <p className="font-[Inter] text-sm text-[#7A6A5B] mt-1 max-w-2xl">
                 {sellerApp?.status === 'pending'
                   ? `Your application for "${sellerApp.storeName}" is under review by an admin.`
                   : sellerApp?.status === 'approved'
@@ -252,7 +252,7 @@ export default function UserProfile() {
           <button
             type="button"
             onClick={() => setSellerOpen(true)}
-            className="px-6 py-3 bg-gradient-to-r from-[#9c5214] to-[#ff9933] text-[#2e1800] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-lg hover:shadow-[0_0_9px_rgba(255,153,51,0.17)] transition-all duration-300 whitespace-nowrap self-start md:self-auto"
+            className="px-6 py-3 bg-gradient-to-r from-[#7A1F1A] to-[#B7322A] text-[#FDF8F0] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-lg hover:shadow-[0_0_9px_rgba(183,50,42,0.17)] transition-all duration-300 whitespace-nowrap self-start md:self-auto"
           >
             {sellerApp ? 'View Application' : 'Apply to Sell'}
           </button>

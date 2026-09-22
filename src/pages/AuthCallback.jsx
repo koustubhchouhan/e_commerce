@@ -82,10 +82,10 @@ export default function AuthCallback() {
     <div className="flex items-center justify-center min-h-screen px-4">
       <div className="text-center">
         <div className="flex items-center justify-center gap-3 mb-4">
-          <ShoppingCart size={32} className="text-[#ff9933]" />
-          <span className="text-glow font-[Outfit] text-3xl font-bold text-[#fff4e6]">NovaMarket</span>
+          <ShoppingCart size={32} className="text-[#B7322A]" />
+          <span className="text-glow font-[Outfit] text-3xl font-bold text-[#231A16]">NovaMarket</span>
         </div>
-        <p className="text-[#cbb89d] animate-pulse">Completing Google sign-in…</p>
+        <p className="text-[#7A6A5B] animate-pulse">Completing Google sign-in…</p>
       </div>
     </div>
   );

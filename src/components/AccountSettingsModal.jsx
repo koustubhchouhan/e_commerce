@@ -5,8 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { useToastStore } from '../store/toastStore';
 
 const inputClass =
-  'w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]';
-const labelClass = 'block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2';
+  'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]';
+const labelClass = 'block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2';
 
 // Shared "account settings" modal used on the customer, seller and admin
 // profile pages. It edits the personal profile row (name, avatar, phone,
@@ -162,8 +162,8 @@ export default function AccountSettingsModal({ open, onClose, initialTab = 'prof
       onClick={() => setTab(key)}
       className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
         tab === key
-          ? 'bg-[#ff9933]/15 text-[#ff9933] border border-[#ff9933]/30'
-          : 'text-[#9e8c73] hover:text-[#f1e7d7] border border-transparent'
+          ? 'bg-[#B7322A]/15 text-[#B7322A] border border-[#B7322A]/30'
+          : 'text-[#8A7B6B] hover:text-[#2A211B] border border-transparent'
       }`}
     >
       <Icon size={16} /> {label}
@@ -182,19 +182,19 @@ export default function AccountSettingsModal({ open, onClose, initialTab = 'prof
         className="glass-panel rounded-xl w-full max-w-2xl animate-scale-in p-0 overflow-hidden"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between px-6 md:px-8 py-5 border-b border-white/10">
+        <div className="flex items-start justify-between px-6 md:px-8 py-5 border-b border-[#231a16]/10">
           <div>
-            <h2 className="font-[Outfit] text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
-              <User className="text-[#ff9933]" size={24} /> Account Settings
+            <h2 className="font-[Outfit] text-2xl font-bold text-[#231A16] flex items-center gap-2">
+              <User className="text-[#B7322A]" size={24} /> Account Settings
             </h2>
-            <p className="text-[#cbb89d] text-xs mt-1">Manage your profile, sign-in email and password.</p>
+            <p className="text-[#7A6A5B] text-xs mt-1">Manage your profile, sign-in email and password.</p>
           </div>
-          <button type="button" onClick={onClose} className="p-2 -mr-2 rounded-lg text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/5 transition-colors" aria-label="Close">
+          <button type="button" onClick={onClose} className="p-2 -mr-2 rounded-lg text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors" aria-label="Close">
             <X size={22} />
           </button>
         </div>
 
-        <div className="flex items-center gap-1 px-6 md:px-8 pt-4 border-b border-white/5">
+        <div className="flex items-center gap-1 px-6 md:px-8 pt-4 border-b border-[#231a16]/5">
           {tabBtn('profile', 'Profile', User)}
           {tabBtn('security', 'Sign-in & Security', Lock)}
         </div>
@@ -203,7 +203,7 @@ export default function AccountSettingsModal({ open, onClose, initialTab = 'prof
           {tab === 'profile' && (
             <form onSubmit={handleSaveProfile} className="flex flex-col gap-5">
               <div className="flex items-center gap-5">
-                <div className="w-20 h-20 rounded-full bg-[#2b1d0d] border border-[#4b3d2a] overflow-hidden flex items-center justify-center shrink-0">
+                <div className="w-20 h-20 rounded-full bg-[#F0E7DA] border border-[#C4B5A2] overflow-hidden flex items-center justify-center shrink-0">
                   {avatarPreview || user?.avatarUrl ? (
                     <img
                       src={avatarPreview || user?.avatarUrl}
@@ -211,7 +211,7 @@ export default function AccountSettingsModal({ open, onClose, initialTab = 'prof
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <User className="text-[#6f6048]" size={32} />
+                    <User className="text-[#8A7B6B]" size={32} />
                   )}
                 </div>
                 <div className="flex flex-col gap-2">
@@ -225,11 +225,11 @@ export default function AccountSettingsModal({ open, onClose, initialTab = 'prof
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[#f1e7d7] text-sm font-semibold transition-colors w-fit"
+                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#231a16]/5 hover:bg-[#231a16]/10 border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold transition-colors w-fit"
                   >
                     <Upload size={15} /> {avatarFile ? 'Choose another' : 'Upload photo'}
                   </button>
-                  <span className="text-[#9e8c73] text-[11px]">JPG/PNG up to 5MB</span>
+                  <span className="text-[#8A7B6B] text-[11px]">JPG/PNG up to 5MB</span>
                 </div>
               </div>
 
@@ -245,8 +245,8 @@ export default function AccountSettingsModal({ open, onClose, initialTab = 'prof
               </div>
 
               {user?.role === 'customer' && (
-                <div className="rounded-xl border border-white/10 bg-[#1a1307]/40 p-4 flex flex-col gap-4">
-                  <div className="flex items-center gap-2 text-[#ff7418]">
+                <div className="rounded-xl border border-[#231a16]/10 bg-[#F5ECDE]/40 p-4 flex flex-col gap-4">
+                  <div className="flex items-center gap-2 text-[#8F2620]">
                     <MapPin size={17} />
                     <h3 className="font-[Outfit] text-sm font-bold uppercase tracking-wider">Default shipping address</h3>
                   </div>
@@ -276,12 +276,12 @@ export default function AccountSettingsModal({ open, onClose, initialTab = 'prof
                       <input className={inputClass} value={ship.phone} onChange={(e) => setShip({ ...ship, phone: e.target.value })} />
                     </div>
                   </div>
-                  <p className="text-[#9e8c73] text-[11px]">Used to pre-fill the checkout form. You can still change it per order.</p>
+                  <p className="text-[#8A7B6B] text-[11px]">Used to pre-fill the checkout form. You can still change it per order.</p>
                 </div>
               )}
 
-              <div className="flex items-center justify-end gap-3 border-t border-white/10 pt-4">
-                <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors">
+              <div className="flex items-center justify-end gap-3 border-t border-[#231a16]/10 pt-4">
+                <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
                   Cancel
                 </button>
                 <button
@@ -289,8 +289,8 @@ export default function AccountSettingsModal({ open, onClose, initialTab = 'prof
                   disabled={busy || !name.trim()}
                   className={`px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all ${
                     busy || !name.trim()
-                      ? 'bg-[#34250f]/50 text-[#6f6048] cursor-not-allowed'
-                      : 'bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)]'
+                      ? 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'
+                      : 'bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]'
                   }`}
                 >
                   {busy ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
@@ -302,21 +302,21 @@ export default function AccountSettingsModal({ open, onClose, initialTab = 'prof
 
           {tab === 'security' && (
             <div className="flex flex-col gap-6">
-              <div className="rounded-xl border border-white/10 bg-[#1a1307]/40 p-4">
-                <div className="flex items-center gap-2 text-[#ffd27a] mb-4">
+              <div className="rounded-xl border border-[#231a16]/10 bg-[#F5ECDE]/40 p-4">
+                <div className="flex items-center gap-2 text-[#C8901A] mb-4">
                   <Mail size={17} />
                   <h3 className="font-[Outfit] text-sm font-bold uppercase tracking-wider">Sign-in email</h3>
                 </div>
                 <form onSubmit={handleChangeEmail} className="flex flex-col gap-3">
                   <input className={inputClass} value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="new.email@example.com" type="email" />
-                  <p className="text-[#9e8c73] text-[11px]">
+                  <p className="text-[#8A7B6B] text-[11px]">
                     Changing this updates the address you sign in with. You'll use the new email on your next login.
                   </p>
                   <div className="flex justify-end">
                     <button
                       type="submit"
                       disabled={busy}
-                      className="px-5 py-2.5 rounded-lg font-[Outfit] text-sm font-bold bg-gradient-to-br from-[#ffd27a] to-[#ff9933] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] transition-all disabled:opacity-60 flex items-center gap-2"
+                      className="px-5 py-2.5 rounded-lg font-[Outfit] text-sm font-bold bg-gradient-to-br from-[#C8901A] to-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all disabled:opacity-60 flex items-center gap-2"
                     >
                       {busy ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                       Update Email
@@ -325,8 +325,8 @@ export default function AccountSettingsModal({ open, onClose, initialTab = 'prof
                 </form>
               </div>
 
-              <div className="rounded-xl border border-white/10 bg-[#1a1307]/40 p-4">
-                <div className="flex items-center gap-2 text-[#ffd27a] mb-4">
+              <div className="rounded-xl border border-[#231a16]/10 bg-[#F5ECDE]/40 p-4">
+                <div className="flex items-center gap-2 text-[#C8901A] mb-4">
                   <Lock size={17} />
                   <h3 className="font-[Outfit] text-sm font-bold uppercase tracking-wider">Password</h3>
                 </div>
@@ -334,7 +334,7 @@ export default function AccountSettingsModal({ open, onClose, initialTab = 'prof
                   <div>
                     <label className={labelClass}>Current password</label>
                     <input className={inputClass} type="password" value={curPassword} onChange={(e) => setCurPassword(e.target.value)} placeholder="Your current password" autoComplete="current-password" />
-                    <p className="text-[#9e8c73] text-[11px] mt-1">Leave blank if you signed up with Google and don't have a password yet.</p>
+                    <p className="text-[#8A7B6B] text-[11px] mt-1">Leave blank if you signed up with Google and don't have a password yet.</p>
                   </div>
                   <div>
                     <label className={labelClass}>New password</label>
@@ -348,7 +348,7 @@ export default function AccountSettingsModal({ open, onClose, initialTab = 'prof
                     <button
                       type="submit"
                       disabled={busy}
-                      className="px-5 py-2.5 rounded-lg font-[Outfit] text-sm font-bold bg-gradient-to-br from-[#ffd27a] to-[#ff9933] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] transition-all disabled:opacity-60 flex items-center gap-2"
+                      className="px-5 py-2.5 rounded-lg font-[Outfit] text-sm font-bold bg-gradient-to-br from-[#C8901A] to-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all disabled:opacity-60 flex items-center gap-2"
                     >
                       {busy ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                       Update Password

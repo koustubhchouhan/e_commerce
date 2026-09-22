@@ -33,7 +33,7 @@ export default function NavBar() {
       <Link
         to={to}
         onClick={() => setMobileOpen(false)}
-        className={`px-3 py-2 rounded-lg transition-colors duration-300 ${mobile ? 'text-base w-full' : ''} ${active ? 'text-[#ff9933] font-bold border-b-2 border-[#ff9933]' : 'text-[#cbb89d] hover:bg-white/5 hover:text-[#f1e7d7]'}`}
+        className={`px-3 py-2 rounded-lg transition-colors duration-300 ${mobile ? 'text-base w-full' : ''} ${active ? 'text-[#B7322A] font-bold border-b-2 border-[#B7322A]' : 'text-[#7A6A5B] hover:bg-[#231a16]/5 hover:text-[#2A211B]'}`}
       >
         {label}
       </Link>
@@ -64,11 +64,11 @@ export default function NavBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-[#170e03]/80 backdrop-blur-xl border-b border-white/10 shadow-[0_1px_20px_rgba(255,153,51,0.1)] px-6 md:px-8 py-3 flex justify-between items-center w-full">
+      <header className="sticky top-0 z-50 bg-[#FDF8F0]/80 backdrop-blur-xl border-b border-[#231a16]/10 shadow-[0_1px_20px_rgba(183,50,42,0.1)] px-6 md:px-8 py-3 flex justify-between items-center w-full">
         
         {/* Logo */}
-        <Link to={userRole === 'admin' ? '/admin' : userRole === 'seller' ? '/seller' : '/home'} className="flex items-center gap-2 font-[Outfit] text-2xl font-bold text-[#fff4e6]">
-          <Rocket className="text-[#ff9933]" />
+        <Link to={userRole === 'admin' ? '/admin' : userRole === 'seller' ? '/seller' : '/home'} className="flex items-center gap-2 font-[Outfit] text-2xl font-bold text-[#231A16]">
+          <Rocket className="text-[#B7322A]" />
           <span className="hidden sm:block">NovaMarket</span>
         </Link>
         
@@ -82,20 +82,20 @@ export default function NavBar() {
           {userRole === 'customer' && (
             <>
               <div className="hidden md:flex items-center relative mr-2">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#cbb89d]" size={16} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7A6A5B]" size={16} />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   onKeyDown={handleSearch}
                   placeholder="Search products..."
-                  className="bg-[#1a1307]/70 border border-white/10 rounded-full py-1.5 pl-9 pr-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all w-[200px]"
+                  className="bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-full py-1.5 pl-9 pr-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all w-[200px]"
                 />
               </div>
-              <Link to="/cart" className="relative text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/5 p-2 rounded-full transition-all">
+              <Link to="/cart" className="relative text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 p-2 rounded-full transition-all">
                 <ShoppingCart size={20} />
                 {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#ff9933] text-[#2e1800] text-[10px] font-bold flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#B7322A] text-[#FDF8F0] text-[10px] font-bold flex items-center justify-center">
                     {totalItems > 9 ? '9+' : totalItems}
                   </span>
                 )}
@@ -105,19 +105,19 @@ export default function NavBar() {
 
           {/* Profile Dropdown */}
           <div className="relative">
-            <button onClick={() => setProfileOpen(!profileOpen)} className="text-[#ff9933] hover:bg-white/5 p-2 rounded-full transition-all border border-transparent hover:border-[#ff9933]/30 flex items-center justify-center bg-[#ff9933]/10">
+            <button onClick={() => setProfileOpen(!profileOpen)} className="text-[#B7322A] hover:bg-[#231a16]/5 p-2 rounded-full transition-all border border-transparent hover:border-[#B7322A]/30 flex items-center justify-center bg-[#B7322A]/10">
               <User size={20} />
             </button>
             {profileOpen && (
-              <div className="absolute right-0 mt-3 w-52 rounded-xl bg-[#221708] border border-white/10 shadow-2xl overflow-hidden animate-fade-in-up origin-top-right z-50">
-                <div className="px-4 py-3 border-b border-white/5">
-                  <p className="text-xs text-[#cbb89d] font-semibold uppercase tracking-wider">{userRole} Account</p>
+              <div className="absolute right-0 mt-3 w-52 rounded-xl bg-[#F5ECDE] border border-[#231a16]/10 shadow-2xl overflow-hidden animate-fade-in-up origin-top-right z-50">
+                <div className="px-4 py-3 border-b border-[#231a16]/5">
+                  <p className="text-xs text-[#7A6A5B] font-semibold uppercase tracking-wider">{userRole} Account</p>
                 </div>
                 <div className="py-1">
-                  <Link to={profileLink} onClick={() => setProfileOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-[#f1e7d7] hover:bg-white/5 transition-colors">
+                  <Link to={profileLink} onClick={() => setProfileOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-[#2A211B] hover:bg-[#231a16]/5 transition-colors">
                     <User size={16} /> {profileLabel}
                   </Link>
-                  <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#ffb4ab] hover:bg-white/5 transition-colors text-left">
+                  <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#B3261E] hover:bg-[#231a16]/5 transition-colors text-left">
                     <LogOut size={16} /> Sign Out
                   </button>
                 </div>
@@ -126,7 +126,7 @@ export default function NavBar() {
           </div>
 
           {/* Hamburger (mobile) */}
-          <button onClick={() => setMobileOpen(true)} className="md:hidden text-[#cbb89d] hover:text-[#fff4e6] p-2 rounded-lg hover:bg-white/5 transition-all">
+          <button onClick={() => setMobileOpen(true)} className="md:hidden text-[#7A6A5B] hover:text-[#231A16] p-2 rounded-lg hover:bg-[#231a16]/5 transition-all">
             <Menu size={22} />
           </button>
         </div>
@@ -138,10 +138,10 @@ export default function NavBar() {
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
           {/* Drawer */}
-          <div className="relative ml-auto w-[80vw] max-w-[320px] h-full bg-[#1c1206] border-l border-white/10 flex flex-col p-6 gap-4 shadow-2xl animate-fade-in-up">
+          <div className="relative ml-auto w-[80vw] max-w-[320px] h-full bg-[#F5ECDE] border-l border-[#231a16]/10 flex flex-col p-6 gap-4 shadow-2xl animate-fade-in-up">
             <div className="flex justify-between items-center mb-4">
-              <span className="font-[Outfit] text-xl font-bold text-[#fff4e6]">Menu</span>
-              <button onClick={() => setMobileOpen(false)} className="text-[#cbb89d] hover:text-[#fff4e6] p-1"><X size={22} /></button>
+              <span className="font-[Outfit] text-xl font-bold text-[#231A16]">Menu</span>
+              <button onClick={() => setMobileOpen(false)} className="text-[#7A6A5B] hover:text-[#231A16] p-1"><X size={22} /></button>
             </div>
 
             {/* Search lives in the main content on mobile (see Home) so it is
@@ -150,17 +150,17 @@ export default function NavBar() {
             <nav className="flex flex-col gap-1 flex-1">
               {links.map(l => <NavItem key={l.to} to={l.to} label={l.label} mobile />)}
               {userRole === 'customer' && (
-                <Link to="/cart" onClick={() => setMobileOpen(false)} className="px-3 py-2 rounded-lg text-[#cbb89d] hover:bg-white/5 hover:text-[#f1e7d7] transition-colors flex items-center gap-2">
-                  <ShoppingCart size={16} /> Cart {totalItems > 0 && <span className="ml-auto text-xs bg-[#ff9933] text-[#2e1800] font-bold px-2 py-0.5 rounded-full">{totalItems}</span>}
+                <Link to="/cart" onClick={() => setMobileOpen(false)} className="px-3 py-2 rounded-lg text-[#7A6A5B] hover:bg-[#231a16]/5 hover:text-[#2A211B] transition-colors flex items-center gap-2">
+                  <ShoppingCart size={16} /> Cart {totalItems > 0 && <span className="ml-auto text-xs bg-[#B7322A] text-[#FDF8F0] font-bold px-2 py-0.5 rounded-full">{totalItems}</span>}
                 </Link>
               )}
             </nav>
 
-            <div className="border-t border-white/10 pt-4 flex flex-col gap-2">
-              <Link to={profileLink} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm text-[#f1e7d7] hover:bg-white/5 rounded-lg transition-colors">
+            <div className="border-t border-[#231a16]/10 pt-4 flex flex-col gap-2">
+              <Link to={profileLink} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm text-[#2A211B] hover:bg-[#231a16]/5 rounded-lg transition-colors">
                 <User size={16} /> {profileLabel}
               </Link>
-              <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#ffb4ab] hover:bg-white/5 rounded-lg transition-colors text-left">
+              <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#B3261E] hover:bg-[#231a16]/5 rounded-lg transition-colors text-left">
                 <LogOut size={16} /> Sign Out
               </button>
             </div>

@@ -11,12 +11,12 @@ import { toProductCardList } from '../lib/productShape';
 // Built-in color treatments an admin can pick for a hero slide.
 const SLIDE_THEMES = {
   orange: {
-    accent: 'text-[#ff9933]',
-    button: 'bg-[#ff9933] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)]',
+    accent: 'text-[#B7322A]',
+    button: 'bg-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]',
   },
   gold: {
-    accent: 'text-[#ffd27a]',
-    button: 'bg-[#ffd27a] text-[#5c3f05] hover:shadow-[0_0_9px_rgba(255,210,122,0.22)]',
+    accent: 'text-[#C8901A]',
+    button: 'bg-[#C8901A] text-[#231A16] hover:shadow-[0_0_9px_rgba(224,161,28,0.22)]',
   },
 };
 
@@ -36,8 +36,8 @@ function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor,
   const [added, setAdded] = useState(false);
 
   const badgeColors = {
-    secondary: 'bg-[#c98a12]/30 text-[#ffd27a] border-[#ffd27a]/30',
-    error: 'bg-[#ffb4ab]/20 text-[#ffb4ab] border-[#ffb4ab]/30'
+    secondary: 'bg-[#B8860B]/30 text-[#C8901A] border-[#C8901A]/30',
+    error: 'bg-[#B3261E]/20 text-[#B3261E] border-[#B3261E]/30'
   };
 
   const handleAdd = () => {
@@ -49,9 +49,9 @@ function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor,
 
   return (
     <GlassCard className="flex flex-col group overflow-hidden relative">
-      <div className="relative h-[220px] bg-[#100901]/50 p-4">
+      <div className="relative h-[220px] bg-[#FDF8F0]/50 p-4">
         <Link to={`/product/${id}`}>
-          <img src={img} alt={title} className="w-full h-full object-cover rounded-xl border border-white/5 transition-transform duration-700 group-hover:scale-105" />
+          <img src={img} alt={title} className="w-full h-full object-cover rounded-xl border border-[#231a16]/5 transition-transform duration-700 group-hover:scale-105" />
         </Link>
         {badge && (
           <span className={`absolute top-6 left-6 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider border ${badgeColors[badgeColor]}`}>
@@ -61,30 +61,30 @@ function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor,
       </div>
       <div className="p-5 flex flex-col flex-1">
         <div className="flex justify-between items-start mb-2">
-          <Link to={`/product/${id}`} className="font-[Outfit] text-lg font-semibold text-[#f1e7d7] hover:text-[#ff9933] transition-colors line-clamp-1">
+          <Link to={`/product/${id}`} className="font-[Outfit] text-lg font-semibold text-[#2A211B] hover:text-[#B7322A] transition-colors line-clamp-1">
             {title}
           </Link>
           <div className="flex flex-col items-end shrink-0 pl-2">
-            <span className="font-[Outfit] text-lg font-semibold text-[#fff4e6]">{inr(price)}</span>
-            {oldPrice && <span className="text-[#cbb89d] text-[10px] line-through">{inr(oldPrice)}</span>}
+            <span className="font-[Outfit] text-lg font-semibold text-[#231A16]">{inr(price)}</span>
+            {oldPrice && <span className="text-[#7A6A5B] text-[10px] line-through">{inr(oldPrice)}</span>}
           </div>
         </div>
-        {storeName && <p className="text-[10px] text-[#9e8c73] font-[Inter] tracking-[0.05em] uppercase mb-1">by {storeName}</p>}
-        <p className="text-[#cbb89d] text-xs leading-relaxed mb-4 line-clamp-2 flex-1">
+        {storeName && <p className="text-[10px] text-[#8A7B6B] font-[Inter] tracking-[0.05em] uppercase mb-1">by {storeName}</p>}
+        <p className="text-[#7A6A5B] text-xs leading-relaxed mb-4 line-clamp-2 flex-1">
           {desc}
         </p>
         
         {adminMode ? (
           <button
             onClick={() => adminOnDelete?.(id)}
-            className="w-full py-2.5 rounded-lg bg-[#93000a]/20 border border-[#ffb4ab]/30 text-[#ffb4ab] text-xs font-semibold tracking-wider hover:bg-[#93000a]/40 transition-colors mt-auto"
+            className="w-full py-2.5 rounded-lg bg-[#FBE3E1]/20 border border-[#B3261E]/30 text-[#B3261E] text-xs font-semibold tracking-wider hover:bg-[#FBE3E1]/40 transition-colors mt-auto"
           >
             Remove Product
           </button>
         ) : (
           <button
             onClick={handleAdd}
-            className={`w-full py-2.5 rounded-lg text-xs font-semibold tracking-wider flex items-center justify-center gap-2 mt-auto transition-all ${added ? 'bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] border-transparent' : 'bg-[#34250f]/50 border border-[#ff9933]/30 text-[#fff4e6] hover:bg-gradient-to-br hover:from-[#ff9933] hover:to-[#ff7418] hover:text-[#2e1800] hover:border-transparent'}`}
+            className={`w-full py-2.5 rounded-lg text-xs font-semibold tracking-wider flex items-center justify-center gap-2 mt-auto transition-all ${added ? 'bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] border-transparent' : 'bg-[#F0E7DA]/50 border border-[#B7322A]/30 text-[#231A16] hover:bg-gradient-to-br hover:from-[#B7322A] hover:to-[#8F2620] hover:text-[#FDF8F0] hover:border-transparent'}`}
           >
             {added ? <><CheckCircle size={16} /> Added!</> : <><ShoppingCart size={16} /> Add to Cart</>}
           </button>
@@ -202,14 +202,14 @@ export default function Home() {
       {/* ══ Mobile Search ══ */}
       <section className="px-6 pt-6 md:hidden">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#cbb89d]" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7A6A5B]" size={18} />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearch}
             placeholder="Search products..."
-            className="w-full bg-[#1a1307]/70 border border-white/10 rounded-full py-3 pl-11 pr-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]"
+            className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-full py-3 pl-11 pr-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
           />
         </div>
       </section>
@@ -225,13 +225,13 @@ export default function Home() {
               return (
                 <div key={slide.id} className="shrink-0 w-[85vw] md:w-[60vw] h-[350px] snap-center rounded-3xl relative overflow-hidden group">
                   <img src={slide.imageUrl} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" alt={slide.title} />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#100901]/90 via-[#100901]/50 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#FDF8F0]/90 via-[#FDF8F0]/50 to-transparent" />
                   <div className="absolute inset-0 p-12 flex flex-col justify-center">
                     {slide.eyebrow && (
                       <span className={`${theme.accent} font-bold tracking-widest text-xs uppercase mb-4`}>{slide.eyebrow}</span>
                     )}
-                    <h2 className="text-glow font-[Outfit] text-5xl font-bold text-white mb-4 max-w-lg">{slide.title}</h2>
-                    {slide.description && <p className="text-[#cbb89d] max-w-md mb-8">{slide.description}</p>}
+                    <h2 className="text-glow font-[Outfit] text-5xl font-bold text-[#231A16] mb-4 max-w-lg">{slide.title}</h2>
+                    {slide.description && <p className="text-[#7A6A5B] max-w-md mb-8">{slide.description}</p>}
                     {slide.buttonLabel && (
                       isExternal ? (
                         <a href={slide.buttonLink} target="_blank" rel="noopener noreferrer" className={buttonClass}>{slide.buttonLabel}</a>
@@ -251,8 +251,8 @@ export default function Home() {
       <section className={`flex-1 px-6 md:px-12 pb-24 ${slides.length === 0 ? 'pt-8 md:pt-10' : ''}`}>
         <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-8">
           <div>
-            <h2 className="font-[Outfit] text-2xl font-semibold text-[#fff4e6]">Discover Products</h2>
-            <p className="text-[#cbb89d] text-sm mt-1">Browse our entire futuristic catalog.</p>
+            <h2 className="font-[Outfit] text-2xl font-semibold text-[#231A16]">Discover Products</h2>
+            <p className="text-[#7A6A5B] text-sm mt-1">Browse our entire futuristic catalog.</p>
           </div>
           {/* Category Filter Tabs */}
           <div className="flex gap-2 flex-wrap">
@@ -262,8 +262,8 @@ export default function Home() {
                 onClick={() => setActiveCategory(cat)}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all ${
                   activeCategory === cat
-                    ? 'bg-[#ff9933]/20 text-[#ff9933] border-[#ff9933]/40'
-                    : 'text-[#cbb89d] border-white/10 hover:text-[#f1e7d7] hover:border-white/20'
+                    ? 'bg-[#B7322A]/20 text-[#B7322A] border-[#B7322A]/40'
+                    : 'text-[#7A6A5B] border-[#231a16]/10 hover:text-[#2A211B] hover:border-[#231a16]/20'
                 }`}
               >
                 {cat}
@@ -273,10 +273,10 @@ export default function Home() {
         </div>
 
         {loading && (
-          <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading products...</div>
+          <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading products...</div>
         )}
         {error && !loading && (
-          <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{error}</div>
+          <div className="flex items-center justify-center h-40 text-[#B3261E]">{error}</div>
         )}
         {!loading && !error && filtered.length > 0 && (
           <>
@@ -286,7 +286,7 @@ export default function Home() {
                 <button
                   onClick={loadMore}
                   disabled={loadingMore}
-                  className="px-8 py-3 rounded-full border border-[#ff9933]/40 text-[#ff9933] text-sm font-bold tracking-wider hover:bg-[#ff9933]/10 hover:shadow-[0_0_9px_rgba(255,153,51,0.15)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-8 py-3 rounded-full border border-[#B7322A]/40 text-[#B7322A] text-sm font-bold tracking-wider hover:bg-[#B7322A]/10 hover:shadow-[0_0_9px_rgba(183,50,42,0.15)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loadingMore ? 'Loading more...' : 'Load More Products'}
                 </button>
@@ -295,7 +295,7 @@ export default function Home() {
           </>
         )}
         {!loading && !error && filtered.length === 0 && (
-          <div className="flex items-center justify-center h-40 text-[#cbb89d]">No products in this category.</div>
+          <div className="flex items-center justify-center h-40 text-[#7A6A5B]">No products in this category.</div>
         )}
       </section>
     </div>

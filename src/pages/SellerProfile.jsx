@@ -70,45 +70,45 @@ export default function SellerProfile() {
     }
   };
 
-  const inputClass = 'w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]';
-  const labelClass = 'block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2';
+  const inputClass = 'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]';
+  const labelClass = 'block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2';
 
   return (
     <div className="flex-grow w-full max-w-[1440px] mx-auto px-4 md:px-16 py-20 flex flex-col gap-10 animate-fade-in-up">
 
-      <section className="w-full flex flex-col md:flex-row items-start md:items-center gap-6 glass-panel p-6 rounded-xl border-t-4 border-t-[#ff9933]">
-        <div className="w-24 h-24 rounded-full bg-[#170e03] border-2 border-[#ff9933]/50 overflow-hidden shrink-0 shadow-[0_0_7px_rgba(255,153,51,0.11)] flex items-center justify-center">
+      <section className="w-full flex flex-col md:flex-row items-start md:items-center gap-6 glass-panel p-6 rounded-xl border-t-4 border-t-[#B7322A]">
+        <div className="w-24 h-24 rounded-full bg-[#FDF8F0] border-2 border-[#B7322A]/50 overflow-hidden shrink-0 shadow-[0_0_7px_rgba(183,50,42,0.11)] flex items-center justify-center">
           {user?.avatarUrl ? (
             <img src={user.avatarUrl} alt="Seller Profile" className="w-full h-full object-cover" />
           ) : (
-            <span className="font-[Outfit] text-4xl font-bold text-[#ff9933]">
+            <span className="font-[Outfit] text-4xl font-bold text-[#B7322A]">
               {(user?.fullName || 'S').charAt(0).toUpperCase()}
             </span>
           )}
         </div>
         <div className="flex-grow">
           <div className="flex items-center gap-3">
-            <h1 className="font-[Outfit] text-3xl md:text-5xl font-bold text-[#fff4e6] tracking-tight">
+            <h1 className="font-[Outfit] text-3xl md:text-5xl font-bold text-[#231A16] tracking-tight">
               {user?.fullName || 'Seller'}
             </h1>
-            <CheckCircle className="text-[#ff9933]" size={24} />
+            <CheckCircle className="text-[#B7322A]" size={24} />
           </div>
-          <p className="font-[Inter] text-lg text-[#ff9933] mt-1">
+          <p className="font-[Inter] text-lg text-[#B7322A] mt-1">
             {store?.name || (loading ? 'Loading store...' : 'Verified Seller')}
-            {store && <span className="text-[#cbb89d] text-sm"> • Seller since {formatSince(store.createdAt)}</span>}
+            {store && <span className="text-[#7A6A5B] text-sm"> • Seller since {formatSince(store.createdAt)}</span>}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => setAccountOpen(true)}
-            className="px-6 py-3 rounded-lg border border-white/15 text-[#f1e7d7] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase hover:bg-white/5 transition-all duration-300"
+            className="px-6 py-3 rounded-lg border border-[#231a16]/15 text-[#2A211B] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase hover:bg-[#231a16]/5 transition-all duration-300"
           >
             Edit Account
           </button>
           <button
             onClick={openEdit}
             disabled={!store}
-            className="px-6 py-3 bg-gradient-to-r from-[#9c5214] to-[#ff9933] text-[#2e1800] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-lg hover:shadow-[0_0_9px_rgba(255,153,51,0.17)] transition-all duration-300 disabled:opacity-50"
+            className="px-6 py-3 bg-gradient-to-r from-[#7A1F1A] to-[#B7322A] text-[#FDF8F0] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-lg hover:shadow-[0_0_9px_rgba(183,50,42,0.17)] transition-all duration-300 disabled:opacity-50"
           >
             Edit Store Profile
           </button>
@@ -119,36 +119,36 @@ export default function SellerProfile() {
 
         <div className="lg:col-span-8 glass-panel p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 min-h-[280px]">
           <div className="flex justify-between items-start mb-6">
-            <div className="flex items-center gap-3 text-[#fff4e6]">
+            <div className="flex items-center gap-3 text-[#231A16]">
               <Store size={28} className="group-hover:scale-110 transition-transform" />
               <h2 className="font-[Outfit] text-2xl font-semibold">Store Details</h2>
             </div>
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading store details...</div>
+            <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading store details...</div>
           ) : error ? (
-            <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{error}</div>
+            <div className="flex items-center justify-center h-40 text-[#B3261E]">{error}</div>
           ) : (
-            <div className="bg-[#34250f]/50 p-4 rounded-lg border border-white/5 space-y-4">
+            <div className="bg-[#F0E7DA]/50 p-4 rounded-lg border border-[#231a16]/5 space-y-4">
               <div>
-                <span className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#cbb89d] uppercase block mb-1">Store URL</span>
-                <p className="text-[#ff9933]">novamarket.com/store/{slugify(store.name) || shortId(store.id)}</p>
+                <span className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#7A6A5B] uppercase block mb-1">Store URL</span>
+                <p className="text-[#B7322A]">novamarket.com/store/{slugify(store.name) || shortId(store.id)}</p>
               </div>
               <div>
-                <span className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#cbb89d] uppercase block mb-1">Business Description</span>
-                <p className="text-[#f1e7d7] text-sm leading-relaxed">
+                <span className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#7A6A5B] uppercase block mb-1">Business Description</span>
+                <p className="text-[#2A211B] text-sm leading-relaxed">
                   {store.description || 'No description yet — click "Edit Store Profile" to tell customers what you sell.'}
                 </p>
               </div>
-              <div className="flex gap-6 border-t border-white/10 pt-4 mt-2">
+              <div className="flex gap-6 border-t border-[#231a16]/10 pt-4 mt-2">
                 <div>
-                  <span className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#cbb89d] uppercase block mb-1">Store ID</span>
-                  <p className="text-[#f1e7d7]">{shortId(store.id)}</p>
+                  <span className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#7A6A5B] uppercase block mb-1">Store ID</span>
+                  <p className="text-[#2A211B]">{shortId(store.id)}</p>
                 </div>
                 <div>
-                  <span className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#cbb89d] uppercase block mb-1">Member Since</span>
-                  <p className="text-[#f1e7d7]">{formatSince(store.createdAt)}</p>
+                  <span className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#7A6A5B] uppercase block mb-1">Member Since</span>
+                  <p className="text-[#2A211B]">{formatSince(store.createdAt)}</p>
                 </div>
               </div>
             </div>
@@ -157,47 +157,47 @@ export default function SellerProfile() {
 
         <div className="lg:col-span-4 glass-panel p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 min-h-[280px]">
           <div className="flex justify-between items-start mb-6">
-            <div className="flex flex-col gap-2 text-[#ffd27a]">
+            <div className="flex flex-col gap-2 text-[#C8901A]">
               <Shield size={28} className="group-hover:scale-110 transition-transform" />
               <h2 className="font-[Outfit] text-2xl font-semibold mt-2">Account Security</h2>
             </div>
           </div>
           <div className="space-y-4">
-            <button className="w-full text-left bg-white/5 hover:bg-white/10 p-3 rounded-lg transition-colors border border-white/5">
-              <span className="font-[Inter] text-sm text-[#f1e7d7] block">Change Password</span>
+            <button className="w-full text-left bg-[#231a16]/5 hover:bg-[#231a16]/10 p-3 rounded-lg transition-colors border border-[#231a16]/5">
+              <span className="font-[Inter] text-sm text-[#2A211B] block">Change Password</span>
             </button>
-            <button className="w-full text-left bg-[#34250f]/30 p-3 rounded-lg border border-white/5">
-              <span className="font-[Inter] text-sm text-[#cbb89d] block">2-Step Verification Not Configured</span>
+            <button className="w-full text-left bg-[#F0E7DA]/30 p-3 rounded-lg border border-[#231a16]/5">
+              <span className="font-[Inter] text-sm text-[#7A6A5B] block">2-Step Verification Not Configured</span>
             </button>
-            <button className="w-full text-left bg-white/5 hover:bg-white/10 p-3 rounded-lg transition-colors border border-white/5">
-              <span className="font-[Inter] text-sm text-[#f1e7d7] block">Active Sessions</span>
+            <button className="w-full text-left bg-[#231a16]/5 hover:bg-[#231a16]/10 p-3 rounded-lg transition-colors border border-[#231a16]/5">
+              <span className="font-[Inter] text-sm text-[#2A211B] block">Active Sessions</span>
             </button>
           </div>
         </div>
 
         <div className="lg:col-span-6 glass-panel p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 min-h-[200px]">
           <div className="flex justify-between items-start mb-4">
-            <div className="flex items-center gap-3 text-[#ff7418]">
+            <div className="flex items-center gap-3 text-[#8F2620]">
               <MapPin size={28} className="group-hover:scale-110 transition-transform" />
               <h2 className="font-[Outfit] text-xl font-semibold">Warehouse / Return Address</h2>
             </div>
-            <ChevronRight size={24} className="text-[#cbb89d] group-hover:text-[#ff7418] transition-colors" />
+            <ChevronRight size={24} className="text-[#7A6A5B] group-hover:text-[#8F2620] transition-colors" />
           </div>
-          <div className="bg-[#34250f]/30 p-3 rounded-lg border border-white/5 flex items-center justify-center h-24">
-            <p className="text-[#9e8c73] text-sm">No return address configured yet.</p>
+          <div className="bg-[#F0E7DA]/30 p-3 rounded-lg border border-[#231a16]/5 flex items-center justify-center h-24">
+            <p className="text-[#8A7B6B] text-sm">No return address configured yet.</p>
           </div>
         </div>
 
         <div className="lg:col-span-6 glass-panel p-6 rounded-xl flex flex-col justify-between group transition-all duration-300 min-h-[200px]">
           <div className="flex justify-between items-start mb-4">
-            <div className="flex items-center gap-3 text-[#fffaf0]">
+            <div className="flex items-center gap-3 text-[#231A16]">
               <Wallet size={28} className="group-hover:scale-110 transition-transform" />
               <h2 className="font-[Outfit] text-xl font-semibold">Payout Methods</h2>
             </div>
-            <ChevronRight size={24} className="text-[#cbb89d] group-hover:text-[#fffaf0] transition-colors" />
+            <ChevronRight size={24} className="text-[#7A6A5B] group-hover:text-[#231A16] transition-colors" />
           </div>
-          <div className="bg-[#34250f]/30 p-3 rounded-lg border border-white/5 flex items-center justify-center h-24">
-            <p className="text-[#9e8c73] text-sm">Payout methods are coming soon.</p>
+          <div className="bg-[#F0E7DA]/30 p-3 rounded-lg border border-[#231a16]/5 flex items-center justify-center h-24">
+            <p className="text-[#8A7B6B] text-sm">Payout methods are coming soon.</p>
           </div>
         </div>
 
@@ -213,14 +213,14 @@ export default function SellerProfile() {
         >
           <div className="glass-panel rounded-xl w-full max-w-lg animate-scale-in p-0 overflow-hidden">
             <form onSubmit={handleSave} onMouseDown={(e) => e.stopPropagation()} className="flex flex-col">
-              <div className="flex items-start justify-between px-6 md:px-8 py-5 border-b border-white/10">
+              <div className="flex items-start justify-between px-6 md:px-8 py-5 border-b border-[#231a16]/10">
                 <div>
-                  <h2 className="font-[Outfit] text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
-                    <Store className="text-[#ff9933]" size={24} /> Edit Store Profile
+                  <h2 className="font-[Outfit] text-2xl font-bold text-[#231A16] flex items-center gap-2">
+                    <Store className="text-[#B7322A]" size={24} /> Edit Store Profile
                   </h2>
-                  <p className="text-[#cbb89d] text-xs mt-1">Update how your storefront appears to customers.</p>
+                  <p className="text-[#7A6A5B] text-xs mt-1">Update how your storefront appears to customers.</p>
                 </div>
-                <button type="button" onClick={() => setEditOpen(false)} className="p-2 -mr-2 rounded-lg text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/5 transition-colors" aria-label="Close">
+                <button type="button" onClick={() => setEditOpen(false)} className="p-2 -mr-2 rounded-lg text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors" aria-label="Close">
                   <X size={22} />
                 </button>
               </div>
@@ -242,14 +242,14 @@ export default function SellerProfile() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 px-6 md:px-8 py-4 border-t border-white/10 bg-[#100901]/30">
-                <button type="button" onClick={() => setEditOpen(false)} className="px-6 py-2.5 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors">
+              <div className="flex items-center justify-end gap-3 px-6 md:px-8 py-4 border-t border-[#231a16]/10 bg-[#FDF8F0]/30">
+                <button type="button" onClick={() => setEditOpen(false)} className="px-6 py-2.5 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!editName.trim() || busy}
-                  className={`px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all ${editName.trim() && !busy ? 'bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)]' : 'bg-[#34250f]/50 text-[#6f6048] cursor-not-allowed'}`}
+                  className={`px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all ${editName.trim() && !busy ? 'bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]' : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'}`}
                 >
                   <Save size={18} /> {busy ? 'Saving...' : 'Save Changes'}
                 </button>

@@ -2,15 +2,15 @@ import { useToastStore } from '../store/toastStore';
 import { CheckCircle, XCircle, Info, X } from 'lucide-react';
 
 const icons = {
-  success: <CheckCircle size={18} className="text-[#ff9933] shrink-0" />,
-  error:   <XCircle size={18} className="text-[#ffb4ab] shrink-0" />,
-  info:    <Info size={18} className="text-[#ffd27a] shrink-0" />,
+  success: <CheckCircle size={18} className="text-[#B7322A] shrink-0" />,
+  error:   <XCircle size={18} className="text-[#B3261E] shrink-0" />,
+  info:    <Info size={18} className="text-[#C8901A] shrink-0" />,
 };
 
 const borders = {
-  success: 'border-l-[#ff9933]',
-  error:   'border-l-[#ffb4ab]',
-  info:    'border-l-[#ffd27a]',
+  success: 'border-l-[#B7322A]',
+  error:   'border-l-[#B3261E]',
+  info:    'border-l-[#C8901A]',
 };
 
 export default function ToastContainer() {
@@ -21,13 +21,13 @@ export default function ToastContainer() {
       {toasts.map(toast => (
         <div
           key={toast.id}
-          className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl bg-[#221708]/95 backdrop-blur-xl border border-white/10 border-l-4 ${borders[toast.type]} shadow-xl max-w-sm animate-fade-in-up`}
+          className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl bg-[#F5ECDE]/95 backdrop-blur-xl border border-[#231a16]/10 border-l-4 ${borders[toast.type]} shadow-xl max-w-sm animate-fade-in-up`}
         >
           {icons[toast.type]}
-          <p className="text-sm text-[#f1e7d7] font-[Inter] font-medium flex-1">{toast.message}</p>
+          <p className="text-sm text-[#2A211B] font-[Inter] font-medium flex-1">{toast.message}</p>
           <button
             onClick={() => removeToast(toast.id)}
-            className="text-[#9e8c73] hover:text-[#fff4e6] transition-colors ml-2"
+            className="text-[#8A7B6B] hover:text-[#231A16] transition-colors ml-2"
           >
             <X size={14} />
           </button>

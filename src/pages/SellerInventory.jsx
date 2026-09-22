@@ -161,11 +161,11 @@ export default function SellerInventory() {
   const getApprovalBadge = (approval) => {
     switch (approval) {
       case 'approved':
-        return <span className="flex items-center gap-1.5 text-[#ffbf66] bg-[#ff9933]/10 border border-[#ff9933]/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"><CheckCircle size={12} /> Approved</span>;
+        return <span className="flex items-center gap-1.5 text-[#E0A11C] bg-[#B7322A]/10 border border-[#B7322A]/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"><CheckCircle size={12} /> Approved</span>;
       case 'rejected':
-        return <span className="flex items-center gap-1.5 text-[#ffb4ab] bg-[#93000a]/20 border border-[#ffb4ab]/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"><XCircle size={12} /> Rejected</span>;
+        return <span className="flex items-center gap-1.5 text-[#B3261E] bg-[#FBE3E1]/20 border border-[#B3261E]/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"><XCircle size={12} /> Rejected</span>;
       default:
-        return <span className="flex items-center gap-1.5 text-[#ffd27a] bg-[#c98a12]/20 border border-[#ffd27a]/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"><Clock size={12} /> Pending</span>;
+        return <span className="flex items-center gap-1.5 text-[#C8901A] bg-[#B8860B]/20 border border-[#C8901A]/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"><Clock size={12} /> Pending</span>;
     }
   };
 
@@ -173,12 +173,12 @@ export default function SellerInventory() {
     <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-12 animate-fade-in-up">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
         <div>
-          <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#fff4e6] mb-2 text-glow">Inventory Management</h1>
-          <p className="text-[#cbb89d]">Manage your product listings, update stock levels, and add new items.</p>
+          <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Inventory Management</h1>
+          <p className="text-[#7A6A5B]">Manage your product listings, update stock levels, and add new items.</p>
         </div>
       <button
         onClick={() => openModal()}
-        className="py-3 px-6 rounded-lg bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] font-[Outfit] text-base font-semibold hover:shadow-[0_0_9px_rgba(255,153,51,0.22)] transition-all flex items-center justify-center gap-2 w-full md:w-auto"
+        className="py-3 px-6 rounded-lg bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] font-[Outfit] text-base font-semibold hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all flex items-center justify-center gap-2 w-full md:w-auto"
       >
           <PlusCircle size={20} /> Add New Product
         </button>
@@ -187,37 +187,37 @@ export default function SellerInventory() {
       <GlassCard className="p-6 md:p-8" hover={false}>
 
         {/* Toolbar */}
-        <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-8 pb-6 border-b border-white/10">
+        <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-8 pb-6 border-b border-[#231a16]/10">
           <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#cbb89d]" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7A6A5B]" size={18} />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search products by name, category or ID..."
-              className="w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all"
+              className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 pl-10 pr-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all"
             />
           </div>
           <div className="flex gap-4 w-full md:w-auto items-center">
-            <span className="text-xs text-[#9e8c73] whitespace-nowrap hidden md:block">
+            <span className="text-xs text-[#8A7B6B] whitespace-nowrap hidden md:block">
               {filtered.length} {filtered.length === 1 ? 'item' : 'items'}
             </span>
-            <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#34250f]/50 border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors">
+            <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#F0E7DA]/50 border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
               <Filter size={16} /> Filter
             </button>
           </div>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-40 text-[#cbb89d]">Loading inventory...</div>
+          <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading inventory...</div>
         ) : error ? (
-          <div className="flex items-center justify-center h-40 text-[#ffb4ab]">{error}</div>
+          <div className="flex items-center justify-center h-40 text-[#B3261E]">{error}</div>
         ) : (
         /* Inventory Table */
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[820px]">
             <thead>
-              <tr className="border-b border-white/10 text-[#cbb89d] text-xs uppercase tracking-wider bg-[#100901]/30">
+              <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider bg-[#FDF8F0]/30">
                 <th className="py-4 px-4 font-semibold rounded-tl-lg">Product Name</th>
                 <th className="py-4 px-4 font-semibold">Category</th>
                 <th className="py-4 px-4 font-semibold text-right">Price</th>
@@ -230,40 +230,40 @@ export default function SellerInventory() {
               {filtered.map((item) => {
                 const finalPrice = item.discount > 0 ? item.price * (1 - item.discount / 100) : item.price;
                 return (
-                  <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                  <tr key={item.id} className="border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors group">
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-lg overflow-hidden bg-[#100901]/60 border border-white/10 flex items-center justify-center shrink-0">
+                        <div className="w-11 h-11 rounded-lg overflow-hidden bg-[#FDF8F0]/60 border border-[#231a16]/10 flex items-center justify-center shrink-0">
                           {item.images && item.images[0]
                             ? <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
-                            : <Package size={18} className="text-[#4b3d2a]" />}
+                            : <Package size={18} className="text-[#C4B5A2]" />}
                         </div>
-                        <span className="font-[Outfit] text-base font-semibold text-[#f1e7d7]">{item.name}</span>
+                        <span className="font-[Outfit] text-base font-semibold text-[#2A211B]">{item.name}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-[#cbb89d] text-sm">{item.category}</td>
+                    <td className="py-4 px-4 text-[#7A6A5B] text-sm">{item.category}</td>
                     <td className="py-4 px-4 text-right">
                       <div className="flex flex-col items-end">
-                        <span className="text-[#ff9933] font-semibold">{inr(finalPrice)}</span>
+                        <span className="text-[#B7322A] font-semibold">{inr(finalPrice)}</span>
                         {item.discount > 0 && (
-                          <span className="text-[10px] text-[#cbb89d] flex items-center gap-1">
+                          <span className="text-[10px] text-[#7A6A5B] flex items-center gap-1">
                             <span className="line-through">{inr(item.price)}</span>
-                            <span className="text-[#ffbf66] font-bold">-{item.discount}%</span>
+                            <span className="text-[#E0A11C] font-bold">-{item.discount}%</span>
                           </span>
                         )}
                       </div>
                     </td>
                     <td className="py-4 px-4 text-center">
-                      <span className={item.stock === 0 ? 'text-[#ffb4ab] font-semibold' : 'text-[#fff4e6]'}>{item.stock}</span>
+                      <span className={item.stock === 0 ? 'text-[#B3261E] font-semibold' : 'text-[#231A16]'}>{item.stock}</span>
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex flex-col items-start gap-1.5">
                         {getApprovalBadge(item.approvalStatus)}
                         {item.status === 'Out of Stock' && (
-                          <span className="text-[10px] text-[#9e8c73] uppercase tracking-wider">Out of stock</span>
+                          <span className="text-[10px] text-[#8A7B6B] uppercase tracking-wider">Out of stock</span>
                         )}
                         {item.approvalStatus === 'rejected' && item.rejectionReason && (
-                          <span className="text-[10px] text-[#ffb4ab]/80 max-w-[220px]">{item.rejectionReason}</span>
+                          <span className="text-[10px] text-[#B3261E]/80 max-w-[220px]">{item.rejectionReason}</span>
                         )}
                       </div>
                     </td>
@@ -273,16 +273,16 @@ export default function SellerInventory() {
                           <button
                             onClick={() => handleResubmit(item)}
                             disabled={resubmittingId === item.id}
-                            className="px-3 py-1.5 rounded-lg bg-[#ff9933]/10 text-[#ff9933] hover:bg-[#ff9933]/20 text-[10px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                            className="px-3 py-1.5 rounded-lg bg-[#B7322A]/10 text-[#B7322A] hover:bg-[#B7322A]/20 text-[10px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
                             title="Resubmit for approval"
                           >
                             {resubmittingId === item.id ? '...' : 'Resubmit'}
                           </button>
                         )}
-                        <button onClick={() => openModal(item)} className="p-2 rounded-lg bg-[#ff9933]/10 text-[#ff9933] hover:bg-[#ff9933]/20 transition-colors" title="Edit Product">
+                        <button onClick={() => openModal(item)} className="p-2 rounded-lg bg-[#B7322A]/10 text-[#B7322A] hover:bg-[#B7322A]/20 transition-colors" title="Edit Product">
                           <Edit size={16} />
                         </button>
-                        <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg bg-[#ffb4ab]/10 text-[#ffb4ab] hover:bg-[#ffb4ab]/20 transition-colors" title="Delete Product">
+                        <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg bg-[#B3261E]/10 text-[#B3261E] hover:bg-[#B3261E]/20 transition-colors" title="Delete Product">
                           <Trash2 size={16} />
                         </button>
                       </div>
@@ -293,8 +293,8 @@ export default function SellerInventory() {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={6} className="py-16 text-center">
-                    <Package size={40} className="mx-auto text-[#4b3d2a] mb-3" />
-                    <p className="text-[#cbb89d]">
+                    <Package size={40} className="mx-auto text-[#C4B5A2] mb-3" />
+                    <p className="text-[#7A6A5B]">
                       {query ? `No products match "${query}".` : 'No products yet. Click "Add New Product" to get started.'}
                     </p>
                   </td>
@@ -390,8 +390,8 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
     });
   };
 
-  const inputClass = 'w-full bg-[#1a1307]/70 border border-white/10 rounded-lg py-2.5 px-4 text-sm text-[#f1e7d7] outline-none focus:border-[#ff9933] transition-all placeholder:text-[#6f6048]';
-  const labelClass = 'block text-[#cbb89d] text-xs font-semibold uppercase tracking-wider mb-2';
+  const inputClass = 'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]';
+  const labelClass = 'block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2';
 
   return (
     <div
@@ -409,16 +409,16 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
         <form onSubmit={handleSubmit} onMouseDown={(e) => e.stopPropagation()} className="flex flex-col min-h-0">
 
           {/* Header */}
-          <div className="shrink-0 flex items-start justify-between px-6 md:px-8 py-5 border-b border-white/10">
+          <div className="shrink-0 flex items-start justify-between px-6 md:px-8 py-5 border-b border-[#231a16]/10">
             <div>
-              <h2 className="font-[Outfit] text-2xl font-bold text-[#fff4e6] flex items-center gap-2">
-                <PlusCircle className="text-[#ff9933]" size={24} /> {isEdit ? 'Edit Product' : 'Add New Product'}
+              <h2 className="font-[Outfit] text-2xl font-bold text-[#231A16] flex items-center gap-2">
+                <PlusCircle className="text-[#B7322A]" size={24} /> {isEdit ? 'Edit Product' : 'Add New Product'}
               </h2>
-              <p className="text-[#cbb89d] text-xs mt-1">
+              <p className="text-[#7A6A5B] text-xs mt-1">
                 {isEdit ? 'Update the details of your listed item.' : 'Fill in the details to list a new item in your store.'}
               </p>
             </div>
-            <button type="button" onClick={onClose} className="p-2 -mr-2 rounded-lg text-[#cbb89d] hover:text-[#fff4e6] hover:bg-white/5 transition-colors" aria-label="Close">
+            <button type="button" onClick={onClose} className="p-2 -mr-2 rounded-lg text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors" aria-label="Close">
               <X size={22} />
             </button>
           </div>
@@ -434,36 +434,36 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
                 onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
                 onDragLeave={() => setDragging(false)}
                 onDrop={(e) => { e.preventDefault(); setDragging(false); addFiles(e.dataTransfer.files); }}
-                className={`cursor-pointer rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1.5 py-8 px-4 text-center transition-all ${dragging ? 'border-[#ff9933] bg-[#ff9933]/5' : 'border-white/15 hover:border-[#ff9933]/40 hover:bg-white/[0.03]'}`}
+                className={`cursor-pointer rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1.5 py-8 px-4 text-center transition-all ${dragging ? 'border-[#B7322A] bg-[#B7322A]/5' : 'border-[#231a16]/15 hover:border-[#B7322A]/40 hover:bg-white/[0.03]'}`}
               >
-                <UploadCloud size={30} className="text-[#ff9933]" />
-                <p className="text-sm text-[#f1e7d7] font-semibold">Drop images here or click to browse</p>
-                <p className="text-[11px] text-[#9e8c73]">PNG, JPG or WEBP — add as many as you like</p>
+                <UploadCloud size={30} className="text-[#B7322A]" />
+                <p className="text-sm text-[#2A211B] font-semibold">Drop images here or click to browse</p>
+                <p className="text-[11px] text-[#8A7B6B]">PNG, JPG or WEBP — add as many as you like</p>
                 <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
               </div>
 
               {images.length > 0 && (
                 <div className="flex gap-3 flex-wrap mt-3">
                   {images.map((img, idx) => (
-                    <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border border-white/10 group/thumb">
+                    <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border border-[#231a16]/10 group/thumb">
                       <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); removeImage(idx); }}
-                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 text-white flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity hover:bg-[#ffb4ab] hover:text-[#690005]"
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 text-white flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity hover:bg-[#B3261E] hover:text-[#F7D5D2]"
                         aria-label={`Remove ${img.name}`}
                       >
                         <X size={12} />
                       </button>
                       {idx === 0 && (
-                        <span className="absolute bottom-0 inset-x-0 bg-[#ff9933]/85 text-[#2e1800] text-[9px] font-bold text-center py-0.5 tracking-wider">COVER</span>
+                        <span className="absolute bottom-0 inset-x-0 bg-[#B7322A]/85 text-[#FDF8F0] text-[9px] font-bold text-center py-0.5 tracking-wider">COVER</span>
                       )}
                     </div>
                   ))}
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-20 h-20 rounded-lg border border-dashed border-white/15 flex items-center justify-center text-[#9e8c73] hover:border-[#ff9933]/40 hover:text-[#ff9933] transition-colors"
+                    className="w-20 h-20 rounded-lg border border-dashed border-[#231a16]/15 flex items-center justify-center text-[#8A7B6B] hover:border-[#B7322A]/40 hover:text-[#B7322A] transition-colors"
                     aria-label="Add more images"
                   >
                     <ImagePlus size={20} />
@@ -474,14 +474,14 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
 
             {/* Name */}
             <div>
-              <label className={labelClass}>Product Name <span className="text-[#ffb4ab]">*</span></label>
+              <label className={labelClass}>Product Name <span className="text-[#B3261E]">*</span></label>
               <input
-                className={`${inputClass} ${touched && !nameValid ? 'border-[#ffb4ab]/60' : ''}`}
+                className={`${inputClass} ${touched && !nameValid ? 'border-[#B3261E]/60' : ''}`}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Nova Pro X-15 Gaming Laptop"
               />
-              {touched && !nameValid && <p className="text-[11px] text-[#ffb4ab] mt-1.5">Please enter a product name.</p>}
+              {touched && !nameValid && <p className="text-[11px] text-[#B3261E] mt-1.5">Please enter a product name.</p>}
             </div>
 
             {/* Category + Stock */}
@@ -491,9 +491,9 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
                 <div className="relative">
                   <select className={`${inputClass} appearance-none pr-10 cursor-pointer`} value={category} onChange={(e) => setCategory(e.target.value)}>
                     {categories.length === 0 && <option value="">No categories</option>}
-                    {categories.map((c) => <option key={c.id} value={c.name} className="bg-[#1c1206]">{c.name}</option>)}
+                    {categories.map((c) => <option key={c.id} value={c.name} className="bg-[#F5ECDE]">{c.name}</option>)}
                   </select>
-                  <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#cbb89d] pointer-events-none" />
+                  <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A6A5B] pointer-events-none" />
                 </div>
               </div>
               <div>
@@ -505,15 +505,15 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
             {/* Price + Discount */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className={labelClass}>Price (INR) <span className="text-[#ffb4ab]">*</span></label>
+                <label className={labelClass}>Price (INR) <span className="text-[#B3261E]">*</span></label>
                 <input
                   type="number" min="0" step="0.01"
-                  className={`${inputClass} ${touched && !priceValid ? 'border-[#ffb4ab]/60' : ''}`}
+                  className={`${inputClass} ${touched && !priceValid ? 'border-[#B3261E]/60' : ''}`}
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   placeholder="0.00"
                 />
-                {touched && !priceValid && <p className="text-[11px] text-[#ffb4ab] mt-1.5">Enter a price greater than 0.</p>}
+                {touched && !priceValid && <p className="text-[11px] text-[#B3261E] mt-1.5">Enter a price greater than 0.</p>}
               </div>
               <div>
                 <label className={labelClass}>Discount (%)</label>
@@ -523,13 +523,13 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
 
             {/* Live sale-price preview */}
             {priceValid && (
-              <div className="flex flex-wrap items-center gap-2 -mt-1 text-sm bg-[#100901]/40 border border-white/5 rounded-lg px-4 py-3">
-                <span className="text-[#cbb89d]">Customers pay</span>
-                <span className="text-[#ff9933] font-[Outfit] font-bold text-lg">{inr(salePrice)}</span>
+              <div className="flex flex-wrap items-center gap-2 -mt-1 text-sm bg-[#FDF8F0]/40 border border-[#231a16]/5 rounded-lg px-4 py-3">
+                <span className="text-[#7A6A5B]">Customers pay</span>
+                <span className="text-[#B7322A] font-[Outfit] font-bold text-lg">{inr(salePrice)}</span>
                 {discountNum > 0 && (
                   <>
-                    <span className="text-[#9e8c73] line-through text-xs">{inr(priceNum)}</span>
-                    <span className="text-[#ffbf66] text-xs bg-[#ff9933]/10 border border-[#ff9933]/20 px-2 py-0.5 rounded-full font-semibold">
+                    <span className="text-[#8A7B6B] line-through text-xs">{inr(priceNum)}</span>
+                    <span className="text-[#E0A11C] text-xs bg-[#B7322A]/10 border border-[#B7322A]/20 px-2 py-0.5 rounded-full font-semibold">
                       save {inr(priceNum - salePrice)} ({discountNum}% off)
                     </span>
                   </>
@@ -542,9 +542,9 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
               <label className={labelClass}>Status</label>
               <div className="relative md:w-1/2">
                 <select className={`${inputClass} appearance-none pr-10 cursor-pointer`} value={status} onChange={(e) => setStatus(e.target.value)}>
-                  {STATUSES.map((s) => <option key={s} value={s} className="bg-[#1c1206]">{s}</option>)}
+                  {STATUSES.map((s) => <option key={s} value={s} className="bg-[#F5ECDE]">{s}</option>)}
                 </select>
-                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#cbb89d] pointer-events-none" />
+                <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A6A5B] pointer-events-none" />
               </div>
             </div>
 
@@ -562,14 +562,14 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
           </div>
 
           {/* Footer */}
-          <div className="shrink-0 flex items-center justify-end gap-3 px-6 md:px-8 py-4 border-t border-white/10 bg-[#100901]/30">
-            <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-lg border border-white/10 text-[#f1e7d7] text-sm font-semibold hover:bg-white/5 transition-colors">
+          <div className="shrink-0 flex items-center justify-end gap-3 px-6 md:px-8 py-4 border-t border-[#231a16]/10 bg-[#FDF8F0]/30">
+            <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
               Cancel
             </button>
             <button
               type="submit"
               disabled={!canSubmit || busy}
-              className={`px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all ${canSubmit && !busy ? 'bg-gradient-to-br from-[#ff9933] to-[#ff7418] text-[#2e1800] hover:shadow-[0_0_9px_rgba(255,153,51,0.22)]' : 'bg-[#34250f]/50 text-[#6f6048] cursor-not-allowed'}`}
+              className={`px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all ${canSubmit && !busy ? 'bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]' : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'}`}
             >
               <PlusCircle size={18} /> {busy ? 'Saving...' : isEdit ? 'Save Changes' : 'Add Product'}
             </button>
