@@ -54,7 +54,7 @@ function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor,
           <img src={img} alt={title} className="w-full h-full object-cover rounded-xl border border-[#231a16]/5 transition-transform duration-700 group-hover:scale-105" />
         </Link>
         {badge && (
-          <span className={`absolute top-6 left-6 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider border ${badgeColors[badgeColor]}`}>
+          <span className={`absolute top-6 left-6 px-3 py-1 rounded-full text-xs font-bold tracking-wider border ${badgeColors[badgeColor]}`}>
             {badge}
           </span>
         )}
@@ -69,7 +69,7 @@ function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor,
             {oldPrice && <span className="text-[#7A6A5B] text-[10px] line-through">{inr(oldPrice)}</span>}
           </div>
         </div>
-        {storeName && <p className="text-[10px] text-[#8A7B6B] font-[Inter] tracking-[0.05em] uppercase mb-1">by {storeName}</p>}
+        {storeName && <p className="text-xs text-[#8A7B6B] font-[Inter] tracking-[0.05em] uppercase mb-1">by {storeName}</p>}
         <p className="text-[#7A6A5B] text-xs leading-relaxed mb-4 line-clamp-2 flex-1">
           {desc}
         </p>

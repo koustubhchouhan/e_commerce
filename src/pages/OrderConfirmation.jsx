@@ -11,7 +11,7 @@ export default function OrderConfirmation() {
   const multiple = orders.length > 1;
 
   return (
-    <div className="max-w-[700px] mx-auto px-6 py-20 animate-fade-in-up flex flex-col items-center gap-8 text-center">
+    <div className="max-w-[700px] mx-auto px-6 py-12 md:py-20 animate-fade-in-up flex flex-col items-center gap-8 text-center">
       
       {/* Animated Success Icon */}
       <div className="relative">

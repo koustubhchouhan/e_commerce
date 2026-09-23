@@ -206,7 +206,7 @@ export default function ProductDetails() {
             <span className="font-[Outfit] text-4xl font-bold text-[#231A16]">{inr(product.price)}</span>
             {product.oldPrice && <span className="text-[#7A6A5B] text-lg line-through">{inr(product.oldPrice)}</span>}
             {savePct !== null && savePct > 0 && (
-              <span className="ml-auto px-3 py-1 rounded-full text-[10px] font-bold tracking-wider bg-[#B7322A]/20 text-[#B7322A] border border-[#B7322A]/30">SAVE {savePct}%</span>
+              <span className="ml-auto px-3 py-1 rounded-full text-xs font-bold tracking-wider bg-[#B7322A]/20 text-[#B7322A] border border-[#B7322A]/30">SAVE {savePct}%</span>
             )}
           </div>
           <div className="mb-10">
@@ -217,9 +217,9 @@ export default function ProductDetails() {
             <div className="flex items-center gap-6 mb-6">
               <span className="text-[#7A6A5B] text-xs font-semibold tracking-wider uppercase">Quantity</span>
               <div className="flex items-center border border-[#C4B5A2] rounded-lg bg-[#F5ECDE] overflow-hidden">
-                <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-10 flex items-center justify-center text-[#2A211B] hover:bg-[#231a16]/5 transition-colors" aria-label="Decrease quantity">-</button>
-                <input type="number" value={qty} readOnly className="w-12 h-10 bg-transparent text-center text-[#2A211B] outline-none" aria-label="Quantity" />
-                <button onClick={() => setQty(qty + 1)} className="w-10 h-10 flex items-center justify-center text-[#2A211B] hover:bg-[#231a16]/5 transition-colors" aria-label="Increase quantity">+</button>
+                <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-11 h-11 flex items-center justify-center text-[#2A211B] hover:bg-[#231a16]/5 transition-colors" aria-label="Decrease quantity">-</button>
+                <input type="number" value={qty} readOnly className="w-12 h-11 bg-transparent text-center text-[#2A211B] outline-none" aria-label="Quantity" />
+                <button onClick={() => setQty(qty + 1)} className="w-11 h-11 flex items-center justify-center text-[#2A211B] hover:bg-[#231a16]/5 transition-colors" aria-label="Increase quantity">+</button>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">

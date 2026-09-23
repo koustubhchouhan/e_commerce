@@ -83,7 +83,7 @@ export default function UserProfile() {
   }, []);
 
   return (
-    <div className="flex-grow w-full max-w-[1440px] mx-auto px-4 md:px-16 py-20 flex flex-col gap-20 animate-fade-in-up">
+    <div className="flex-grow w-full max-w-[1440px] mx-auto px-4 md:px-16 py-12 md:py-20 flex flex-col gap-16 md:gap-20 animate-fade-in-up">
 
       {/* ═══ Profile Header Section ═══ */}
       <section className="w-full flex flex-col md:flex-row items-start md:items-center gap-6 glass-panel p-6 rounded-xl">

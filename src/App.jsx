@@ -80,7 +80,7 @@ function App() {
   return (
     <>
       <WebGLBackground />
-      <div className="relative z-10 flex flex-col min-h-screen">
+      <div className="relative z-10 flex flex-col min-h-[100dvh]">
         {!hideNavAndFooter && userRole !== "guest" && <NavBar />}
 
         <main className="flex-grow">

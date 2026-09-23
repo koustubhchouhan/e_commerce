@@ -79,7 +79,7 @@ export default function AuthCallback() {
   }, []);
 
   return (
-    <div className="flex items-center justify-center min-h-screen px-4">
+    <div className="flex items-center justify-center min-h-[100dvh] px-4">
       <div className="text-center">
         <div className="flex items-center justify-center gap-3 mb-4">
           <ShoppingCart size={32} className="text-[#B7322A]" />

@@ -84,7 +84,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="max-w-[1200px] mx-auto px-12 py-16 animate-fade-in-up">
+    <div className="max-w-[1200px] mx-auto px-6 py-12 md:px-12 md:py-16 animate-fade-in-up">
       <div className="text-center mb-16">
         <h1 className="text-glow font-[Outfit] text-5xl font-bold text-[#231A16] mb-4">
           {context ? `Ask ${context.storeName}` : 'Contact Us'}

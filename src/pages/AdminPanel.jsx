@@ -606,7 +606,7 @@ export default function AdminPanel() {
     statusFilter === 'all' ? orders : orders.filter((o) => o.status === statusFilter);
 
   return (
-    <div className="flex min-h-[calc(100vh-80px)] animate-fade-in-up">
+    <div className="flex min-h-[calc(100dvh-80px)] animate-fade-in-up">
       {/* Drawer backdrop (mobile) */}
       {navOpen && (
         <div
@@ -616,7 +616,7 @@ export default function AdminPanel() {
       )}
 
       {/* Sidebar Navigation — slide-in drawer on mobile, static column on desktop */}
-      <aside className={`fixed inset-y-0 left-0 z-[100] w-[280px] max-w-[80vw] bg-[#F5ECDE] backdrop-blur-xl border-r border-[#231a16]/5 p-6 flex flex-col shrink-0 overflow-y-auto transition-transform duration-300 lg:sticky lg:top-[80px] lg:h-[calc(100vh-80px)] lg:max-w-none lg:bg-[#F5ECDE]/90 lg:translate-x-0 ${navOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-[100] w-[280px] max-w-[80vw] bg-[#F5ECDE] backdrop-blur-xl border-r border-[#231a16]/5 p-6 flex flex-col shrink-0 overflow-y-auto transition-transform duration-300 lg:sticky lg:top-[80px] lg:h-[calc(100dvh-80px)] lg:max-w-none lg:bg-[#F5ECDE]/90 lg:translate-x-0 ${navOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <h2 className="font-[Outfit] text-2xl font-bold text-[#B7322A] mb-8 px-4">Admin Dashboard</h2>
         
         <nav className="flex flex-col gap-2 flex-1">

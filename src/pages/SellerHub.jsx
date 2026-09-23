@@ -323,7 +323,7 @@ export default function SellerHub() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-80px)] animate-fade-in-up">
+    <div className="flex min-h-[calc(100dvh-80px)] animate-fade-in-up">
       {/* Drawer backdrop (mobile) */}
       {navOpen && (
         <div
@@ -333,7 +333,7 @@ export default function SellerHub() {
       )}
       
       {/* ═══ Left Sidebar — slide-in drawer on mobile, static column on desktop ═══ */}
-      <aside className={`fixed inset-y-0 left-0 z-[100] w-[280px] max-w-[80vw] bg-[#F5ECDE] backdrop-blur-xl border-r border-[#231a16]/5 p-6 flex flex-col shrink-0 overflow-y-auto transition-transform duration-300 lg:sticky lg:top-[80px] lg:h-[calc(100vh-80px)] lg:max-w-none lg:bg-[#F5ECDE]/90 lg:translate-x-0 ${navOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-[100] w-[280px] max-w-[80vw] bg-[#F5ECDE] backdrop-blur-xl border-r border-[#231a16]/5 p-6 flex flex-col shrink-0 overflow-y-auto transition-transform duration-300 lg:sticky lg:top-[80px] lg:h-[calc(100dvh-80px)] lg:max-w-none lg:bg-[#F5ECDE]/90 lg:translate-x-0 ${navOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         
         {/* Profile Info */}
         <div className="flex flex-col items-center mb-10 text-center">
@@ -364,7 +364,7 @@ export default function SellerHub() {
       </aside>
 
       {/* ═══ Main Content Area ═══ */}
-      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-12 lg:overflow-y-auto lg:h-[calc(100vh-80px)]">
+      <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-12 lg:overflow-y-auto lg:h-[calc(100dvh-80px)]">
         <button
           type="button"
           onClick={() => setNavOpen(true)}

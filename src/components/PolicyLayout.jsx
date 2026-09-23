@@ -12,7 +12,7 @@ export default function PolicyLayout() {
   const isGuest = userRole === 'guest';
 
   return (
-    <div className={isGuest ? 'min-h-screen flex flex-col' : ''}>
+    <div className={isGuest ? 'min-h-[100dvh] flex flex-col' : ''}>
       {isGuest && (
         <header className="sticky top-0 z-40 border-b border-[#231a16]/5 bg-[#FDF8F0]/90 backdrop-blur-xl">
           <div className="max-w-[1100px] mx-auto px-6 py-4 flex items-center justify-between gap-4">

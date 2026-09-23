@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Rocket, ShoppingCart, User, Search, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -13,10 +13,45 @@ export default function NavBar() {
   const [searchQuery, setSearchQuery] = useState('');
   const totalItems = useCartStore(s => s.getTotalItems());
 
+  const profileRef = useRef(null);
+  const drawerCloseRef = useRef(null);
+
+  // Profile menu: dismiss on an outside tap or Escape.
+  useEffect(() => {
+    if (!profileOpen) return;
+    const onPointerDown = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') setProfileOpen(false); };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('touchstart', onPointerDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('touchstart', onPointerDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [profileOpen]);
+
+  // Mobile drawer: lock background scroll, close on Escape, move focus inside.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') setMobileOpen(false); };
+    document.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    drawerCloseRef.current?.focus();
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [mobileOpen]);
+
   const handleLogout = () => {
     logout();
     navigate('/login');
     setMobileOpen(false);
+    setProfileOpen(false);
   };
 
   const handleSearch = (e) => {
@@ -33,7 +68,7 @@ export default function NavBar() {
       <Link
         to={to}
         onClick={() => setMobileOpen(false)}
-        className={`px-3 py-2 rounded-lg transition-colors duration-300 ${mobile ? 'text-base w-full' : ''} ${active ? 'text-[#B7322A] font-bold border-b-2 border-[#B7322A]' : 'text-[#7A6A5B] hover:bg-[#231a16]/5 hover:text-[#2A211B]'}`}
+        className={`px-3 py-3 rounded-lg transition-colors duration-300 ${mobile ? 'text-base w-full' : ''} ${active ? 'text-[#B7322A] font-bold border-b-2 border-[#B7322A]' : 'text-[#7A6A5B] hover:bg-[#231a16]/5 hover:text-[#2A211B]'}`}
       >
         {label}
       </Link>
@@ -64,7 +99,7 @@ export default function NavBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-[#FDF8F0]/80 backdrop-blur-xl border-b border-[#231a16]/10 shadow-[0_1px_20px_rgba(183,50,42,0.1)] px-6 md:px-8 py-3 flex justify-between items-center w-full">
+      <header className="sticky top-0 z-50 bg-[#FDF8F0]/80 backdrop-blur-xl border-b border-[#231a16]/10 shadow-[0_1px_20px_rgba(183,50,42,0.1)] px-4 sm:px-6 md:px-8 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 flex justify-between items-center w-full">
         
         {/* Logo */}
         <Link to={userRole === 'admin' ? '/admin' : userRole === 'seller' ? '/seller' : '/home'} className="flex items-center gap-2 font-[Outfit] text-2xl font-bold text-[#231A16]">
@@ -92,10 +127,10 @@ export default function NavBar() {
                   className="bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-full py-1.5 pl-9 pr-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all w-[200px]"
                 />
               </div>
-              <Link to="/cart" className="relative text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 p-2 rounded-full transition-all">
+              <Link to="/cart" aria-label={`Cart, ${totalItems} item${totalItems === 1 ? '' : 's'}`} className="relative text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 h-11 w-11 flex items-center justify-center rounded-full transition-all">
                 <ShoppingCart size={20} />
                 {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#B7322A] text-[#FDF8F0] text-[10px] font-bold flex items-center justify-center">
+                  <span className="absolute top-1 right-1 min-w-5 h-5 px-1 rounded-full bg-[#B7322A] text-[#FDF8F0] text-[10px] font-bold flex items-center justify-center">
                     {totalItems > 9 ? '9+' : totalItems}
                   </span>
                 )}
@@ -104,8 +139,14 @@ export default function NavBar() {
           )}
 
           {/* Profile Dropdown */}
-          <div className="relative">
-            <button onClick={() => setProfileOpen(!profileOpen)} className="text-[#B7322A] hover:bg-[#231a16]/5 p-2 rounded-full transition-all border border-transparent hover:border-[#B7322A]/30 flex items-center justify-center bg-[#B7322A]/10">
+          <div className="relative" ref={profileRef}>
+            <button
+              onClick={() => setProfileOpen(!profileOpen)}
+              aria-label="Account menu"
+              aria-haspopup="menu"
+              aria-expanded={profileOpen}
+              className="text-[#B7322A] hover:bg-[#231a16]/5 h-11 w-11 flex items-center justify-center rounded-full transition-all border border-transparent hover:border-[#B7322A]/30 bg-[#B7322A]/10"
+            >
               <User size={20} />
             </button>
             {profileOpen && (
@@ -114,10 +155,10 @@ export default function NavBar() {
                   <p className="text-xs text-[#7A6A5B] font-semibold uppercase tracking-wider">{userRole} Account</p>
                 </div>
                 <div className="py-1">
-                  <Link to={profileLink} onClick={() => setProfileOpen(false)} className="flex items-center gap-2 px-4 py-2 text-sm text-[#2A211B] hover:bg-[#231a16]/5 transition-colors">
+                  <Link to={profileLink} onClick={() => setProfileOpen(false)} className="flex items-center gap-2 px-4 py-3 text-sm text-[#2A211B] hover:bg-[#231a16]/5 transition-colors">
                     <User size={16} /> {profileLabel}
                   </Link>
-                  <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#B3261E] hover:bg-[#231a16]/5 transition-colors text-left">
+                  <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-[#B3261E] hover:bg-[#231a16]/5 transition-colors text-left">
                     <LogOut size={16} /> Sign Out
                   </button>
                 </div>
@@ -126,7 +167,11 @@ export default function NavBar() {
           </div>
 
           {/* Hamburger (mobile) */}
-          <button onClick={() => setMobileOpen(true)} className="md:hidden text-[#7A6A5B] hover:text-[#231A16] p-2 rounded-lg hover:bg-[#231a16]/5 transition-all">
+          <button
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open menu"
+            className="md:hidden text-[#7A6A5B] hover:text-[#231A16] h-11 w-11 flex items-center justify-center rounded-lg hover:bg-[#231a16]/5 transition-all"
+          >
             <Menu size={22} />
           </button>
         </div>
@@ -138,10 +183,22 @@ export default function NavBar() {
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
           {/* Drawer */}
-          <div className="relative ml-auto w-[80vw] max-w-[320px] h-full bg-[#F5ECDE] border-l border-[#231a16]/10 flex flex-col p-6 gap-4 shadow-2xl animate-fade-in-up">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Main menu"
+            className="relative ml-auto w-[80vw] max-w-[320px] h-full bg-[#F5ECDE] border-l border-[#231a16]/10 flex flex-col p-6 gap-4 shadow-2xl animate-fade-in-up pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
+          >
             <div className="flex justify-between items-center mb-4">
               <span className="font-[Outfit] text-xl font-bold text-[#231A16]">Menu</span>
-              <button onClick={() => setMobileOpen(false)} className="text-[#7A6A5B] hover:text-[#231A16] p-1"><X size={22} /></button>
+              <button
+                ref={drawerCloseRef}
+                onClick={() => setMobileOpen(false)}
+                aria-label="Close menu"
+                className="text-[#7A6A5B] hover:text-[#231A16] h-11 w-11 flex items-center justify-center rounded-lg hover:bg-[#231a16]/5 transition-colors"
+              >
+                <X size={22} />
+              </button>
             </div>
 
             {/* Search lives in the main content on mobile (see Home) so it is
@@ -150,17 +207,17 @@ export default function NavBar() {
             <nav className="flex flex-col gap-1 flex-1">
               {links.map(l => <NavItem key={l.to} to={l.to} label={l.label} mobile />)}
               {userRole === 'customer' && (
-                <Link to="/cart" onClick={() => setMobileOpen(false)} className="px-3 py-2 rounded-lg text-[#7A6A5B] hover:bg-[#231a16]/5 hover:text-[#2A211B] transition-colors flex items-center gap-2">
+                <Link to="/cart" onClick={() => setMobileOpen(false)} className="px-3 py-3 rounded-lg text-[#7A6A5B] hover:bg-[#231a16]/5 hover:text-[#2A211B] transition-colors flex items-center gap-2">
                   <ShoppingCart size={16} /> Cart {totalItems > 0 && <span className="ml-auto text-xs bg-[#B7322A] text-[#FDF8F0] font-bold px-2 py-0.5 rounded-full">{totalItems}</span>}
                 </Link>
               )}
             </nav>
 
             <div className="border-t border-[#231a16]/10 pt-4 flex flex-col gap-2">
-              <Link to={profileLink} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm text-[#2A211B] hover:bg-[#231a16]/5 rounded-lg transition-colors">
+              <Link to={profileLink} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-3 py-3 text-sm text-[#2A211B] hover:bg-[#231a16]/5 rounded-lg transition-colors">
                 <User size={16} /> {profileLabel}
               </Link>
-              <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#B3261E] hover:bg-[#231a16]/5 rounded-lg transition-colors text-left">
+              <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-3 text-sm text-[#B3261E] hover:bg-[#231a16]/5 rounded-lg transition-colors text-left">
                 <LogOut size={16} /> Sign Out
               </button>
             </div>

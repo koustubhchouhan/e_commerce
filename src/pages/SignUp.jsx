@@ -72,7 +72,7 @@ export default function SignUp() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 py-12">
+    <div className="flex items-center justify-center min-h-[calc(100dvh-80px)] px-4 py-12">
       {/* Ambient glows inside the page context */}
       <div className="absolute w-[500px] h-[500px] bg-[#B7322A]/5 rounded-full blur-[80px] top-[10%] right-[10%] mix-blend-screen pointer-events-none animate-pulse" />
       <div className="absolute w-[600px] h-[600px] bg-[#B8860B]/5 rounded-full blur-[80px] bottom-[10%] left-[10%] mix-blend-screen pointer-events-none" />

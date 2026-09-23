@@ -113,7 +113,7 @@ export default function AdminProfile() {
   };
 
   return (
-    <div className="flex-grow w-full max-w-[1440px] mx-auto px-4 md:px-16 py-20 flex flex-col gap-10 animate-fade-in-up">
+    <div className="flex-grow w-full max-w-[1440px] mx-auto px-4 md:px-16 py-12 md:py-20 flex flex-col gap-10 animate-fade-in-up">
 
       <section className="w-full flex flex-col md:flex-row items-start md:items-center gap-6 glass-panel p-6 rounded-xl border-t-4 border-t-[#B3261E]">
         <div className="w-24 h-24 rounded-full bg-[#FBE3E1] border-2 border-[#B3261E]/50 flex items-center justify-center shrink-0 shadow-[0_0_7px_rgba(179,38,30,0.11)] text-[#B3261E]">
