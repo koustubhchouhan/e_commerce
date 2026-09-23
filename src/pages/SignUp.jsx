@@ -3,7 +3,7 @@ import { User, Mail, Lock, EyeOff, Eye, ArrowRight, AlertCircle, Globe } from 'l
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToastStore } from '../store/toastStore';
-import { startGoogleOAuth, isGoogleOAuthConfigured } from '../lib/googleAuth';
+import { isGoogleOAuthConfigured } from '../lib/googleAuthConfig';
 
 // Account types offered at sign-up. Admin is never self-selectable — it is
 // granted by the platform, not applied for.
@@ -60,6 +60,9 @@ export default function SignUp() {
     setError('');
     setGoogleBusy(true);
     try {
+      // Loaded on demand so the Supabase client stays out of the first-load
+      // bundle; it is only needed once the user actually chooses Google.
+      const { startGoogleOAuth } = await import('../lib/googleAuth');
       await startGoogleOAuth({ mode: 'signup', role });
       // The browser is about to leave for Google's consent screen.
     } catch (err) {

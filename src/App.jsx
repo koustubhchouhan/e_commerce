@@ -1,39 +1,59 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import WebGLBackground from "./components/WebGLBackground";
 import NavBar from "./components/NavBar";
 import Footer from "./components/Footer";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import SignUp from "./pages/SignUp";
-import AuthCallback from "./pages/AuthCallback";
-import ProductDetails from "./pages/ProductDetails";
-import AdminPanel from "./pages/AdminPanel";
-import SellerHub from "./pages/SellerHub";
-import SellerInventory from "./pages/SellerInventory";
-import SellerProfile from "./pages/SellerProfile";
-import UserProfile from "./pages/UserProfile";
-import AdminProfile from "./pages/AdminProfile";
-import Categories from "./pages/Categories";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import MyMessages from "./pages/MyMessages";
-import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
-import OrderConfirmation from "./pages/OrderConfirmation";
-import OrderDetails from "./pages/OrderDetails";
-import SearchResults from "./pages/SearchResults";
-import SellerRequests from "./pages/SellerRequests";
-import NotFound from "./pages/NotFound";
 import PolicyLayout from "./components/PolicyLayout";
-import TermsAndConditions from "./pages/legal/TermsAndConditions";
-import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
-import RefundPolicy from "./pages/legal/RefundPolicy";
-import ShippingPolicy from "./pages/legal/ShippingPolicy";
-import ContactUs from "./pages/legal/ContactUs";
+
+// Pages are split into per-route chunks so a visitor only downloads the code
+// for the screen they open. Admin and seller tooling is the heaviest part of
+// the app and most visitors never reach it.
+const Home = lazy(() => import("./pages/Home"));
+const Login = lazy(() => import("./pages/Login"));
+const SignUp = lazy(() => import("./pages/SignUp"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const ProductDetails = lazy(() => import("./pages/ProductDetails"));
+const AdminPanel = lazy(() => import("./pages/AdminPanel"));
+const SellerHub = lazy(() => import("./pages/SellerHub"));
+const SellerInventory = lazy(() => import("./pages/SellerInventory"));
+const SellerProfile = lazy(() => import("./pages/SellerProfile"));
+const UserProfile = lazy(() => import("./pages/UserProfile"));
+const AdminProfile = lazy(() => import("./pages/AdminProfile"));
+const Categories = lazy(() => import("./pages/Categories"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const MyMessages = lazy(() => import("./pages/MyMessages"));
+const Cart = lazy(() => import("./pages/Cart"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
+const OrderDetails = lazy(() => import("./pages/OrderDetails"));
+const SearchResults = lazy(() => import("./pages/SearchResults"));
+const SellerRequests = lazy(() => import("./pages/SellerRequests"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const TermsAndConditions = lazy(() => import("./pages/legal/TermsAndConditions"));
+const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
+const RefundPolicy = lazy(() => import("./pages/legal/RefundPolicy"));
+const ShippingPolicy = lazy(() => import("./pages/legal/ShippingPolicy"));
+const ContactUs = lazy(() => import("./pages/legal/ContactUs"));
+
+function RouteFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="animate-pulse font-[Outfit] text-lg text-[#7A6A5B]">
+        Loading…
+      </div>
+    </div>
+  );
+}
 
 function ProtectedRoute({ children, allowedRoles }) {
-  const { userRole } = useAuth();
+  const { userRole, loading } = useAuth();
+
+  // Session still being restored. Don't redirect yet: userRole reads "guest"
+  // until the check resolves, so redirecting here would bounce a signed-in user
+  // to /login on every hard refresh. Render a placeholder and wait instead.
+  if (loading) return <RouteFallback />;
 
   if (userRole === "guest") {
     return <Navigate to="/login" replace />;
@@ -50,24 +70,12 @@ function ProtectedRoute({ children, allowedRoles }) {
 }
 
 function App() {
-  const { userRole, loading } = useAuth();
+  const { userRole } = useAuth();
   const location = useLocation();
   const hideNavAndFooter =
     location.pathname === "/login" ||
     location.pathname === "/signup" ||
     location.pathname === "/auth/callback";
-
-  // While we restore an existing session, avoid rendering routes (a protected
-  // route would otherwise bounce a logged-in user to /login on hard refresh).
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#FDF8F0]">
-        <div className="animate-pulse font-[Outfit] text-xl text-[#7A6A5B]">
-          Loading…
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -76,7 +84,8 @@ function App() {
         {!hideNavAndFooter && userRole !== "guest" && <NavBar />}
 
         <main className="flex-grow">
-          <Routes>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
@@ -243,7 +252,8 @@ function App() {
             />
 
             <Route path="*" element={<NotFound />} />
-          </Routes>
+            </Routes>
+          </Suspense>
         </main>
 
         {!hideNavAndFooter && userRole !== "guest" && <Footer />}

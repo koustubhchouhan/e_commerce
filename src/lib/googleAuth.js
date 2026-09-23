@@ -9,11 +9,12 @@
 // this user's own Google login. The service-role key stays server-only.
 
 import { createClient } from '@supabase/supabase-js';
+import { isGoogleOAuthConfigured } from './googleAuthConfig';
 
 const URL = import.meta.env?.VITE_SUPABASE_URL;
 const ANON = import.meta.env?.VITE_SUPABASE_ANON_KEY;
 
-export const isGoogleOAuthConfigured = Boolean(URL && ANON);
+export { isGoogleOAuthConfigured };
 
 const client = isGoogleOAuthConfigured
   ? createClient(URL, ANON, {

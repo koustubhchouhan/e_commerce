@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ShoppingCart, Mail, Lock, EyeOff, Eye, ArrowRight, Globe, AlertCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { startGoogleOAuth, isGoogleOAuthConfigured } from '../lib/googleAuth';
+import { isGoogleOAuthConfigured } from '../lib/googleAuthConfig';
 import { POLICY_LINKS } from '../lib/business';
 
 // Role the person intends to sign in as. This is only a UX guard — the real
@@ -66,6 +66,9 @@ export default function Login() {
     setError('');
     setGoogleBusy(true);
     try {
+      // Loaded on demand so the Supabase client stays out of the first-load
+      // bundle; it is only needed once the user actually chooses Google.
+      const { startGoogleOAuth } = await import('../lib/googleAuth');
       await startGoogleOAuth({ mode: 'login', role: selectedRole || undefined });
       // The browser is about to leave for Google's consent screen.
     } catch (err) {
