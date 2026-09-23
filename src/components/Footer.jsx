@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="font-[Outfit] text-2xl font-bold text-[#FDF8F0] flex items-center gap-2 mb-2">
           <Rocket className="text-[#E0A11C]" /> {BUSINESS.brandName}
         </div>
-        <p className="text-[#C4B5A2] text-sm">© 2024 {BUSINESS.brandName}. Future-Ready Commerce. All rights reserved.</p>
+        <p className="text-[#C4B5A2] text-sm">© {new Date().getFullYear()} {BUSINESS.brandName}. Future-Ready Commerce. All rights reserved.</p>
       </div>
       <div className="flex flex-wrap gap-6 items-center md:justify-end">
         {POLICY_LINKS.map((link) => (
