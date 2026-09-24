@@ -12,7 +12,7 @@ function ContactCard({ icon, title, children }) {
         {icon}
       </div>
       <div>
-        <h3 className="font-[Outfit] text-lg font-bold text-[#231A16] mb-1">{title}</h3>
+        <h3 className="font-display text-lg font-bold text-[#231A16] mb-1">{title}</h3>
         <div className="text-[#7A6A5B] text-sm leading-relaxed">{children}</div>
       </div>
     </div>

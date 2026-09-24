@@ -102,10 +102,10 @@ export default function ProductDetails() {
       <div className="min-h-[60vh] flex items-center justify-center px-6 animate-fade-in-up">
         <GlassCard className="p-12 max-w-md w-full text-center flex flex-col items-center gap-5" hover={false}>
           <PackageX size={56} className="text-[#F0E7DA]" />
-          <h1 className="font-[Outfit] text-3xl font-bold text-[#231A16]">Product not found</h1>
+          <h1 className="font-display text-3xl font-bold text-[#231A16]">Product not found</h1>
           <p className="text-[#7A6A5B] text-sm">This item may have been removed or the link is incorrect.</p>
-          <Link to="/home" className="mt-2 px-6 py-3 rounded-lg bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] font-[Outfit] font-bold hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all">
-            Back to Shop
+          <Link to="/home" className="btn btn-primary mt-2 px-7 py-3">
+            Back to shop
           </Link>
         </GlassCard>
       </div>
@@ -186,7 +186,7 @@ export default function ProductDetails() {
           {hasGallery && (
             <div className="flex gap-4 overflow-x-auto pb-1 w-full max-w-[560px] mx-auto">
               {images.map((img, idx) => (
-                <button key={idx} onClick={() => setActiveImage(idx)} className={`w-24 h-24 rounded-lg overflow-hidden shrink-0 transition-all ${activeImage === idx ? 'border-2 border-[#B7322A] opacity-100' : 'border border-[#231a16]/10 opacity-60 hover:opacity-100'}`}>
+                <button key={idx} onClick={() => setActiveImage(idx)} className={`w-24 h-24 rounded-xl overflow-hidden shrink-0 transition-all ${activeImage === idx ? 'border-2 border-[#B7322A] opacity-100' : 'border border-[#231a16]/10 opacity-60 hover:opacity-100'}`}>
                   <img src={img} alt={`${product.title} view ${idx + 1}`} className="w-full h-full object-cover" />
                 </button>
               ))}
@@ -201,39 +201,39 @@ export default function ProductDetails() {
             <span className="text-[#7A6A5B] text-xs font-semibold tracking-wider ml-2">{reviewSummary}</span>
           </div>
           <span className="text-[#B7322A] text-xs font-bold uppercase tracking-widest mb-2">{product.category}</span>
-          <h1 className="font-[Outfit] text-4xl font-bold text-[#231A16] mb-4 leading-tight">{product.title}</h1>
+          <h1 className="font-display text-4xl font-bold text-[#231A16] mb-4 leading-tight">{product.title}</h1>
           <div className="flex items-baseline gap-4 mb-8 pb-6 border-b border-[#231a16]/10">
-            <span className="font-[Outfit] text-4xl font-bold text-[#231A16]">{inr(product.price)}</span>
+            <span className="font-display text-4xl font-bold text-[#231A16]">{inr(product.price)}</span>
             {product.oldPrice && <span className="text-[#7A6A5B] text-lg line-through">{inr(product.oldPrice)}</span>}
             {savePct !== null && savePct > 0 && (
               <span className="ml-auto px-3 py-1 rounded-full text-xs font-bold tracking-wider bg-[#B7322A]/20 text-[#B7322A] border border-[#B7322A]/30">SAVE {savePct}%</span>
             )}
           </div>
           <div className="mb-10">
-            <h3 className="text-[#B7322A] font-[Outfit] text-xl font-semibold mb-3">Description</h3>
+            <h3 className="text-[#B7322A] font-display text-xl font-semibold mb-3">Description</h3>
             <p className="text-[#7A6A5B] text-base leading-relaxed">{product.desc}</p>
           </div>
           <div className="mt-auto pt-6">
             <div className="flex items-center gap-6 mb-6">
               <span className="text-[#7A6A5B] text-xs font-semibold tracking-wider uppercase">Quantity</span>
-              <div className="flex items-center border border-[#C4B5A2] rounded-lg bg-[#F5ECDE] overflow-hidden">
+              <div className="flex items-center border border-[#C4B5A2] rounded-xl bg-[#F5ECDE] overflow-hidden">
                 <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-11 h-11 flex items-center justify-center text-[#2A211B] hover:bg-[#231a16]/5 transition-colors" aria-label="Decrease quantity">-</button>
                 <input type="number" value={qty} readOnly className="w-12 h-11 bg-transparent text-center text-[#2A211B] outline-none" aria-label="Quantity" />
                 <button onClick={() => setQty(qty + 1)} className="w-11 h-11 flex items-center justify-center text-[#2A211B] hover:bg-[#231a16]/5 transition-colors" aria-label="Increase quantity">+</button>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <button onClick={handleAddToCart} className={`py-3.5 rounded-lg font-[Outfit] text-xl font-semibold flex items-center justify-center gap-2 transition-all border ${added ? 'bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] border-transparent' : 'bg-[#F5ECDE]/50 text-[#B7322A] border-[#B7322A] hover:bg-[#B7322A]/10'}`}>
-                {added ? <><CheckCircle size={20} /> Added!</> : <><ShoppingCart size={20} /> Add to Cart</>}
+              <button onClick={handleAddToCart} className={`btn py-3.5 text-base ${added ? 'btn-primary' : 'btn-outline'}`}>
+                {added ? <><CheckCircle size={20} /> Added</> : <><ShoppingCart size={20} /> Add to cart</>}
               </button>
-              <button onClick={handleBuyNow} className="py-3.5 rounded-lg bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] font-[Outfit] text-xl font-semibold neon-glow hover:shadow-[0_0_14px_rgba(183,50,42,0.28)] transition-all">
-                Buy Now
+              <button onClick={handleBuyNow} className="btn btn-primary py-3.5 text-base">
+                Buy now
               </button>
             </div>
             {userRole === 'customer' && product.storeName && (
               <Link
                 to={`/contact?product=${product.id}`}
-                className="mt-3 w-full py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 text-[#7A6A5B] border border-[#231a16]/10 hover:text-[#B7322A] hover:border-[#B7322A]/40 transition-colors"
+                className="btn w-full mt-3 py-2.5 text-sm text-[#7A6A5B] border border-[#E3D5C1] hover:text-[#B7322A] hover:border-[#B7322A]/40"
               >
                 <MessageCircle size={16} /> Ask {product.storeName} a question
               </Link>
@@ -244,7 +244,7 @@ export default function ProductDetails() {
 
       {/* Reviews */}
       <div>
-        <h2 className="font-[Outfit] text-3xl font-bold text-[#231A16] mb-8">Customer Reviews</h2>
+        <h2 className="font-display text-3xl font-bold text-[#231A16] mb-8">Customer Reviews</h2>
 
         {/* Write a review — the form is only shown to verified buyers */}
         {!isLoggedIn ? (
@@ -254,12 +254,12 @@ export default function ProductDetails() {
         ) : canReview === null ? (
           <p className="text-[#7A6A5B] text-sm mb-8">Checking your review eligibility...</p>
         ) : !canReview ? (
-          <div className="bg-[#F0E7DA]/30 p-6 rounded-lg border border-dashed border-[#231a16]/10 text-sm text-[#7A6A5B] mb-8">
+          <div className="bg-[#F0E7DA]/30 p-6 rounded-xl border border-dashed border-[#231a16]/10 text-sm text-[#7A6A5B] mb-8">
             Only verified buyers can review this product. Once your order is delivered, you'll be able to share your experience here.
           </div>
         ) : (
           <GlassCard className="p-6 mb-8" hover={false}>
-            <h3 className="font-[Outfit] text-xl font-semibold text-[#2A211B] mb-1">Write a Review</h3>
+            <h3 className="font-display text-xl font-semibold text-[#2A211B] mb-1">Write a Review</h3>
             <p className="text-[#8A7B6B] text-xs mb-4">You purchased this product — share your experience.</p>
             <form onSubmit={handleSubmitReview} className="flex flex-col gap-4">
               <div>
@@ -285,14 +285,14 @@ export default function ProductDetails() {
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="What did you think of this product?"
-                  className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all resize-none placeholder:text-[#8A7B6B]"
+                  className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all resize-none placeholder:text-[#8A7B6B]"
                 />
               </div>
               <div className="flex justify-end">
                 <button
                   type="submit"
                   disabled={rating < 1 || submitting}
-                  className={`px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold transition-all ${rating >= 1 && !submitting ? 'bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]' : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'}`}
+                  className={`px-6 py-2.5 rounded-xl font-display text-sm font-bold transition-all ${rating >= 1 && !submitting ? 'bg-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]' : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'}`}
                 >
                   {submitting ? 'Posting...' : 'Post Review'}
                 </button>
@@ -304,11 +304,11 @@ export default function ProductDetails() {
         {reviewLoading ? (
           <div className="flex items-center justify-center h-32 text-[#7A6A5B]">Loading reviews...</div>
         ) : reviewError ? (
-          <div className="bg-[#F7D5D2]/20 p-8 rounded-lg border border-[#B3261E]/30 text-center text-[#B3261E] text-sm">
+          <div className="bg-[#F7D5D2]/20 p-8 rounded-xl border border-[#B3261E]/30 text-center text-[#B3261E] text-sm">
             {reviewError}
           </div>
         ) : reviews.length === 0 ? (
-          <div className="bg-[#F0E7DA]/30 p-8 rounded-lg border border-dashed border-[#231a16]/10 text-center text-[#8A7B6B] text-sm">
+          <div className="bg-[#F0E7DA]/30 p-8 rounded-xl border border-dashed border-[#231a16]/10 text-center text-[#8A7B6B] text-sm">
             No reviews yet — be the first to review this product.
           </div>
         ) : (
@@ -352,9 +352,9 @@ function ReviewCard({ initials, name, role, text, stars, sellerReply }) {
     <GlassCard className="p-6">
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#EDE2D2] flex items-center justify-center text-[#B7322A] font-[Outfit] font-semibold border border-[#231a16]/10 shrink-0">{initials}</div>
+          <div className="w-10 h-10 rounded-full bg-[#EDE2D2] flex items-center justify-center text-[#B7322A] font-display font-semibold border border-[#231a16]/10 shrink-0">{initials}</div>
           <div>
-            <div className="font-[Outfit] text-xl font-semibold text-[#2A211B]">{name}</div>
+            <div className="font-display text-xl font-semibold text-[#2A211B]">{name}</div>
             <div className="text-[#7A6A5B] text-xs font-semibold tracking-wider">{role}</div>
           </div>
         </div>

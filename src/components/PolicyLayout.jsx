@@ -16,12 +16,12 @@ export default function PolicyLayout() {
       {isGuest && (
         <header className="sticky top-0 z-40 border-b border-[#231a16]/5 bg-[#FDF8F0]/90 backdrop-blur-xl">
           <div className="max-w-[1100px] mx-auto px-6 py-4 flex items-center justify-between gap-4">
-            <Link to="/login" className="font-[Outfit] text-xl font-bold text-[#231A16] flex items-center gap-2">
+            <Link to="/login" className="font-display text-xl font-bold text-[#231A16] flex items-center gap-2">
               <Rocket className="text-[#B7322A]" size={22} /> {BUSINESS.brandName}
             </Link>
             <Link
               to="/login"
-              className="px-4 py-2 rounded-lg border border-[#B7322A]/30 text-[#B7322A] text-sm font-semibold hover:bg-[#B7322A]/10 transition-colors"
+              className="px-4 py-2 rounded-xl border border-[#B7322A]/30 text-[#B7322A] text-sm font-semibold hover:bg-[#B7322A]/10 transition-colors"
             >
               Sign In
             </Link>
@@ -37,7 +37,7 @@ export default function PolicyLayout() {
         <footer className="border-t border-[#231a16]/5 bg-[#FDF8F0]">
           <div className="max-w-[1100px] mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <div className="font-[Outfit] text-xl font-bold text-[#231A16] flex items-center gap-2 mb-3">
+              <div className="font-display text-xl font-bold text-[#231A16] flex items-center gap-2 mb-3">
                 <Rocket className="text-[#B7322A]" size={20} /> {BUSINESS.brandName}
               </div>
               <p className="text-[#8A7B6B] text-xs leading-relaxed">
@@ -47,7 +47,7 @@ export default function PolicyLayout() {
               </p>
             </div>
             <div>
-              <h3 className="font-[Outfit] text-sm font-bold uppercase tracking-wider text-[#7A6A5B] mb-3">
+              <h3 className="font-display text-sm font-bold uppercase tracking-wider text-[#7A6A5B] mb-3">
                 Policies
               </h3>
               <ul className="flex flex-col gap-2">
@@ -61,7 +61,7 @@ export default function PolicyLayout() {
               </ul>
             </div>
             <div>
-              <h3 className="font-[Outfit] text-sm font-bold uppercase tracking-wider text-[#7A6A5B] mb-3">
+              <h3 className="font-display text-sm font-bold uppercase tracking-wider text-[#7A6A5B] mb-3">
                 Get in touch
               </h3>
               <ul className="flex flex-col gap-2 text-sm text-[#7A6A5B]">

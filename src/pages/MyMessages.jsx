@@ -61,7 +61,7 @@ export default function MyMessages() {
     <div className="max-w-[1000px] mx-auto px-6 md:px-12 py-16 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-12">
         <div>
-          <h1 className="text-glow font-[Outfit] text-4xl sm:text-5xl font-bold text-[#231A16] mb-3 flex items-center gap-3">
+          <h1 className="text-glow font-display text-4xl sm:text-5xl font-bold text-[#231A16] mb-3 flex items-center gap-3">
             <Inbox className="text-[#B7322A]" size={38} /> My Messages
           </h1>
           <p className="text-[#7A6A5B] text-lg">
@@ -70,7 +70,7 @@ export default function MyMessages() {
         </div>
         <Link
           to="/contact"
-          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-[Outfit] text-sm font-bold bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all shrink-0"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-display text-sm font-bold bg-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all shrink-0"
         >
           <MessageSquare size={18} /> New Message
         </Link>
@@ -91,7 +91,7 @@ export default function MyMessages() {
           </div>
           <button
             onClick={retry}
-            className="px-5 py-2.5 rounded-lg font-[Outfit] text-sm font-bold bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all"
+            className="px-5 py-2.5 rounded-xl font-display text-sm font-bold bg-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all"
           >
             Retry
           </button>
@@ -122,7 +122,7 @@ export default function MyMessages() {
               <GlassCard key={msg.id} hover={false} className="p-6 md:p-8">
                 <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
                   <div className="min-w-0">
-                    <h2 className="font-[Outfit] text-xl font-bold text-[#231A16] break-words">{msg.subject}</h2>
+                    <h2 className="font-display text-xl font-bold text-[#231A16] break-words">{msg.subject}</h2>
                     <p className="text-[#8A7B6B] text-xs mt-1">
                       To {recipient} · {formatDate(msg.createdAt)}
                       {msg.productName ? ` · About ${msg.productName}` : ''}
@@ -133,7 +133,7 @@ export default function MyMessages() {
                   </span>
                 </div>
 
-                <div className="rounded-lg border border-[#231a16]/10 bg-[#F5ECDE]/60 p-4">
+                <div className="rounded-xl border border-[#231a16]/10 bg-[#F5ECDE]/60 p-4">
                   <p className="text-[#8A7B6B] text-xs font-semibold uppercase tracking-wider mb-2">Your message</p>
                   <p className="text-[#2A211B] text-sm whitespace-pre-wrap">{msg.message}</p>
                 </div>

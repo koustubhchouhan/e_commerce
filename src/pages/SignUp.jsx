@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Mail, Lock, EyeOff, Eye, ArrowRight, AlertCircle, Globe } from 'lucide-react';
+import { ArrowRight, AlertCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToastStore } from '../store/toastStore';
@@ -11,6 +11,17 @@ const SIGNUP_ROLES = [
   { key: 'customer', label: 'Customer', hint: 'Shop the storefront' },
   { key: 'seller', label: 'Seller', hint: 'Sell your own products (reviewed)' },
 ];
+
+function GoogleMark({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </svg>
+  );
+}
 
 export default function SignUp() {
   const [fullName, setFullName] = useState('');
@@ -72,162 +83,180 @@ export default function SignUp() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100dvh-80px)] px-4 py-12">
-      {/* Ambient glows inside the page context */}
-      <div className="absolute w-[500px] h-[500px] bg-[#B7322A]/5 rounded-full blur-[80px] top-[10%] right-[10%] mix-blend-screen pointer-events-none animate-pulse" />
-      <div className="absolute w-[600px] h-[600px] bg-[#B8860B]/5 rounded-full blur-[80px] bottom-[10%] left-[10%] mix-blend-screen pointer-events-none" />
+    <div className="min-h-[100dvh] bg-[#FDF8F0] flex items-center justify-center px-4 py-8 sm:py-12">
+      <div className="w-full max-w-5xl">
+        <div className="grid md:grid-cols-2 rounded-[2rem] overflow-hidden border border-[#E7DAC8] shadow-[0_24px_60px_rgba(60,40,25,0.12)]">
 
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-10">
-          <h1 className="text-glow font-[Outfit] text-4xl font-bold text-[#231A16] mb-2">
-            Create Account
-          </h1>
-          <p className="text-[#7A6A5B]">Join the Future-Ready Commerce Platform</p>
-        </div>
-
-        <div className="glass-panel rounded-2xl p-10 relative overflow-hidden">
-          {/* Top edge glow */}
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#B7322A]/50 to-transparent" />
-
-          {error && (
-            <div className="flex items-start gap-2 mb-6 rounded-lg border border-[#B3261E]/30 bg-[#FBE3E1]/20 px-4 py-3 text-sm text-[#B3261E]">
-              <AlertCircle size={18} className="mt-0.5 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSignUp}>
-            <div className="relative mb-6">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7A6A5B]" size={20} />
-              <input
-                type="text"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Full Name"
-                className="w-full bg-[#F5ECDE] border border-[#231a16]/20 rounded-lg py-3 pl-12 pr-4 text-[#2A211B] outline-none focus:border-[#B7322A] focus:shadow-[0_0_5px_rgba(183,50,42,0.11)] transition-all"
-              />
+          {/* ── Left: brand panel ── */}
+          <div className="relative bg-[#B7322A] text-[#FDF8F0] p-8 sm:p-12 flex flex-col justify-between min-h-[240px] md:min-h-[620px]">
+            <div
+              className="pointer-events-none absolute -right-16 -top-16 w-64 h-64 rounded-full bg-[#8F2620]/40"
+              aria-hidden="true"
+            />
+            <div className="relative flex items-center gap-2">
+              <span className="w-9 h-9 rounded-full bg-[#E0A11C] text-[#231A16] flex items-center justify-center font-display font-bold">
+                N
+              </span>
+              <span className="font-display text-xl font-semibold">NovaMarket</span>
             </div>
 
-            <div className="relative mb-6">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7A6A5B]" size={20} />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email Address"
-                className="w-full bg-[#F5ECDE] border border-[#231a16]/20 rounded-lg py-3 pl-12 pr-4 text-[#2A211B] outline-none focus:border-[#B7322A] focus:shadow-[0_0_5px_rgba(183,50,42,0.11)] transition-all"
-              />
-            </div>
-
-            <div className="relative mb-8">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7A6A5B]" size={20} />
-              <input
-                type={showPassword ? "text" : "password"}
-                required
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password (min 8 characters)"
-                className="w-full bg-[#F5ECDE] border border-[#231a16]/20 rounded-lg py-3 pl-12 pr-12 text-[#2A211B] outline-none focus:border-[#B7322A] focus:shadow-[0_0_5px_rgba(183,50,42,0.11)] transition-all"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#7A6A5B] hover:text-[#B7322A] transition-colors"
-              >
-                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
-              </button>
-            </div>
-
-            {/* Account type — admin is never offered here */}
-            <div className="mb-6">
-              <p className="text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">
-                I want to sign up as
+            <div className="relative mt-8">
+              <p className="font-display text-2xl text-[#E0A11C] mb-3">स्वागत</p>
+              <h2 className="font-display text-3xl sm:text-4xl font-semibold leading-tight max-w-sm">
+                Join a market built on trust.
+              </h2>
+              <p className="text-[#FDF8F0]/80 text-sm mt-4 max-w-sm leading-relaxed">
+                Create your account to track orders, save addresses and unlock member-only
+                pricing across the storefront.
               </p>
-              <div className="flex flex-col gap-2">
-                {SIGNUP_ROLES.map((r) => {
-                  const active = role === r.key;
-                  return (
-                    <button
-                      key={r.key}
-                      type="button"
-                      onClick={() => setRole(r.key)}
-                      className={`flex items-center justify-between gap-3 px-4 py-3 rounded-lg border text-left transition-all ${
-                        active
-                          ? 'bg-[#B7322A]/15 border-[#B7322A]/50 text-[#231A16]'
-                          : 'bg-[#231a16]/5 border-[#231a16]/10 text-[#7A6A5B] hover:bg-[#231a16]/10 hover:text-[#2A211B]'
-                      }`}
-                    >
-                      <span className="flex items-center gap-2 font-[Outfit] font-semibold text-sm">
-                        <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${active ? 'border-[#B7322A]' : 'border-[#231a16]/25'}`}>
-                          {active && <span className="w-2 h-2 rounded-full bg-[#B7322A]" />}
-                        </span>
-                        {r.label}
-                      </span>
-                      <span className={`text-[11px] ${active ? 'text-[#7A6A5B]' : 'text-[#8A7B6B]'}`}>{r.hint}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              {role === 'seller' && (
-                <p className="text-[#C8901A] text-xs mt-2">
-                  Seller accounts need admin approval before you can list products.
-                </p>
-              )}
             </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full py-3.5 rounded-lg bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] font-[Outfit] text-xl font-semibold flex items-center justify-center gap-2 hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all relative overflow-hidden group disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <span className="relative z-10">{submitting ? 'Creating…' : 'Create Account'}</span>
-              {!submitting && <ArrowRight size={20} className="relative z-10 group-hover:translate-x-1 transition-transform" />}
-              <div className="absolute inset-0 bg-[#231a16]/20 translate-y-full group-hover:translate-y-0 transition-transform" />
-            </button>
-          </form>
-
-          {/* Divider */}
-          <div className="relative flex items-center justify-center my-8">
-            <div className="absolute w-full h-[1px] bg-[#231a16]/10" />
-            <span className="relative px-3 py-1 rounded-full text-[10px] font-semibold tracking-wider text-[#7A6A5B] uppercase bg-[#EDE2D2]">
-              Or sign up with
-            </span>
+            <div className="relative mt-8 hidden sm:flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#FDF8F0]/75">
+              <span>Verified sellers</span>
+              <span className="w-1 h-1 rounded-full bg-[#FDF8F0]/40" />
+              <span>Secure payments</span>
+              <span className="w-1 h-1 rounded-full bg-[#FDF8F0]/40" />
+              <span>Pan-India delivery</span>
+            </div>
           </div>
 
-          {/* Social — the account type chosen above is attached to the sign-up */}
-          <div className="flex gap-4">
+          {/* ── Right: form panel ── */}
+          <div className="bg-[#FDF8F0] p-8 sm:p-12">
+            <h1 className="font-display text-3xl font-semibold text-[#231A16]">Create account</h1>
+            <p className="text-sm text-[#7A6A5B] mt-2">
+              Already registered?{' '}
+              <Link to="/login" className="text-[#B7322A] font-semibold underline decoration-[#B7322A]/30 hover:decoration-[#B7322A] transition-all">
+                Sign in
+              </Link>
+            </p>
+
+            {error && (
+              <div className="flex items-start gap-2 mt-6 rounded-2xl border border-[#B3261E]/30 bg-[#FBE3E1]/40 px-4 py-3 text-sm text-[#B3261E]">
+                <AlertCircle size={18} className="mt-0.5 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSignUp} className="mt-6">
+              <div className="mb-4">
+                <label htmlFor="signup-name" className="micro-label block mb-2">Full name</label>
+                <input
+                  id="signup-name"
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Your name"
+                  className="field"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label htmlFor="signup-email" className="micro-label block mb-2">Email</label>
+                <input
+                  id="signup-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="field"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label htmlFor="signup-password" className="micro-label block mb-2">Password</label>
+                <div className="relative">
+                  <input
+                    id="signup-password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    minLength={8}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Minimum 8 characters"
+                    className="field pr-16"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#B7322A] text-sm font-semibold hover:text-[#8F2620] transition-colors"
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Account type — admin is never offered here */}
+              <div className="mb-6">
+                <p className="micro-label mb-2">I want to sign up as</p>
+                <div className="flex flex-col gap-2">
+                  {SIGNUP_ROLES.map((r) => {
+                    const active = role === r.key;
+                    return (
+                      <button
+                        key={r.key}
+                        type="button"
+                        onClick={() => setRole(r.key)}
+                        className={`flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border text-left transition-all ${
+                          active
+                            ? 'bg-[#FBE3E1]/40 border-[#B7322A] text-[#231A16]'
+                            : 'bg-transparent border-[#E3D5C1] text-[#7A6A5B] hover:border-[#B7322A]/40'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2.5 font-medium text-sm">
+                          <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${active ? 'border-[#B7322A]' : 'border-[#C4B5A2]'}`}>
+                            {active && <span className="w-2 h-2 rounded-full bg-[#B7322A]" />}
+                          </span>
+                          {r.label}
+                        </span>
+                        <span className="text-[11px] text-[#A79684] text-right">{r.hint}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {role === 'seller' && (
+                  <p className="text-[#C8901A] text-xs mt-2">
+                    Seller accounts need admin approval before you can list products.
+                  </p>
+                )}
+              </div>
+
+              <button type="submit" disabled={submitting} className="btn btn-primary w-full py-3.5 text-base">
+                {submitting ? 'Creating account…' : 'Create account'}
+                {!submitting && <ArrowRight size={18} />}
+              </button>
+            </form>
+
+            {/* Divider */}
+            <div className="relative flex items-center justify-center my-6">
+              <div className="absolute w-full h-px bg-[#E3D5C1]" />
+              <span className="relative px-3 text-[11px] font-medium tracking-wide text-[#A79684] uppercase bg-[#FDF8F0]">
+                or
+              </span>
+            </div>
+
             <button
               type="button"
               onClick={handleGoogle}
               disabled={googleBusy || submitting}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#231a16]/5 border border-[#231a16]/10 text-[#2A211B] text-sm hover:bg-[#231a16]/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="btn w-full py-3 border-[1.5px] border-[#E3D5C1] bg-transparent text-[#2A211B] text-sm hover:border-[#B7322A]/40 hover:bg-[#FBF3E7]"
             >
-              <Globe size={18} /> {googleBusy ? 'Redirecting…' : 'Google'}
+              <GoogleMark /> {googleBusy ? 'Redirecting…' : 'Continue with Google'}
             </button>
+            {role === 'seller' && (
+              <p className="text-[10px] text-[#A79684] mt-3 leading-relaxed text-center">
+                Signing up as a Seller with Google still requires admin approval before you can list products.
+              </p>
+            )}
+            {!isGoogleOAuthConfigured && (
+              <p className="text-[10px] text-[#B8860B] mt-2 leading-relaxed">
+                Google sign-up needs VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY set, plus the provider
+                enabled in Supabase.
+              </p>
+            )}
           </div>
-          {role === 'seller' && (
-            <p className="text-[10px] text-[#8A7B6B] mt-3 leading-relaxed text-center">
-              Signing up as a Seller with Google still requires admin approval before you can list products.
-            </p>
-          )}
-          {!isGoogleOAuthConfigured && (
-            <p className="text-[10px] text-[#B8860B] mt-2 leading-relaxed">
-              Google sign-up needs VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY set, plus the provider
-              enabled in Supabase.
-            </p>
-          )}
         </div>
-
-        <p className="text-center mt-8 text-[#7A6A5B] text-sm">
-          Already have an account?{' '}
-          <Link to="/login" className="text-[#B7322A] font-semibold underline decoration-[#B7322A]/30 hover:decoration-[#B7322A] transition-all">
-            Authenticate Here
-          </Link>
-        </p>
       </div>
     </div>
   );

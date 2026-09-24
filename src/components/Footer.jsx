@@ -6,7 +6,7 @@ export default function Footer() {
   return (
     <footer className="bg-[#231A16] border-t border-[#FDF8F0]/10 py-12 px-6 md:py-20 md:px-16 pb-[calc(env(safe-area-inset-bottom)+3rem)] grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
       <div>
-        <div className="font-[Outfit] text-2xl font-bold text-[#FDF8F0] flex items-center gap-2 mb-2">
+        <div className="font-display text-2xl font-bold text-[#FDF8F0] flex items-center gap-2 mb-2">
           <Rocket className="text-[#E0A11C]" /> {BUSINESS.brandName}
         </div>
         <p className="text-[#C4B5A2] text-sm">© {new Date().getFullYear()} {BUSINESS.brandName}. Future-Ready Commerce. All rights reserved.</p>

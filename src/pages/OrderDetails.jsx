@@ -95,7 +95,7 @@ export default function OrderDetails() {
         <>
           <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="font-[Outfit] text-4xl font-bold text-[#231A16] mb-2 text-glow">
+              <h1 className="font-display text-4xl font-bold text-[#231A16] mb-2 text-glow">
                 Order #{shortId(order.id)}
               </h1>
               <p className="text-[#7A6A5B] flex items-center gap-2">
@@ -110,7 +110,7 @@ export default function OrderDetails() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Items */}
             <GlassCard className="lg:col-span-8 p-6 lg:p-8">
-              <h2 className="font-[Outfit] text-2xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
+              <h2 className="font-display text-2xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
                 <Package size={22} className="text-[#B7322A]" /> Items
               </h2>
 
@@ -121,7 +121,7 @@ export default function OrderDetails() {
               <div className="flex flex-col">
                 {order.items?.map((item) => (
                   <div key={item.id} className="flex items-center gap-4 py-4 border-b border-[#231a16]/5 last:border-b-0">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-[#231a16]/10 bg-[#F5ECDE]">
+                    <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-[#231a16]/10 bg-[#F5ECDE]">
                       <img src={item.coverImage || FALLBACK_IMG} alt={item.productName} className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -132,7 +132,7 @@ export default function OrderDetails() {
                         {' '}× {item.quantity}
                       </p>
                     </div>
-                    <span className="text-[#231A16] font-[Outfit] font-bold shrink-0">{inr(item.lineTotal)}</span>
+                    <span className="text-[#231A16] font-display font-bold shrink-0">{inr(item.lineTotal)}</span>
                   </div>
                 ))}
               </div>
@@ -141,7 +141,7 @@ export default function OrderDetails() {
             {/* Summary */}
             <div className="lg:col-span-4 flex flex-col gap-6">
               <GlassCard className="p-6">
-                <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16] mb-4 flex items-center gap-2">
+                <h2 className="font-display text-xl font-semibold text-[#231A16] mb-4 flex items-center gap-2">
                   <CreditCard size={18} className="text-[#C8901A]" /> Summary
                 </h2>
                 <div className="flex flex-col gap-2 text-sm">
@@ -153,7 +153,7 @@ export default function OrderDetails() {
               </GlassCard>
 
               <GlassCard className="p-6">
-                <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16] mb-4 flex items-center gap-2">
+                <h2 className="font-display text-xl font-semibold text-[#231A16] mb-4 flex items-center gap-2">
                   <MapPin size={18} className="text-[#8F2620]" /> Shipping Address
                 </h2>
                 {address ? (
@@ -193,7 +193,7 @@ export default function OrderDetails() {
                 <GlassCard className="p-6">
                   {confirmingCancel ? (
                     <>
-                      <h3 className="font-[Outfit] text-base font-semibold text-[#B3261E] mb-1 flex items-center gap-2">
+                      <h3 className="font-display text-base font-semibold text-[#B3261E] mb-1 flex items-center gap-2">
                         <XCircle size={18} /> Cancel this order?
                       </h3>
                       <p className="text-[#7A6A5B] text-xs leading-relaxed mb-4">
@@ -203,7 +203,7 @@ export default function OrderDetails() {
                         <button
                           disabled={cancelling}
                           onClick={handleCancel}
-                          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-[Outfit] text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-br from-[#B3261E] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(143,38,32,0.22)]"
+                          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-display text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-[#B3261E] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(143,38,32,0.22)]"
                         >
                           {cancelling && <Loader2 size={16} className="animate-spin" />}
                           {cancelling ? 'Cancelling...' : 'Yes, cancel order'}
@@ -211,7 +211,7 @@ export default function OrderDetails() {
                         <button
                           disabled={cancelling}
                           onClick={() => setConfirmingCancel(false)}
-                          className="px-4 py-2.5 rounded-lg font-[Outfit] text-sm font-bold text-[#7A6A5B] border border-[#231a16]/10 hover:bg-[#231a16]/5 transition-colors disabled:opacity-50"
+                          className="px-4 py-2.5 rounded-xl font-display text-sm font-bold text-[#7A6A5B] border border-[#231a16]/10 hover:bg-[#231a16]/5 transition-colors disabled:opacity-50"
                         >
                           Keep order
                         </button>
@@ -222,7 +222,7 @@ export default function OrderDetails() {
                       <p className="text-[#7A6A5B] text-xs mb-3">Order not shipped yet?</p>
                       <button
                         onClick={() => setConfirmingCancel(true)}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-[Outfit] text-sm font-bold transition-all bg-[#B3261E]/10 text-[#B3261E] border border-[#B3261E]/30 hover:bg-[#B3261E]/20"
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-display text-sm font-bold transition-all bg-[#B3261E]/10 text-[#B3261E] border border-[#B3261E]/30 hover:bg-[#B3261E]/20"
                       >
                         <XCircle size={16} /> Cancel Order
                       </button>

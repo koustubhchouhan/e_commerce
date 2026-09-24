@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToastStore } from '../store/toastStore';
 
 const inputClass =
-  'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]';
+  'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]';
 const labelClass = 'block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2';
 
 // Customer-facing "Become a Seller" flow. Opened from the customer profile;
@@ -73,7 +73,7 @@ export default function SellerApplicationModal({ onClose, onChange }) {
       >
         <div className="flex items-start justify-between px-6 py-5 border-b border-[#231a16]/10">
           <div>
-            <h2 className="font-[Outfit] text-2xl font-bold text-[#231A16] flex items-center gap-2">
+            <h2 className="font-display text-2xl font-bold text-[#231A16] flex items-center gap-2">
               <Store className="text-[#B7322A]" size={24} /> Become a Seller
             </h2>
             <p className="text-[#7A6A5B] text-xs mt-1">
@@ -83,7 +83,7 @@ export default function SellerApplicationModal({ onClose, onChange }) {
           <button
             type="button"
             onClick={onClose}
-            className="p-2 -mr-2 rounded-lg text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors"
+            className="p-2 -mr-2 rounded-xl text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors"
             aria-label="Close"
           >
             <X size={22} />
@@ -98,7 +98,7 @@ export default function SellerApplicationModal({ onClose, onChange }) {
           ) : existing ? (
             <div className="flex flex-col gap-4">
               <div
-                className={`flex items-start gap-3 rounded-lg border p-4 text-sm ${
+                className={`flex items-start gap-3 rounded-xl border p-4 text-sm ${
                   existing.status === 'approved'
                     ? 'border-[#B7322A]/30 bg-[#B7322A]/10 text-[#2A211B]'
                     : 'border-[#C8901A]/30 bg-[#B8860B]/10 text-[#2A211B]'
@@ -122,7 +122,7 @@ export default function SellerApplicationModal({ onClose, onChange }) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-6 py-2.5 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors"
+                  className="px-6 py-2.5 rounded-xl border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors"
                 >
                   Close
                 </button>
@@ -161,16 +161,16 @@ export default function SellerApplicationModal({ onClose, onChange }) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-6 py-2.5 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors"
+                  className="px-6 py-2.5 rounded-xl border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!storeName.trim() || !contactEmail.trim() || submitting}
-                  className={`px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all ${
+                  className={`px-6 py-2.5 rounded-xl font-display text-sm font-bold flex items-center gap-2 transition-all ${
                     storeName.trim() && contactEmail.trim() && !submitting
-                      ? 'bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]'
+                      ? 'bg-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]'
                       : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'
                   }`}
                 >

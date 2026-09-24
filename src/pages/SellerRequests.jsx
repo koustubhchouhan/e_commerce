@@ -75,7 +75,7 @@ export default function SellerRequests() {
   return (
     <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-12 animate-fade-in-up flex flex-col gap-8">
       <header>
-        <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">My Seller Applications</h1>
+        <h1 className="font-display text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">My Seller Applications</h1>
         <p className="text-[#7A6A5B]">Track the status of your requests to open a storefront.</p>
       </header>
 
@@ -92,7 +92,7 @@ export default function SellerRequests() {
                   <Store className="text-[#B7322A]" size={22} />
                 </div>
                 <div>
-                  <h2 className="font-[Outfit] text-2xl font-semibold text-[#231A16]">Become a Seller</h2>
+                  <h2 className="font-display text-2xl font-semibold text-[#231A16]">Become a Seller</h2>
                   <p className="text-[#7A6A5B] text-sm">Set up your storefront and start listing products.</p>
                 </div>
               </div>
@@ -104,7 +104,7 @@ export default function SellerRequests() {
                     value={storeName}
                     onChange={(e) => setStoreName(e.target.value)}
                     placeholder="e.g. NeonTech Store"
-                    className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
+                    className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
                   />
                 </div>
                 <div>
@@ -114,15 +114,15 @@ export default function SellerRequests() {
                     value={contactEmail}
                     onChange={(e) => setContactEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
+                    className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={!storeName.trim() || !contactEmail.trim() || submitting}
-                  className={`w-full py-3 rounded-lg font-[Outfit] text-base font-semibold flex items-center justify-center gap-2 transition-all ${
+                  className={`w-full py-3 rounded-xl font-display text-base font-semibold flex items-center justify-center gap-2 transition-all ${
                     storeName.trim() && contactEmail.trim() && !submitting
-                      ? 'bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]'
+                      ? 'bg-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]'
                       : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'
                   }`}
                 >
@@ -143,7 +143,7 @@ export default function SellerRequests() {
           {!loading && !error && applications.length === 0 && (
             <GlassCard className="p-10 flex flex-col items-center gap-3 text-center">
               <FileText size={36} className="text-[#C4B5A2]" />
-              <p className="text-[#2A211B] font-[Outfit] text-lg font-semibold">No applications yet</p>
+              <p className="text-[#2A211B] font-display text-lg font-semibold">No applications yet</p>
               <p className="text-[#7A6A5B] text-sm">Fill in the form above to start selling on the platform.</p>
             </GlassCard>
           )}
@@ -159,7 +159,7 @@ export default function SellerRequests() {
                     </div>
                     <div>
                       <div className="flex items-center gap-3 flex-wrap">
-                        <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16]">{app.storeName}</h2>
+                        <h2 className="font-display text-xl font-semibold text-[#231A16]">{app.storeName}</h2>
                         <span className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${meta.badge}`}>
                           {meta.icon} {meta.label}
                         </span>
@@ -174,19 +174,19 @@ export default function SellerRequests() {
                 </div>
 
                 {app.status === 'pending' && (
-                  <div className="bg-[#F5ECDE]/80 p-4 rounded-lg border border-[#C8901A]/20 text-[#C8901A] text-sm flex items-start gap-2">
+                  <div className="bg-[#F5ECDE]/80 p-4 rounded-xl border border-[#C8901A]/20 text-[#C8901A] text-sm flex items-start gap-2">
                     <Clock size={16} className="shrink-0 mt-0.5" />
                     <p>Your application is under review. You will be notified once an administrator makes a decision.</p>
                   </div>
                 )}
                 {app.status === 'approved' && (
-                  <div className="bg-[#F5ECDE]/80 p-4 rounded-lg border border-[#B7322A]/20 text-[#2A211B] text-sm flex items-start gap-2">
+                  <div className="bg-[#F5ECDE]/80 p-4 rounded-xl border border-[#B7322A]/20 text-[#2A211B] text-sm flex items-start gap-2">
                     <CheckCircle size={16} className="text-[#B7322A] shrink-0 mt-0.5" />
                     <p>Congratulations! Your storefront has been approved. Head to the seller dashboard to start selling.</p>
                   </div>
                 )}
                 {app.status === 'rejected' && (
-                  <div className="bg-[#F5ECDE]/80 p-4 rounded-lg border border-[#B3261E]/20 text-[#2A211B] text-sm flex items-start gap-2">
+                  <div className="bg-[#F5ECDE]/80 p-4 rounded-xl border border-[#B3261E]/20 text-[#2A211B] text-sm flex items-start gap-2">
                     <PackageX size={16} className="text-[#B3261E] shrink-0 mt-0.5" />
                     <p>Unfortunately your application was rejected. You may submit a new application at any time.</p>
                   </div>
@@ -199,24 +199,24 @@ export default function SellerRequests() {
         {/* Right Column: Status Summary */}
         <div className="lg:col-span-1">
           <GlassCard className="p-8 sticky top-28">
-            <h2 className="font-[Outfit] text-2xl font-semibold text-[#231A16] mb-6">Application Overview</h2>
+            <h2 className="font-display text-2xl font-semibold text-[#231A16] mb-6">Application Overview</h2>
 
             <div className="flex flex-col gap-6">
               <div className="flex justify-between items-center border-b border-[#231a16]/10 pb-4">
                 <span className="text-[#7A6A5B] text-sm">Pending Review</span>
-                <span className="font-[Outfit] text-2xl font-bold text-[#C8901A]">{loading ? '—' : pending}</span>
+                <span className="font-display text-2xl font-bold text-[#C8901A]">{loading ? '—' : pending}</span>
               </div>
               <div className="flex justify-between items-center border-b border-[#231a16]/10 pb-4">
                 <span className="text-[#7A6A5B] text-sm">Approved</span>
-                <span className="font-[Outfit] text-2xl font-bold text-[#B7322A]">{loading ? '—' : approved}</span>
+                <span className="font-display text-2xl font-bold text-[#B7322A]">{loading ? '—' : approved}</span>
               </div>
               <div className="flex justify-between items-center pb-2">
                 <span className="text-[#7A6A5B] text-sm">Rejected</span>
-                <span className="font-[Outfit] text-2xl font-bold text-[#B3261E]">{loading ? '—' : rejected}</span>
+                <span className="font-display text-2xl font-bold text-[#B3261E]">{loading ? '—' : rejected}</span>
               </div>
             </div>
 
-            <div className="mt-8 p-4 bg-[#B8860B]/10 border border-[#C8901A]/20 rounded-lg">
+            <div className="mt-8 p-4 bg-[#B8860B]/10 border border-[#C8901A]/20 rounded-xl">
               <div className="flex gap-3">
                 <Store className="text-[#C8901A] shrink-0" size={20} />
                 <p className="text-[#2A211B] text-sm leading-relaxed">

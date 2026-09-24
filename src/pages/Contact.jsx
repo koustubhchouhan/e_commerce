@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { BUSINESS, businessAddress } from '../lib/business';
 
-const inputClass = 'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-3 px-4 text-[#2A211B] outline-none focus:border-[#B7322A] transition-colors';
+const inputClass = 'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-3 px-4 text-[#2A211B] outline-none focus:border-[#B7322A] transition-colors';
 
 export default function Contact() {
   const addToast = useToastStore(s => s.addToast);
@@ -86,7 +86,7 @@ export default function Contact() {
   return (
     <div className="max-w-[1200px] mx-auto px-6 py-12 md:px-12 md:py-16 animate-fade-in-up">
       <div className="text-center mb-16">
-        <h1 className="text-glow font-[Outfit] text-5xl font-bold text-[#231A16] mb-4">
+        <h1 className="text-glow font-display text-5xl font-bold text-[#231A16] mb-4">
           {context ? `Ask ${context.storeName}` : 'Contact Us'}
         </h1>
         <p className="text-[#7A6A5B] text-lg max-w-2xl mx-auto">
@@ -104,7 +104,7 @@ export default function Contact() {
               <Mail size={24} />
             </div>
             <div>
-              <h3 className="font-[Outfit] text-xl font-bold text-[#231A16] mb-1">{context ? 'Replies' : 'Email Support'}</h3>
+              <h3 className="font-display text-xl font-bold text-[#231A16] mb-1">{context ? 'Replies' : 'Email Support'}</h3>
               <p className="text-[#7A6A5B] text-sm mb-1">
                 {context ? 'Replies arrive in your My Messages inbox.' : 'Our team replies within 24 hours — check My Messages.'}
               </p>
@@ -117,7 +117,7 @@ export default function Contact() {
               <Phone size={24} />
             </div>
             <div>
-              <h3 className="font-[Outfit] text-xl font-bold text-[#231A16] mb-1">Direct Line</h3>
+              <h3 className="font-display text-xl font-bold text-[#231A16] mb-1">Direct Line</h3>
               <p className="text-[#7A6A5B] text-sm mb-1">{BUSINESS.supportHours}</p>
               <a href={`tel:${BUSINESS.phone.replace(/[^+\d]/g, '')}`} className="text-[#C8901A] font-semibold hover:underline">{BUSINESS.phone}</a>
             </div>
@@ -128,7 +128,7 @@ export default function Contact() {
               <MapPin size={24} />
             </div>
             <div>
-              <h3 className="font-[Outfit] text-xl font-bold text-[#231A16] mb-1">Headquarters</h3>
+              <h3 className="font-display text-xl font-bold text-[#231A16] mb-1">Headquarters</h3>
               <p className="text-[#7A6A5B] text-sm leading-relaxed">
                 {businessAddress.map((line, index) => (
                   <span key={line}>
@@ -144,7 +144,7 @@ export default function Contact() {
         {/* Contact Form */}
         <GlassCard className="p-10">
           {context && (
-            <div className="mb-6 p-4 rounded-lg border border-[#B7322A]/30 bg-[#B7322A]/5 text-sm">
+            <div className="mb-6 p-4 rounded-xl border border-[#B7322A]/30 bg-[#B7322A]/5 text-sm">
               <p className="text-[#231A16] font-semibold">This message will go to {context.storeName}</p>
               <p className="text-[#7A6A5B] text-xs mt-1 leading-relaxed">
                 About “{context.productName}” — sellers reply to their inbox. Our support team can still see every message.
@@ -152,12 +152,12 @@ export default function Contact() {
             </div>
           )}
           {contextBusy && (
-            <div className="mb-6 p-4 rounded-lg border border-[#231a16]/10 bg-[#231a16]/5 text-sm text-[#7A6A5B] flex items-center gap-2">
+            <div className="mb-6 p-4 rounded-xl border border-[#231a16]/10 bg-[#231a16]/5 text-sm text-[#7A6A5B] flex items-center gap-2">
               <Loader2 size={16} className="animate-spin text-[#B7322A]" /> Loading product details...
             </div>
           )}
 
-          <h2 className="font-[Outfit] text-2xl font-bold text-[#231A16] mb-6">Send a Message</h2>
+          <h2 className="font-display text-2xl font-bold text-[#231A16] mb-6">Send a Message</h2>
           <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
             <div className="grid grid-cols-2 gap-5">
               <div>
@@ -181,7 +181,7 @@ export default function Contact() {
               <label className="text-xs text-[#7A6A5B] font-bold uppercase tracking-wider mb-2 block">Message</label>
               <textarea rows="5" value={form.message} onChange={set('message')} className={`${inputClass} resize-none`} placeholder="Your message here..." required />
             </div>
-            <button type="submit" disabled={!canSubmit} className="w-full py-4 rounded-lg bg-[#F0E7DA]/50 border border-[#B7322A]/30 text-[#231A16] font-[Outfit] text-lg font-semibold tracking-wider flex items-center justify-center gap-2 hover:bg-gradient-to-br hover:from-[#B7322A] hover:to-[#8F2620] hover:text-[#FDF8F0] hover:border-transparent transition-all mt-2 group disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="submit" disabled={!canSubmit} className="w-full py-4 rounded-xl bg-[#F0E7DA]/50 border border-[#B7322A]/30 text-[#231A16] font-display text-lg font-semibold tracking-wider flex items-center justify-center gap-2 hover:bg-gradient-to-br hover:from-[#B7322A] hover:to-[#8F2620] hover:text-[#FDF8F0] hover:border-transparent transition-all mt-2 group disabled:opacity-50 disabled:cursor-not-allowed">
               {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />}
               {sending ? 'Sending...' : context ? `Send to ${context.storeName}` : 'Send Transmission'}
             </button>

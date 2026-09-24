@@ -40,7 +40,7 @@ export default function SearchResults() {
           <Search size={22} />
         </div>
         <div>
-          <h1 className="font-[Outfit] text-3xl font-bold text-[#231A16]">
+          <h1 className="font-display text-3xl font-bold text-[#231A16]">
             Search Results for <span className="text-[#B7322A]">"{query}"</span>
           </h1>
           <p className="text-[#7A6A5B] text-sm mt-1">
@@ -63,7 +63,7 @@ export default function SearchResults() {
           <Search size={60} className="text-[#F0E7DA]" />
           <p className="text-[#7A6A5B] text-xl">No results for <span className="text-[#231A16] font-semibold">"{query}"</span></p>
           <p className="text-[#8A7B6B] text-sm">Try a different keyword or browse our catalog.</p>
-          <Link to="/home" className="mt-2 px-6 py-3 rounded-lg bg-[#F0E7DA]/50 border border-[#231a16]/10 text-[#2A211B] font-[Outfit] font-semibold text-base hover:bg-[#231a16]/5 transition-all">
+          <Link to="/home" className="mt-2 px-6 py-3 rounded-xl bg-[#F0E7DA]/50 border border-[#231a16]/10 text-[#2A211B] font-display font-semibold text-base hover:bg-[#231a16]/5 transition-all">
             Browse All Products
           </Link>
         </div>

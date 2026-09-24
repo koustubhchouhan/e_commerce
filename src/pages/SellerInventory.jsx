@@ -173,12 +173,12 @@ export default function SellerInventory() {
     <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-12 animate-fade-in-up">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
         <div>
-          <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Inventory Management</h1>
+          <h1 className="font-display text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Inventory Management</h1>
           <p className="text-[#7A6A5B]">Manage your product listings, update stock levels, and add new items.</p>
         </div>
       <button
         onClick={() => openModal()}
-        className="py-3 px-6 rounded-lg bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] font-[Outfit] text-base font-semibold hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all flex items-center justify-center gap-2 w-full md:w-auto"
+        className="py-3 px-6 rounded-xl bg-[#B7322A] text-[#FDF8F0] font-display text-base font-semibold hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all flex items-center justify-center gap-2 w-full md:w-auto"
       >
           <PlusCircle size={20} /> Add New Product
         </button>
@@ -195,14 +195,14 @@ export default function SellerInventory() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search products by name, category or ID..."
-              className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 pl-10 pr-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all"
+              className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all"
             />
           </div>
           <div className="flex gap-4 w-full md:w-auto items-center">
             <span className="text-xs text-[#8A7B6B] whitespace-nowrap hidden md:block">
               {filtered.length} {filtered.length === 1 ? 'item' : 'items'}
             </span>
-            <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#F0E7DA]/50 border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
+            <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#F0E7DA]/50 border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
               <Filter size={16} /> Filter
             </button>
           </div>
@@ -233,12 +233,12 @@ export default function SellerInventory() {
                   <tr key={item.id} className="border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors group">
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-lg overflow-hidden bg-[#FDF8F0]/60 border border-[#231a16]/10 flex items-center justify-center shrink-0">
+                        <div className="w-11 h-11 rounded-xl overflow-hidden bg-[#FDF8F0]/60 border border-[#231a16]/10 flex items-center justify-center shrink-0">
                           {item.images && item.images[0]
                             ? <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
                             : <Package size={18} className="text-[#C4B5A2]" />}
                         </div>
-                        <span className="font-[Outfit] text-base font-semibold text-[#2A211B]">{item.name}</span>
+                        <span className="font-display text-base font-semibold text-[#2A211B]">{item.name}</span>
                       </div>
                     </td>
                     <td className="py-4 px-4 text-[#7A6A5B] text-sm">{item.category}</td>
@@ -273,16 +273,16 @@ export default function SellerInventory() {
                           <button
                             onClick={() => handleResubmit(item)}
                             disabled={resubmittingId === item.id}
-                            className="px-3 py-1.5 rounded-lg bg-[#B7322A]/10 text-[#B7322A] hover:bg-[#B7322A]/20 text-[10px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                            className="px-3 py-1.5 rounded-xl bg-[#B7322A]/10 text-[#B7322A] hover:bg-[#B7322A]/20 text-[10px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
                             title="Resubmit for approval"
                           >
                             {resubmittingId === item.id ? '...' : 'Resubmit'}
                           </button>
                         )}
-                        <button onClick={() => openModal(item)} className="p-2 rounded-lg bg-[#B7322A]/10 text-[#B7322A] hover:bg-[#B7322A]/20 transition-colors" title="Edit Product">
+                        <button onClick={() => openModal(item)} className="p-2 rounded-xl bg-[#B7322A]/10 text-[#B7322A] hover:bg-[#B7322A]/20 transition-colors" title="Edit Product">
                           <Edit size={16} />
                         </button>
-                        <button onClick={() => handleDelete(item.id)} className="p-2 rounded-lg bg-[#B3261E]/10 text-[#B3261E] hover:bg-[#B3261E]/20 transition-colors" title="Delete Product">
+                        <button onClick={() => handleDelete(item.id)} className="p-2 rounded-xl bg-[#B3261E]/10 text-[#B3261E] hover:bg-[#B3261E]/20 transition-colors" title="Delete Product">
                           <Trash2 size={16} />
                         </button>
                       </div>
@@ -390,7 +390,7 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
     });
   };
 
-  const inputClass = 'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]';
+  const inputClass = 'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]';
   const labelClass = 'block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2';
 
   return (
@@ -411,14 +411,14 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
           {/* Header */}
           <div className="shrink-0 flex items-start justify-between px-6 md:px-8 py-5 border-b border-[#231a16]/10">
             <div>
-              <h2 className="font-[Outfit] text-2xl font-bold text-[#231A16] flex items-center gap-2">
+              <h2 className="font-display text-2xl font-bold text-[#231A16] flex items-center gap-2">
                 <PlusCircle className="text-[#B7322A]" size={24} /> {isEdit ? 'Edit Product' : 'Add New Product'}
               </h2>
               <p className="text-[#7A6A5B] text-xs mt-1">
                 {isEdit ? 'Update the details of your listed item.' : 'Fill in the details to list a new item in your store.'}
               </p>
             </div>
-            <button type="button" onClick={onClose} className="p-2 -mr-2 rounded-lg text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors" aria-label="Close">
+            <button type="button" onClick={onClose} className="p-2 -mr-2 rounded-xl text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors" aria-label="Close">
               <X size={22} />
             </button>
           </div>
@@ -445,7 +445,7 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
               {images.length > 0 && (
                 <div className="flex gap-3 flex-wrap mt-3">
                   {images.map((img, idx) => (
-                    <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border border-[#231a16]/10 group/thumb">
+                    <div key={idx} className="relative w-20 h-20 rounded-xl overflow-hidden border border-[#231a16]/10 group/thumb">
                       <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
                       <button
                         type="button"
@@ -463,7 +463,7 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-20 h-20 rounded-lg border border-dashed border-[#231a16]/15 flex items-center justify-center text-[#8A7B6B] hover:border-[#B7322A]/40 hover:text-[#B7322A] transition-colors"
+                    className="w-20 h-20 rounded-xl border border-dashed border-[#231a16]/15 flex items-center justify-center text-[#8A7B6B] hover:border-[#B7322A]/40 hover:text-[#B7322A] transition-colors"
                     aria-label="Add more images"
                   >
                     <ImagePlus size={20} />
@@ -523,9 +523,9 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
 
             {/* Live sale-price preview */}
             {priceValid && (
-              <div className="flex flex-wrap items-center gap-2 -mt-1 text-sm bg-[#FDF8F0]/40 border border-[#231a16]/5 rounded-lg px-4 py-3">
+              <div className="flex flex-wrap items-center gap-2 -mt-1 text-sm bg-[#FDF8F0]/40 border border-[#231a16]/5 rounded-xl px-4 py-3">
                 <span className="text-[#7A6A5B]">Customers pay</span>
-                <span className="text-[#B7322A] font-[Outfit] font-bold text-lg">{inr(salePrice)}</span>
+                <span className="text-[#B7322A] font-display font-bold text-lg">{inr(salePrice)}</span>
                 {discountNum > 0 && (
                   <>
                     <span className="text-[#8A7B6B] line-through text-xs">{inr(priceNum)}</span>
@@ -563,13 +563,13 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
 
           {/* Footer */}
           <div className="shrink-0 flex items-center justify-end gap-3 px-6 md:px-8 py-4 border-t border-[#231a16]/10 bg-[#FDF8F0]/30">
-            <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
+            <button type="button" onClick={onClose} className="px-6 py-2.5 rounded-xl border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
               Cancel
             </button>
             <button
               type="submit"
               disabled={!canSubmit || busy}
-              className={`px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all ${canSubmit && !busy ? 'bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]' : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'}`}
+              className={`px-6 py-2.5 rounded-xl font-display text-sm font-bold flex items-center gap-2 transition-all ${canSubmit && !busy ? 'bg-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]' : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'}`}
             >
               <PlusCircle size={18} /> {busy ? 'Saving...' : isEdit ? 'Save Changes' : 'Add Product'}
             </button>
