@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   ShoppingBag, ShoppingCart, User, Search, LogOut, Menu, X,
   Home, LayoutGrid, MessageCircle, Package,
+  LayoutDashboard, ClipboardList, Settings, MoreHorizontal,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCartStore } from '../store/cartStore';
@@ -69,8 +70,12 @@ export default function NavBar() {
     if (e.key === 'Enter') runSearch();
   };
 
+  // A tab is active on its exact path or any nested path. Exact matching keeps
+  // siblings like /seller, /seller-requests and /seller-profile distinct.
+  const isActive = (to) => location.pathname === to || location.pathname.startsWith(`${to}/`);
+
   const NavItem = ({ to, label, mobile = false }) => {
-    const active = location.pathname.startsWith(to);
+    const active = isActive(to);
     return (
       <Link
         to={to}
@@ -87,7 +92,7 @@ export default function NavBar() {
   };
 
   const NavItemMobile = ({ to, label }) => {
-    const active = location.pathname.startsWith(to);
+    const active = isActive(to);
     return (
       <Link
         to={to}
@@ -123,13 +128,28 @@ export default function NavBar() {
   const profileLink = userRole === 'customer' ? '/profile' : userRole === 'seller' ? '/seller-profile' : '/admin-profile';
   const profileLabel = userRole === 'customer' ? 'My Profile' : userRole === 'seller' ? 'Seller Profile' : 'Admin Settings';
 
-  const bottomNav = [
-    { to: '/home', label: 'Home', icon: Home },
-    { to: '/categories', label: 'Shop', icon: LayoutGrid },
-    { to: '/cart', label: 'Cart', icon: ShoppingCart },
-    { to: '/messages', label: 'Messages', icon: MessageCircle },
-    { to: '/profile', label: 'Profile', icon: User },
-  ];
+  const bottomNavByRole = {
+    customer: [
+      { to: '/home', label: 'Home', icon: Home },
+      { to: '/categories', label: 'Shop', icon: LayoutGrid },
+      { to: '/cart', label: 'Cart', icon: ShoppingCart },
+      { to: '/messages', label: 'Messages', icon: MessageCircle },
+      { to: '/profile', label: 'Profile', icon: User },
+    ],
+    seller: [
+      { to: '/seller', label: 'Dashboard', icon: LayoutDashboard },
+      { to: '/inventory', label: 'Inventory', icon: Package },
+      { to: '/seller-requests', label: 'Requests', icon: ClipboardList },
+      { to: '/seller-profile', label: 'Profile', icon: User },
+    ],
+    admin: [
+      { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+      { to: '/inventory', label: 'Products', icon: Package },
+      { to: '/admin-profile', label: 'Settings', icon: Settings },
+      { more: true, label: 'More', icon: MoreHorizontal },
+    ],
+  };
+  const bottomNav = bottomNavByRole[userRole] ?? [];
 
   return (
     <>
@@ -282,20 +302,27 @@ export default function NavBar() {
         </div>
       )}
 
-      {/* ══ Mobile bottom navigation (customers) ══ */}
-      {userRole === 'customer' && (
+      {/* ══ Mobile bottom navigation (all signed-in roles) ══ */}
+      {bottomNav.length > 0 && (
         <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#FFFCF7] border-t border-[#E7DAC8] pb-[env(safe-area-inset-bottom)]">
-          <div className="grid grid-cols-5">
-            {bottomNav.map(({ to, label, icon: Icon }) => {
-              const active = location.pathname.startsWith(to);
+          <div className={bottomNav.length > 4 ? 'grid grid-cols-5' : 'grid grid-cols-4'}>
+            {bottomNav.map(({ to, label, icon: Icon, more }) => {
+              const active = !more && isActive(to);
+              const tabClass = `relative flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors ${
+                active ? 'text-[#B7322A]' : 'text-[#8A7B6B]'
+              }`;
+
+              if (more) {
+                return (
+                  <button key="more" type="button" onClick={() => setMobileOpen(true)} className={tabClass}>
+                    <Icon size={20} />
+                    {label}
+                  </button>
+                );
+              }
+
               return (
-                <Link
-                  key={to}
-                  to={to}
-                  className={`relative flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors ${
-                    active ? 'text-[#B7322A]' : 'text-[#8A7B6B]'
-                  }`}
-                >
+                <Link key={to} to={to} className={tabClass}>
                   <Icon size={20} />
                   {label}
                   {to === '/cart' && totalItems > 0 && (

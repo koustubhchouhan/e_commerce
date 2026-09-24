@@ -78,8 +78,8 @@ function App() {
     location.pathname === "/auth/callback";
 
   const showChrome = !hideNavAndFooter && userRole !== "guest";
-  // Customers get a fixed bottom nav on small screens; reserve space for it.
-  const reserveBottomNav = showChrome && userRole === "customer";
+  // Every signed-in role gets the fixed bottom nav on small screens; reserve space for it.
+  const reserveBottomNav = showChrome;
 
   return (
     <>
