@@ -117,7 +117,7 @@ export default function MyMessages() {
         <div className="flex flex-col gap-6">
           {messages.map((msg) => {
             const status = statusOf(msg);
-            const recipient = msg.storeName || 'NovaMarket Support';
+            const recipient = msg.storeName || 'Arghya Support';
             return (
               <GlassCard key={msg.id} hover={false} className="p-6 md:p-8">
                 <div className="flex flex-wrap items-start justify-between gap-3 mb-4">

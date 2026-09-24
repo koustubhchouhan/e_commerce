@@ -106,7 +106,7 @@ export default function Checkout() {
           key: order.keyId,
           amount: order.amount,
           currency: order.currency,
-          name: 'NovaMarket',
+          name: 'Arghya',
           description: order.orders?.length > 1 ? `${order.orders.length} store orders` : 'Order payment',
           order_id: order.razorpayOrderId,
           prefill: {
@@ -211,7 +211,7 @@ export default function Checkout() {
                 </div>
                 <p className="text-xs text-[#7A6A5B] leading-relaxed">
                   Clicking Pay opens Razorpay's secure checkout. Your card details are entered there
-                  and never touch NovaMarket's servers.
+                  and never touch Arghya's servers.
                 </p>
               </div>
               <div className="flex gap-3 mt-4">

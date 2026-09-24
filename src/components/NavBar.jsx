@@ -144,7 +144,7 @@ export default function NavBar() {
             <span className="w-9 h-9 rounded-full bg-[#E0A11C] text-[#231A16] flex items-center justify-center shrink-0">
               <ShoppingBag size={18} />
             </span>
-            <span className="font-display text-xl font-semibold tracking-tight text-[#FDF8F0]">NovaMarket</span>
+            <span className="font-display text-xl font-semibold tracking-tight text-[#FDF8F0]">Arghya</span>
           </Link>
 
           {/* Desktop nav links */}
