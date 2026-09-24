@@ -97,7 +97,7 @@ export default function SignUp() {
               <span className="w-9 h-9 rounded-full bg-[#E0A11C] text-[#231A16] flex items-center justify-center font-display font-bold">
                 N
               </span>
-              <span className="font-display text-xl font-semibold">NovaMarket</span>
+              <span className="font-display text-xl font-semibold">Arghya</span>
             </div>
 
             <div className="relative mt-8">

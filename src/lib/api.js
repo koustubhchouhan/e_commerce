@@ -1,4 +1,4 @@
-// NovaMarket API client.
+// Arghya API client.
 // Thin wrapper around fetch that talks to the Express backend. Session tokens
 // live in HttpOnly cookies the browser manages; this client never reads or
 // stores them. It transparently refreshes an expired session once per request.

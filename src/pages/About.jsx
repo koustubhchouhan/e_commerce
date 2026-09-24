@@ -4,7 +4,7 @@ export default function About() {
   return (
     <div className="max-w-[1200px] mx-auto px-6 py-12 md:px-12 md:py-16 animate-fade-in-up">
       <div className="text-center mb-16">
-        <h1 className="text-glow font-display text-5xl font-bold text-[#231A16] mb-6">About NovaMarket</h1>
+        <h1 className="text-glow font-display text-5xl font-bold text-[#231A16] mb-6">About Arghya</h1>
         <p className="text-[#7A6A5B] text-lg max-w-3xl mx-auto leading-relaxed">
           Pioneering the future of digital commerce. We are building a borderless platform connecting tech enthusiasts with next-generation hardware and software solutions.
         </p>

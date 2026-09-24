@@ -124,7 +124,7 @@ export default function UserProfile() {
             </div>
             <div className="min-w-0">
               <p className="font-display font-semibold text-[#231A16] truncate">{displayName}</p>
-              <p className="text-xs text-[#8A7B6B] truncate">{user?.email || 'NovaMarket member'}</p>
+              <p className="text-xs text-[#8A7B6B] truncate">{user?.email || 'Arghya member'}</p>
             </div>
           </div>
 
@@ -305,7 +305,7 @@ export default function UserProfile() {
                     ? `Your application for "${sellerApp.storeName}" is under review by an admin.`
                     : sellerApp?.status === 'approved'
                       ? `Your storefront "${sellerApp.storeName}" is approved.`
-                      : 'Open your own storefront and start listing products on NovaMarket.'}
+                      : 'Open your own storefront and start listing products on Arghya.'}
                 </p>
               </div>
             </div>

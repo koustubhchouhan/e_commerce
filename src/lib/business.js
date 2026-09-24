@@ -5,8 +5,8 @@
 // verification. Razorpay reviews these pages and the contact information on
 // them, so the name, address, phone number and email must match your KYC.
 export const BUSINESS = {
-  brandName: 'NovaMarket',
-  legalName: 'NovaMarket Technologies Private Limited',
+  brandName: 'Arghya',
+  legalName: 'Arghya Technologies Private Limited',
   website: 'https://novamarket.in',
   email: 'rahulsinghal0993@gmail.com',
   phone: '+91 8955746038',
