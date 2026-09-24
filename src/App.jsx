@@ -40,7 +40,7 @@ const ContactUs = lazy(() => import("./pages/legal/ContactUs"));
 function RouteFallback() {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="animate-pulse font-[Outfit] text-lg text-[#7A6A5B]">
+      <div className="animate-pulse font-display text-lg text-[#7A6A5B]">
         Loading…
       </div>
     </div>
@@ -77,11 +77,19 @@ function App() {
     location.pathname === "/signup" ||
     location.pathname === "/auth/callback";
 
+  const showChrome = !hideNavAndFooter && userRole !== "guest";
+  // Customers get a fixed bottom nav on small screens; reserve space for it.
+  const reserveBottomNav = showChrome && userRole === "customer";
+
   return (
     <>
       <WebGLBackground />
-      <div className="relative z-10 flex flex-col min-h-[100dvh]">
-        {!hideNavAndFooter && userRole !== "guest" && <NavBar />}
+      <div
+        className={`relative z-10 flex flex-col min-h-[100dvh] ${
+          reserveBottomNav ? "pb-[calc(env(safe-area-inset-bottom)+4.25rem)] lg:pb-0" : ""
+        }`}
+      >
+        {showChrome && <NavBar />}
 
         <main className="flex-grow">
           <Suspense fallback={<RouteFallback />}>
@@ -256,7 +264,7 @@ function App() {
           </Suspense>
         </main>
 
-        {!hideNavAndFooter && userRole !== "guest" && <Footer />}
+        {showChrome && <Footer />}
       </div>
     </>
   );

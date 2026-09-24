@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Rocket, ShoppingCart, User, Search, LogOut, Menu, X } from 'lucide-react';
+import {
+  ShoppingBag, ShoppingCart, User, Search, LogOut, Menu, X,
+  Home, LayoutGrid, MessageCircle, Package,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCartStore } from '../store/cartStore';
 
@@ -54,12 +57,16 @@ export default function NavBar() {
     setProfileOpen(false);
   };
 
-  const handleSearch = (e) => {
-    if (e.key === 'Enter' && searchQuery.trim()) {
+  const runSearch = () => {
+    if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
       setMobileOpen(false);
     }
+  };
+
+  const handleSearchKey = (e) => {
+    if (e.key === 'Enter') runSearch();
   };
 
   const NavItem = ({ to, label, mobile = false }) => {
@@ -68,7 +75,26 @@ export default function NavBar() {
       <Link
         to={to}
         onClick={() => setMobileOpen(false)}
-        className={`px-3 py-3 rounded-lg transition-colors duration-300 ${mobile ? 'text-base w-full' : ''} ${active ? 'text-[#B7322A] font-bold border-b-2 border-[#B7322A]' : 'text-[#7A6A5B] hover:bg-[#231a16]/5 hover:text-[#2A211B]'}`}
+        className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${mobile ? 'text-base w-full' : ''} ${
+          active
+            ? 'bg-[#FDF8F0]/18 text-[#FDF8F0]'
+            : 'text-[#FDF8F0]/80 hover:bg-[#FDF8F0]/10 hover:text-[#FDF8F0]'
+        }`}
+      >
+        {label}
+      </Link>
+    );
+  };
+
+  const NavItemMobile = ({ to, label }) => {
+    const active = location.pathname.startsWith(to);
+    return (
+      <Link
+        to={to}
+        onClick={() => setMobileOpen(false)}
+        className={`px-4 py-3 rounded-2xl text-base transition-colors ${
+          active ? 'bg-[#B7322A] text-[#FDF8F0] font-semibold' : 'text-[#2A211B] hover:bg-[#231a16]/5'
+        }`}
       >
         {label}
       </Link>
@@ -97,132 +123,191 @@ export default function NavBar() {
   const profileLink = userRole === 'customer' ? '/profile' : userRole === 'seller' ? '/seller-profile' : '/admin-profile';
   const profileLabel = userRole === 'customer' ? 'My Profile' : userRole === 'seller' ? 'Seller Profile' : 'Admin Settings';
 
+  const bottomNav = [
+    { to: '/home', label: 'Home', icon: Home },
+    { to: '/categories', label: 'Shop', icon: LayoutGrid },
+    { to: '/cart', label: 'Cart', icon: ShoppingCart },
+    { to: '/messages', label: 'Messages', icon: MessageCircle },
+    { to: '/profile', label: 'Profile', icon: User },
+  ];
+
   return (
     <>
-      <header className="sticky top-0 z-50 bg-[#FDF8F0]/80 backdrop-blur-xl border-b border-[#231a16]/10 shadow-[0_1px_20px_rgba(183,50,42,0.1)] px-4 sm:px-6 md:px-8 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-3 flex justify-between items-center w-full">
-        
-        {/* Logo */}
-        <Link to={userRole === 'admin' ? '/admin' : userRole === 'seller' ? '/seller' : '/home'} className="flex items-center gap-2 font-[Outfit] text-2xl font-bold text-[#231A16]">
-          <Rocket className="text-[#B7322A]" />
-          <span className="hidden sm:block">NovaMarket</span>
-        </Link>
-        
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex gap-6 font-[Inter] text-base">
-          {links.map(l => <NavItem key={l.to} to={l.to} label={l.label} />)}
-        </nav>
+      <header className="sticky top-0 z-50 bg-[#B7322A] text-[#FDF8F0] shadow-[0_2px_14px_rgba(143,38,32,0.25)] pt-[calc(env(safe-area-inset-top))]">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 h-16 flex items-center gap-3 md:gap-6">
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-2 relative">
+          {/* Brand */}
+          <Link
+            to={userRole === 'admin' ? '/admin' : userRole === 'seller' ? '/seller' : '/home'}
+            className="flex items-center gap-2 shrink-0"
+          >
+            <span className="w-9 h-9 rounded-full bg-[#E0A11C] text-[#231A16] flex items-center justify-center shrink-0">
+              <ShoppingBag size={18} />
+            </span>
+            <span className="font-display text-xl font-semibold tracking-tight text-[#FDF8F0]">NovaMarket</span>
+          </Link>
+
+          {/* Desktop nav links */}
+          <nav className="hidden lg:flex items-center gap-1 font-body">
+            {links.map(l => <NavItem key={l.to} to={l.to} label={l.label} />)}
+          </nav>
+
+          {/* Search (desktop, customers) */}
           {userRole === 'customer' && (
-            <>
-              <div className="hidden md:flex items-center relative mr-2">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#7A6A5B]" size={16} />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  onKeyDown={handleSearch}
-                  placeholder="Search products..."
-                  className="bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-full py-1.5 pl-9 pr-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all w-[200px]"
-                />
-              </div>
-              <Link to="/cart" aria-label={`Cart, ${totalItems} item${totalItems === 1 ? '' : 's'}`} className="relative text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 h-11 w-11 flex items-center justify-center rounded-full transition-all">
+            <div className="hidden md:flex flex-1 max-w-xl mx-auto relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8A7B6B]" size={17} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKey}
+                placeholder="Search the storefront…"
+                className="w-full bg-[#FDF8F0] rounded-full py-2.5 pl-11 pr-4 text-sm text-[#2A211B] outline-none placeholder:text-[#A79684] focus:ring-2 focus:ring-[#E0A11C]/60"
+              />
+            </div>
+          )}
+
+          {/* Right actions */}
+          <div className="flex items-center gap-1 sm:gap-2 ml-auto relative">
+            {userRole === 'customer' && (
+              <Link
+                to="/cart"
+                aria-label={`Cart, ${totalItems} item${totalItems === 1 ? '' : 's'}`}
+                className="relative h-11 px-3 flex items-center gap-2 rounded-full hover:bg-[#FDF8F0]/10 transition-colors"
+              >
                 <ShoppingCart size={20} />
+                <span className="hidden sm:inline text-sm font-medium">Cart</span>
                 {totalItems > 0 && (
-                  <span className="absolute top-1 right-1 min-w-5 h-5 px-1 rounded-full bg-[#B7322A] text-[#FDF8F0] text-[10px] font-bold flex items-center justify-center">
+                  <span className="min-w-5 h-5 px-1 rounded-full bg-[#E0A11C] text-[#231A16] text-[11px] font-bold flex items-center justify-center">
                     {totalItems > 9 ? '9+' : totalItems}
                   </span>
                 )}
               </Link>
-            </>
-          )}
-
-          {/* Profile Dropdown */}
-          <div className="relative" ref={profileRef}>
-            <button
-              onClick={() => setProfileOpen(!profileOpen)}
-              aria-label="Account menu"
-              aria-haspopup="menu"
-              aria-expanded={profileOpen}
-              className="text-[#B7322A] hover:bg-[#231a16]/5 h-11 w-11 flex items-center justify-center rounded-full transition-all border border-transparent hover:border-[#B7322A]/30 bg-[#B7322A]/10"
-            >
-              <User size={20} />
-            </button>
-            {profileOpen && (
-              <div className="absolute right-0 mt-3 w-52 rounded-xl bg-[#F5ECDE] border border-[#231a16]/10 shadow-2xl overflow-hidden animate-fade-in-up origin-top-right z-50">
-                <div className="px-4 py-3 border-b border-[#231a16]/5">
-                  <p className="text-xs text-[#7A6A5B] font-semibold uppercase tracking-wider">{userRole} Account</p>
-                </div>
-                <div className="py-1">
-                  <Link to={profileLink} onClick={() => setProfileOpen(false)} className="flex items-center gap-2 px-4 py-3 text-sm text-[#2A211B] hover:bg-[#231a16]/5 transition-colors">
-                    <User size={16} /> {profileLabel}
-                  </Link>
-                  <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-[#B3261E] hover:bg-[#231a16]/5 transition-colors text-left">
-                    <LogOut size={16} /> Sign Out
-                  </button>
-                </div>
-              </div>
             )}
-          </div>
 
-          {/* Hamburger (mobile) */}
-          <button
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open menu"
-            className="md:hidden text-[#7A6A5B] hover:text-[#231A16] h-11 w-11 flex items-center justify-center rounded-lg hover:bg-[#231a16]/5 transition-all"
-          >
-            <Menu size={22} />
-          </button>
+            {/* Profile dropdown */}
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => setProfileOpen(!profileOpen)}
+                aria-label="Account menu"
+                aria-haspopup="menu"
+                aria-expanded={profileOpen}
+                className="h-11 w-11 flex items-center justify-center rounded-full border border-[#FDF8F0]/40 hover:bg-[#FDF8F0]/10 transition-colors"
+              >
+                <User size={20} />
+              </button>
+              {profileOpen && (
+                <div className="absolute right-0 mt-3 w-56 rounded-2xl bg-[#FFFCF7] border border-[#E7DAC8] shadow-2xl overflow-hidden animate-fade-in-up origin-top-right z-50 text-[#2A211B]">
+                  <div className="px-4 py-3 border-b border-[#231a16]/5">
+                    <p className="micro-label">{userRole} Account</p>
+                  </div>
+                  <div className="py-1">
+                    <Link to={profileLink} onClick={() => setProfileOpen(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#231a16]/5 transition-colors">
+                      <User size={16} /> {profileLabel}
+                    </Link>
+                    {userRole === 'customer' && (
+                      <Link to="/profile" onClick={() => setProfileOpen(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#231a16]/5 transition-colors">
+                        <Package size={16} /> My Orders
+                      </Link>
+                    )}
+                    <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-[#B3261E] hover:bg-[#231a16]/5 transition-colors text-left">
+                      <LogOut size={16} /> Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Hamburger (mobile) */}
+            <button
+              onClick={() => setMobileOpen(true)}
+              aria-label="Open menu"
+              className="lg:hidden h-11 w-11 flex items-center justify-center rounded-full hover:bg-[#FDF8F0]/10 transition-colors"
+            >
+              <Menu size={22} />
+            </button>
+          </div>
         </div>
       </header>
 
       {/* ══ Mobile Drawer ══ */}
       {mobileOpen && (
         <div className="fixed inset-0 z-[100] flex">
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          {/* Drawer */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
           <div
             role="dialog"
             aria-modal="true"
             aria-label="Main menu"
-            className="relative ml-auto w-[80vw] max-w-[320px] h-full bg-[#F5ECDE] border-l border-[#231a16]/10 flex flex-col p-6 gap-4 shadow-2xl animate-fade-in-up pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
+            className="relative ml-auto w-[82vw] max-w-[340px] h-full bg-[#FDF8F0] border-l border-[#E7DAC8] flex flex-col p-6 gap-4 shadow-2xl animate-fade-in-up pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
           >
-            <div className="flex justify-between items-center mb-4">
-              <span className="font-[Outfit] text-xl font-bold text-[#231A16]">Menu</span>
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-display text-xl font-semibold text-[#231A16]">Menu</span>
               <button
                 ref={drawerCloseRef}
                 onClick={() => setMobileOpen(false)}
                 aria-label="Close menu"
-                className="text-[#7A6A5B] hover:text-[#231A16] h-11 w-11 flex items-center justify-center rounded-lg hover:bg-[#231a16]/5 transition-colors"
+                className="text-[#7A6A5B] hover:text-[#231A16] h-11 w-11 flex items-center justify-center rounded-full hover:bg-[#231a16]/5 transition-colors"
               >
                 <X size={22} />
               </button>
             </div>
 
-            {/* Search lives in the main content on mobile (see Home) so it is
-                always reachable without opening this drawer. */}
+            {userRole === 'customer' && (
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8A7B6B]" size={18} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearchKey}
+                  placeholder="Search products…"
+                  className="field pl-11"
+                />
+              </div>
+            )}
 
             <nav className="flex flex-col gap-1 flex-1">
-              {links.map(l => <NavItem key={l.to} to={l.to} label={l.label} mobile />)}
-              {userRole === 'customer' && (
-                <Link to="/cart" onClick={() => setMobileOpen(false)} className="px-3 py-3 rounded-lg text-[#7A6A5B] hover:bg-[#231a16]/5 hover:text-[#2A211B] transition-colors flex items-center gap-2">
-                  <ShoppingCart size={16} /> Cart {totalItems > 0 && <span className="ml-auto text-xs bg-[#B7322A] text-[#FDF8F0] font-bold px-2 py-0.5 rounded-full">{totalItems}</span>}
-                </Link>
-              )}
+              {links.map(l => <NavItemMobile key={l.to} to={l.to} label={l.label} />)}
             </nav>
 
-            <div className="border-t border-[#231a16]/10 pt-4 flex flex-col gap-2">
-              <Link to={profileLink} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-3 py-3 text-sm text-[#2A211B] hover:bg-[#231a16]/5 rounded-lg transition-colors">
+            <div className="border-t border-[#E7DAC8] pt-4 flex flex-col gap-2">
+              <Link to={profileLink} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-4 py-3 text-sm text-[#2A211B] hover:bg-[#231a16]/5 rounded-2xl transition-colors">
                 <User size={16} /> {profileLabel}
               </Link>
-              <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-3 text-sm text-[#B3261E] hover:bg-[#231a16]/5 rounded-lg transition-colors text-left">
+              <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-[#B3261E] hover:bg-[#231a16]/5 rounded-2xl transition-colors text-left">
                 <LogOut size={16} /> Sign Out
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* ══ Mobile bottom navigation (customers) ══ */}
+      {userRole === 'customer' && (
+        <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#FFFCF7] border-t border-[#E7DAC8] pb-[env(safe-area-inset-bottom)]">
+          <div className="grid grid-cols-5">
+            {bottomNav.map(({ to, label, icon: Icon }) => {
+              const active = location.pathname.startsWith(to);
+              return (
+                <Link
+                  key={to}
+                  to={to}
+                  className={`relative flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors ${
+                    active ? 'text-[#B7322A]' : 'text-[#8A7B6B]'
+                  }`}
+                >
+                  <Icon size={20} />
+                  {label}
+                  {to === '/cart' && totalItems > 0 && (
+                    <span className="absolute top-1 right-1/2 translate-x-4 min-w-4 h-4 px-1 rounded-full bg-[#B7322A] text-[#FDF8F0] text-[9px] font-bold flex items-center justify-center">
+                      {totalItems > 9 ? '9+' : totalItems}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
       )}
     </>
   );

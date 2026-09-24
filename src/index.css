@@ -40,8 +40,8 @@
   --color-outline: #8A7B6B;
   --color-outline-variant: #C4B5A2;
 
-  --font-display: 'Outfit', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
 }
 
 @layer base {
@@ -92,26 +92,122 @@
     background: var(--color-surface);
   }
   ::-webkit-scrollbar-thumb {
-    background: var(--color-surface-variant);
+    background: #DCCDBA;
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-primary-fixed-dim);
+    background: #B7322A;
   }
 }
 
 @layer utilities {
+  /* Soft paper card — replaces the old glass/neon panel. Cream surface with a
+     warm hairline border and a barely-there lift, matching the mockups. */
   .glass-panel {
-    background: rgba(253, 248, 240, 0.72);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(35, 26, 22, 0.1);
+    background: #FFFCF7;
+    border: 1px solid #E7DAC8;
+    border-radius: 1.25rem;
+    box-shadow: 0 1px 2px rgba(60, 40, 25, 0.04);
   }
 
   .glass-panel-hover:hover {
-    background: rgba(245, 236, 222, 0.9);
-    border-color: rgba(183, 50, 42, 0.25);
-    box-shadow: 0 8px 22px rgba(35, 26, 22, 0.08);
+    border-color: rgba(183, 50, 42, 0.35);
+    box-shadow: 0 12px 28px rgba(60, 40, 25, 0.09);
+  }
+
+  .card-surface {
+    background: #FFFCF7;
+    border: 1px solid #E7DAC8;
+    border-radius: 1.25rem;
+  }
+
+  /* Diagonal hatch used for image placeholders, as seen in the mockups. */
+  .stripe-placeholder {
+    background-color: #F3E9D8;
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(190, 165, 130, 0.28) 0,
+      rgba(190, 165, 130, 0.28) 1px,
+      transparent 1px,
+      transparent 12px
+    );
+  }
+
+  /* ── Buttons: pill shapes, solid red primary + outlined red secondary ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    transition: background-color 0.2s ease, color 0.2s ease,
+      border-color 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: #B7322A;
+    color: #FDF8F0;
+    border: 1.5px solid #B7322A;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: #8F2620;
+    border-color: #8F2620;
+    box-shadow: 0 8px 20px rgba(143, 38, 32, 0.22);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: #B7322A;
+    border: 1.5px solid #B7322A;
+  }
+  .btn-outline:hover:not(:disabled) {
+    background: #B7322A;
+    color: #FDF8F0;
+  }
+
+  .btn-gold {
+    background: #E0A11C;
+    color: #231A16;
+    border: 1.5px solid #E0A11C;
+  }
+  .btn-gold:hover:not(:disabled) {
+    background: #C8901A;
+    border-color: #C8901A;
+  }
+
+  /* ── Pill form field on cream ── */
+  .field {
+    width: 100%;
+    background: #FBF3E7;
+    border: 1px solid #E3D5C1;
+    border-radius: 9999px;
+    padding: 0.8rem 1.25rem;
+    color: #2A211B;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .field::placeholder {
+    color: #A79684;
+  }
+  .field:focus {
+    border-color: #B7322A;
+    box-shadow: 0 0 0 3px rgba(183, 50, 42, 0.12);
+  }
+
+  /* ── Small uppercase section label ("PURITY", "CHOOSE ITEMS") ── */
+  .micro-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #8A7B6B;
   }
 
   .neon-glow {
@@ -123,7 +219,7 @@
   }
 
   .text-glow {
-    text-shadow: 0 1px 2px rgba(35, 26, 22, 0.08);
+    text-shadow: 0 1px 2px rgba(35, 26, 22, 0.06);
   }
 
   .hide-scrollbar {

@@ -61,7 +61,7 @@ export default function Categories() {
   return (
     <div className="max-w-[1440px] mx-auto px-6 py-10 md:px-12 md:py-12 animate-fade-in-up">
       <header className="mb-12 text-center">
-        <h1 className="font-[Outfit] text-5xl font-bold text-[#231A16] mb-4 text-glow">Browse Categories</h1>
+        <h1 className="font-display text-5xl font-bold text-[#231A16] mb-4 text-glow">Browse Categories</h1>
         <p className="text-[#7A6A5B] max-w-2xl mx-auto">Explore our curated collections of futuristic tech, smart gadgets, and seasonal deals.</p>
       </header>
 
@@ -86,7 +86,7 @@ export default function Categories() {
                     SPECIAL EVENT
                   </span>
                 )}
-                <h2 className={`font-[Outfit] text-3xl font-bold mb-2 ${cat.theme === 'festive' ? 'text-[#E0A11C] drop-shadow-[0_0_4px_rgba(224,161,28,0.44)]' : 'text-[#231A16]'}`}>
+                <h2 className={`font-display text-3xl font-bold mb-2 ${cat.theme === 'festive' ? 'text-[#E0A11C] drop-shadow-[0_0_4px_rgba(224,161,28,0.44)]' : 'text-[#231A16]'}`}>
                   {cat.title}
                 </h2>
                 <p className="text-[#2A211B] text-sm opacity-90">{cat.desc}</p>

@@ -28,7 +28,7 @@ export default function Cart() {
           <ShoppingBag size={24} />
         </div>
         <div>
-          <h1 className="font-[Outfit] text-4xl font-bold text-[#231A16] text-glow tracking-tight">Your Cart</h1>
+          <h1 className="font-display text-4xl font-bold text-[#231A16] text-glow tracking-tight">Your Cart</h1>
           <p className="text-[#7A6A5B] mt-1 text-sm">{items.length === 0 ? 'Your cart is empty.' : `${items.reduce((a,i)=>a+i.quantity,0)} item(s) in your cart.`}</p>
         </div>
       </header>
@@ -43,7 +43,7 @@ export default function Cart() {
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <ShoppingBag size={60} className="text-[#F0E7DA]" />
           <p className="text-[#7A6A5B] text-xl">Your cart is empty.</p>
-          <Link to="/home" className="mt-2 px-6 py-3 rounded-lg bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] font-[Outfit] font-bold text-base hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all">Start Shopping</Link>
+          <Link to="/home" className="btn btn-primary mt-2 px-7 py-3 text-base">Start shopping</Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
@@ -52,20 +52,20 @@ export default function Cart() {
           <div className="xl:col-span-8 flex flex-col gap-4">
             {items.map(({ product, quantity }) => (
               <GlassCard key={product.id} className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6 group hover:border-[#B7322A]/30 transition-all duration-300">
-                <div className="w-full sm:w-32 h-32 rounded-lg bg-[#FDF8F0]/50 border border-[#231a16]/5 overflow-hidden shrink-0">
+                <div className="w-full sm:w-32 h-32 rounded-xl bg-[#FDF8F0]/50 border border-[#231a16]/5 overflow-hidden shrink-0">
                   <img src={product.img} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
                 <div className="flex-1 flex flex-col gap-2 w-full">
                   <div className="flex justify-between items-start gap-4">
-                    <h3 className="font-[Outfit] text-xl font-semibold text-[#231A16] line-clamp-1">{product.title}</h3>
-                    <button onClick={() => handleRemove(product.id, product.title)} className="text-[#B3261E]/70 hover:text-[#B3261E] hover:bg-[#FBE3E1]/20 p-2 rounded-lg transition-all">
+                    <h3 className="font-display text-xl font-semibold text-[#231A16] line-clamp-1">{product.title}</h3>
+                    <button onClick={() => handleRemove(product.id, product.title)} className="text-[#B3261E]/70 hover:text-[#B3261E] hover:bg-[#FBE3E1]/20 p-2 rounded-xl transition-all">
                       <Trash2 size={18} />
                     </button>
                   </div>
-                  <p className="font-[Outfit] text-xl font-bold text-[#B7322A]">{inr(product.price)}</p>
+                  <p className="font-display text-xl font-bold text-[#B7322A]">{inr(product.price)}</p>
                   {product.storeName && <span className="text-[11px] text-[#8A7B6B] uppercase tracking-wider font-[Inter]">by {product.storeName}</span>}
                   <div className="flex items-center gap-4 mt-2">
-                    <div className="flex items-center bg-[#F5ECDE] border border-[#231a16]/10 rounded-lg p-1">
+                    <div className="flex items-center bg-[#F5ECDE] border border-[#231a16]/10 rounded-xl p-1">
                       <button onClick={() => updateQty(product.id, quantity - 1)} className="w-8 h-8 flex items-center justify-center text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 rounded-md transition-colors"><Minus size={14} /></button>
                       <span className="w-10 text-center font-semibold text-[#2A211B] text-sm">{quantity}</span>
                       <button onClick={() => updateQty(product.id, quantity + 1)} className="w-8 h-8 flex items-center justify-center text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 rounded-md transition-colors"><Plus size={14} /></button>
@@ -84,23 +84,23 @@ export default function Cart() {
 
           {/* Order Summary */}
           <div className="xl:col-span-4">
-            <GlassCard className="p-8 sticky top-28 flex flex-col gap-6 border-t-4 border-t-[#B8860B]">
-              <h2 className="font-[Outfit] text-2xl font-semibold text-[#231A16]">Order Summary</h2>
+            <GlassCard className="p-8 sticky top-28 flex flex-col gap-6">
+              <h2 className="font-display text-2xl font-semibold text-[#231A16]">Order summary</h2>
               
-              <div className="flex flex-col gap-4 text-sm font-[Inter] border-b border-[#231a16]/10 pb-6">
+              <div className="flex flex-col gap-4 text-sm font-body border-b border-[#E7DAC8] pb-6">
                 <div className="flex justify-between items-center text-[#7A6A5B]">
                   <span>Subtotal</span>
-                  <span className="text-[#2A211B] font-medium">${subtotal.toFixed(2)}</span>
+                  <span className="text-[#2A211B] font-medium">{inr(subtotal)}</span>
                 </div>
               </div>
 
               <div className="flex justify-between items-end">
-                <span className="text-[#7A6A5B] uppercase tracking-wider text-xs font-bold">Total</span>
-                <span className="font-[Outfit] text-4xl font-bold text-[#231A16]">${total.toFixed(2)}</span>
+                <span className="micro-label">Total</span>
+                <span className="font-display text-4xl font-bold text-[#231A16]">{inr(total)}</span>
               </div>
 
-              <button onClick={() => navigate('/checkout')} className="w-full py-4 rounded-xl bg-gradient-to-r from-[#B8860B] to-[#E0A11C] text-[#231A16] font-[Outfit] text-lg font-bold tracking-wide hover:shadow-[0_0_11px_rgba(224,161,28,0.22)] transition-all flex items-center justify-center gap-2 mt-4 group">
-                Proceed to Checkout <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+              <button onClick={() => navigate('/checkout')} className="btn btn-primary w-full py-4 text-lg mt-4 group">
+                Proceed to checkout <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </button>
               
               <div className="flex flex-col gap-3 mt-2">

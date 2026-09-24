@@ -70,7 +70,7 @@ export default function SellerProfile() {
     }
   };
 
-  const inputClass = 'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]';
+  const inputClass = 'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]';
   const labelClass = 'block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2';
 
   return (
@@ -81,14 +81,14 @@ export default function SellerProfile() {
           {user?.avatarUrl ? (
             <img src={user.avatarUrl} alt="Seller Profile" className="w-full h-full object-cover" />
           ) : (
-            <span className="font-[Outfit] text-4xl font-bold text-[#B7322A]">
+            <span className="font-display text-4xl font-bold text-[#B7322A]">
               {(user?.fullName || 'S').charAt(0).toUpperCase()}
             </span>
           )}
         </div>
         <div className="flex-grow">
           <div className="flex items-center gap-3">
-            <h1 className="font-[Outfit] text-3xl md:text-5xl font-bold text-[#231A16] tracking-tight">
+            <h1 className="font-display text-3xl md:text-5xl font-bold text-[#231A16] tracking-tight">
               {user?.fullName || 'Seller'}
             </h1>
             <CheckCircle className="text-[#B7322A]" size={24} />
@@ -101,14 +101,14 @@ export default function SellerProfile() {
         <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => setAccountOpen(true)}
-            className="px-6 py-3 rounded-lg border border-[#231a16]/15 text-[#2A211B] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase hover:bg-[#231a16]/5 transition-all duration-300"
+            className="px-6 py-3 rounded-xl border border-[#231a16]/15 text-[#2A211B] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase hover:bg-[#231a16]/5 transition-all duration-300"
           >
             Edit Account
           </button>
           <button
             onClick={openEdit}
             disabled={!store}
-            className="px-6 py-3 bg-gradient-to-r from-[#7A1F1A] to-[#B7322A] text-[#FDF8F0] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-lg hover:shadow-[0_0_9px_rgba(183,50,42,0.17)] transition-all duration-300 disabled:opacity-50"
+            className="px-6 py-3 bg-[#B7322A] text-[#FDF8F0] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-xl hover:shadow-[0_0_9px_rgba(183,50,42,0.17)] transition-all duration-300 disabled:opacity-50"
           >
             Edit Store Profile
           </button>
@@ -121,7 +121,7 @@ export default function SellerProfile() {
           <div className="flex justify-between items-start mb-6">
             <div className="flex items-center gap-3 text-[#231A16]">
               <Store size={28} className="group-hover:scale-110 transition-transform" />
-              <h2 className="font-[Outfit] text-2xl font-semibold">Store Details</h2>
+              <h2 className="font-display text-2xl font-semibold">Store Details</h2>
             </div>
           </div>
 
@@ -130,7 +130,7 @@ export default function SellerProfile() {
           ) : error ? (
             <div className="flex items-center justify-center h-40 text-[#B3261E]">{error}</div>
           ) : (
-            <div className="bg-[#F0E7DA]/50 p-4 rounded-lg border border-[#231a16]/5 space-y-4">
+            <div className="bg-[#F0E7DA]/50 p-4 rounded-xl border border-[#231a16]/5 space-y-4">
               <div>
                 <span className="font-[Inter] text-xs font-semibold tracking-[0.05em] text-[#7A6A5B] uppercase block mb-1">Store URL</span>
                 <p className="text-[#B7322A]">novamarket.com/store/{slugify(store.name) || shortId(store.id)}</p>
@@ -159,17 +159,17 @@ export default function SellerProfile() {
           <div className="flex justify-between items-start mb-6">
             <div className="flex flex-col gap-2 text-[#C8901A]">
               <Shield size={28} className="group-hover:scale-110 transition-transform" />
-              <h2 className="font-[Outfit] text-2xl font-semibold mt-2">Account Security</h2>
+              <h2 className="font-display text-2xl font-semibold mt-2">Account Security</h2>
             </div>
           </div>
           <div className="space-y-4">
-            <button className="w-full text-left bg-[#231a16]/5 hover:bg-[#231a16]/10 p-3 rounded-lg transition-colors border border-[#231a16]/5">
+            <button className="w-full text-left bg-[#231a16]/5 hover:bg-[#231a16]/10 p-3 rounded-xl transition-colors border border-[#231a16]/5">
               <span className="font-[Inter] text-sm text-[#2A211B] block">Change Password</span>
             </button>
-            <button className="w-full text-left bg-[#F0E7DA]/30 p-3 rounded-lg border border-[#231a16]/5">
+            <button className="w-full text-left bg-[#F0E7DA]/30 p-3 rounded-xl border border-[#231a16]/5">
               <span className="font-[Inter] text-sm text-[#7A6A5B] block">2-Step Verification Not Configured</span>
             </button>
-            <button className="w-full text-left bg-[#231a16]/5 hover:bg-[#231a16]/10 p-3 rounded-lg transition-colors border border-[#231a16]/5">
+            <button className="w-full text-left bg-[#231a16]/5 hover:bg-[#231a16]/10 p-3 rounded-xl transition-colors border border-[#231a16]/5">
               <span className="font-[Inter] text-sm text-[#2A211B] block">Active Sessions</span>
             </button>
           </div>
@@ -179,11 +179,11 @@ export default function SellerProfile() {
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-3 text-[#8F2620]">
               <MapPin size={28} className="group-hover:scale-110 transition-transform" />
-              <h2 className="font-[Outfit] text-xl font-semibold">Warehouse / Return Address</h2>
+              <h2 className="font-display text-xl font-semibold">Warehouse / Return Address</h2>
             </div>
             <ChevronRight size={24} className="text-[#7A6A5B] group-hover:text-[#8F2620] transition-colors" />
           </div>
-          <div className="bg-[#F0E7DA]/30 p-3 rounded-lg border border-[#231a16]/5 flex items-center justify-center h-24">
+          <div className="bg-[#F0E7DA]/30 p-3 rounded-xl border border-[#231a16]/5 flex items-center justify-center h-24">
             <p className="text-[#8A7B6B] text-sm">No return address configured yet.</p>
           </div>
         </div>
@@ -192,11 +192,11 @@ export default function SellerProfile() {
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-3 text-[#231A16]">
               <Wallet size={28} className="group-hover:scale-110 transition-transform" />
-              <h2 className="font-[Outfit] text-xl font-semibold">Payout Methods</h2>
+              <h2 className="font-display text-xl font-semibold">Payout Methods</h2>
             </div>
             <ChevronRight size={24} className="text-[#7A6A5B] group-hover:text-[#231A16] transition-colors" />
           </div>
-          <div className="bg-[#F0E7DA]/30 p-3 rounded-lg border border-[#231a16]/5 flex items-center justify-center h-24">
+          <div className="bg-[#F0E7DA]/30 p-3 rounded-xl border border-[#231a16]/5 flex items-center justify-center h-24">
             <p className="text-[#8A7B6B] text-sm">Payout methods are coming soon.</p>
           </div>
         </div>
@@ -215,12 +215,12 @@ export default function SellerProfile() {
             <form onSubmit={handleSave} onMouseDown={(e) => e.stopPropagation()} className="flex flex-col">
               <div className="flex items-start justify-between px-6 md:px-8 py-5 border-b border-[#231a16]/10">
                 <div>
-                  <h2 className="font-[Outfit] text-2xl font-bold text-[#231A16] flex items-center gap-2">
+                  <h2 className="font-display text-2xl font-bold text-[#231A16] flex items-center gap-2">
                     <Store className="text-[#B7322A]" size={24} /> Edit Store Profile
                   </h2>
                   <p className="text-[#7A6A5B] text-xs mt-1">Update how your storefront appears to customers.</p>
                 </div>
-                <button type="button" onClick={() => setEditOpen(false)} className="p-2 -mr-2 rounded-lg text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors" aria-label="Close">
+                <button type="button" onClick={() => setEditOpen(false)} className="p-2 -mr-2 rounded-xl text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors" aria-label="Close">
                   <X size={22} />
                 </button>
               </div>
@@ -243,13 +243,13 @@ export default function SellerProfile() {
               </div>
 
               <div className="flex items-center justify-end gap-3 px-6 md:px-8 py-4 border-t border-[#231a16]/10 bg-[#FDF8F0]/30">
-                <button type="button" onClick={() => setEditOpen(false)} className="px-6 py-2.5 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
+                <button type="button" onClick={() => setEditOpen(false)} className="px-6 py-2.5 rounded-xl border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!editName.trim() || busy}
-                  className={`px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all ${editName.trim() && !busy ? 'bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]' : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'}`}
+                  className={`px-6 py-2.5 rounded-xl font-display text-sm font-bold flex items-center gap-2 transition-all ${editName.trim() && !busy ? 'bg-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]' : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'}`}
                 >
                   <Save size={18} /> {busy ? 'Saving...' : 'Save Changes'}
                 </button>

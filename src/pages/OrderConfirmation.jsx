@@ -23,7 +23,7 @@ export default function OrderConfirmation() {
       </div>
 
       <div>
-        <h1 className="font-[Outfit] text-5xl font-bold text-[#231A16] mb-3 text-glow">
+        <h1 className="font-display text-5xl font-bold text-[#231A16] mb-3 text-glow">
           {multiple ? 'Orders Confirmed!' : 'Order Confirmed!'}
         </h1>
         <p className="text-[#7A6A5B] text-lg">
@@ -45,7 +45,7 @@ export default function OrderConfirmation() {
                 >
                   <span className="text-[#7A6A5B] text-sm">Order {index + 1}</span>
                   <div className="flex items-center gap-4">
-                    <span className="font-[Outfit] text-base font-bold text-[#B7322A] uppercase">{order.orderId}</span>
+                    <span className="font-display text-base font-bold text-[#B7322A] uppercase">{order.orderId}</span>
                     {order.total != null && <span className="text-[#231A16] text-sm font-semibold">{inr(order.total)}</span>}
                   </div>
                 </div>
@@ -54,18 +54,18 @@ export default function OrderConfirmation() {
           ) : (
             <div className="flex justify-between items-center py-3 border-b border-[#231a16]/10">
               <span className="text-[#7A6A5B] text-sm">Order ID</span>
-              <span className="font-[Outfit] text-lg font-bold text-[#B7322A] uppercase">{orderId}</span>
+              <span className="font-display text-lg font-bold text-[#B7322A] uppercase">{orderId}</span>
             </div>
           )}
           {total != null && (
             <div className="flex justify-between items-center py-3 border-b border-[#231a16]/10">
               <span className="text-[#7A6A5B] text-sm">Total Paid</span>
-              <span className="font-[Outfit] text-lg font-semibold text-[#231A16]">{inr(total)}</span>
+              <span className="font-display text-lg font-semibold text-[#231A16]">{inr(total)}</span>
             </div>
           )}
           <div className="flex justify-between items-center py-3 border-b border-[#231a16]/10">
             <span className="text-[#7A6A5B] text-sm">Estimated Delivery</span>
-            <span className="font-[Outfit] text-lg font-semibold text-[#231A16]">5–7 Business Days</span>
+            <span className="font-display text-lg font-semibold text-[#231A16]">5–7 Business Days</span>
           </div>
           <div className="flex justify-between items-center py-3">
             <span className="text-[#7A6A5B] text-sm">Status</span>
@@ -80,10 +80,10 @@ export default function OrderConfirmation() {
       </div>
 
       <div className="flex gap-4 flex-wrap justify-center">
-        <Link to="/home" className="flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-[#7A1F1A] to-[#B7322A] text-[#FDF8F0] font-[Outfit] text-base font-bold hover:shadow-[0_0_9px_rgba(183,50,42,0.17)] transition-all">
+        <Link to="/home" className="flex items-center gap-2 px-8 py-3 rounded-xl bg-[#B7322A] text-[#FDF8F0] font-display text-base font-bold hover:shadow-[0_0_9px_rgba(183,50,42,0.17)] transition-all">
           Continue Shopping <ArrowRight size={18} />
         </Link>
-        <Link to="/profile" className="flex items-center gap-2 px-8 py-3 rounded-xl border border-[#231a16]/10 text-[#2A211B] font-[Outfit] text-base font-semibold hover:bg-[#231a16]/5 transition-all">
+        <Link to="/profile" className="flex items-center gap-2 px-8 py-3 rounded-xl border border-[#231a16]/10 text-[#2A211B] font-display text-base font-semibold hover:bg-[#231a16]/5 transition-all">
           View My Orders
         </Link>
       </div>

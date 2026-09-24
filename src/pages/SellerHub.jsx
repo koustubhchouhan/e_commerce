@@ -341,12 +341,12 @@ export default function SellerHub() {
             {user?.avatarUrl ? (
               <img src={user.avatarUrl} alt="Seller Profile" className="w-full h-full object-cover" />
             ) : (
-              <span className="font-[Outfit] text-3xl font-bold text-[#B7322A]">
+              <span className="font-display text-3xl font-bold text-[#B7322A]">
                 {(user?.fullName || 'S').charAt(0).toUpperCase()}
               </span>
             )}
           </div>
-          <h2 className="font-[Outfit] text-xl font-bold text-[#231A16]">{user?.fullName || 'Seller'}</h2>
+          <h2 className="font-display text-xl font-bold text-[#231A16]">{user?.fullName || 'Seller'}</h2>
           <p className="text-[#7A6A5B] text-xs font-semibold tracking-wider uppercase mt-1">{store?.name || 'Your Store'}</p>
           <span className="px-3 py-1 rounded-full bg-[#E0A11C]/10 text-[#E0A11C] text-[10px] font-bold uppercase tracking-wider mt-3 border border-[#E0A11C]/20">
             Verified Seller
@@ -368,7 +368,7 @@ export default function SellerHub() {
         <button
           type="button"
           onClick={() => setNavOpen(true)}
-          className="lg:hidden flex items-center gap-2 mb-6 px-4 py-2.5 rounded-lg border border-[#231a16]/10 bg-[#F5ECDE]/70 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors"
+          className="lg:hidden flex items-center gap-2 mb-6 px-4 py-2.5 rounded-xl border border-[#231a16]/10 bg-[#F5ECDE]/70 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors"
           aria-label="Open seller navigation"
         >
           <Menu size={18} /> Menu
@@ -377,7 +377,7 @@ export default function SellerHub() {
         {activeTab === 'overview' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Store Overview</h1>
+              <h1 className="font-display text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Store Overview</h1>
               <p className="text-[#7A6A5B]">Monitor your recent analytics, add new products, and track inventory.</p>
             </header>
 
@@ -398,7 +398,7 @@ export default function SellerHub() {
               {/* Inventory List */}
               <div className="xl:col-span-2">
                 <GlassCard className="p-6 lg:p-8 min-h-[500px]">
-                  <h2 className="font-[Outfit] text-2xl font-semibold text-[#231A16] mb-6">Your Inventory</h2>
+                  <h2 className="font-display text-2xl font-semibold text-[#231A16] mb-6">Your Inventory</h2>
                   
                   {loadingProducts ? (
                     <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading inventory...</div>
@@ -418,7 +418,7 @@ export default function SellerHub() {
                           const approval = item.approvalStatus ?? 'approved';
                           return (
                           <tr key={item.id} className="border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors">
-                            <td className="py-4 px-4 font-[Outfit] text-lg font-semibold text-[#2A211B]">{item.name}</td>
+                            <td className="py-4 px-4 font-display text-lg font-semibold text-[#2A211B]">{item.name}</td>
                             <td className="py-4 px-4 text-right text-[#B7322A] font-semibold">{inr(item.price)}</td>
                             <td className="py-4 px-4 text-center text-[#231A16]">{salesByProduct[item.id] ?? 0}</td>
                             <td className="py-4 px-4 text-right">
@@ -467,7 +467,7 @@ export default function SellerHub() {
         {activeTab === 'orders' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Store Orders</h1>
+              <h1 className="font-display text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Store Orders</h1>
               <p className="text-[#7A6A5B]">Products ordered from your store by customers.</p>
             </header>
             
@@ -511,7 +511,7 @@ export default function SellerHub() {
                                   key={action.key}
                                   disabled={updatingId === order.id}
                                   onClick={() => handleOrderStatus(order, action.key)}
-                                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                                     action.key === 'cancelled'
                                       ? 'bg-[#B3261E]/10 text-[#B3261E] border-[#B3261E]/30 hover:bg-[#B3261E]/20'
                                       : 'bg-[#B7322A]/10 text-[#E0A11C] border-[#B7322A]/30 hover:bg-[#B7322A]/20'
@@ -544,7 +544,7 @@ export default function SellerHub() {
         {activeTab === 'messages' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Messages & Complaints</h1>
+              <h1 className="font-display text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Messages & Complaints</h1>
               <p className="text-[#7A6A5B]">
                 {unreadMessages > 0
                   ? `${unreadMessages} unread message${unreadMessages === 1 ? '' : 's'} from customers.`
@@ -605,7 +605,7 @@ export default function SellerHub() {
                             <button
                               onClick={(e) => { e.stopPropagation(); openMessage(msg); }}
                               title={msg.reply ? 'View / edit reply' : 'Reply'}
-                              className="p-2 rounded-lg bg-[#B7322A]/10 text-[#B7322A] hover:bg-[#B7322A]/20 transition-colors"
+                              className="p-2 rounded-xl bg-[#B7322A]/10 text-[#B7322A] hover:bg-[#B7322A]/20 transition-colors"
                             >
                               <Reply size={16} />
                             </button>
@@ -613,7 +613,7 @@ export default function SellerHub() {
                               onClick={(e) => { e.stopPropagation(); handleToggleMessageRead(msg); }}
                               disabled={togglingId === msg.id}
                               title={msg.isRead ? 'Mark as unread' : 'Mark as read'}
-                              className="p-2 rounded-lg bg-[#B7322A]/10 text-[#E0A11C] hover:bg-[#B7322A]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="p-2 rounded-xl bg-[#B7322A]/10 text-[#E0A11C] hover:bg-[#B7322A]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {msg.isRead ? <EyeOff size={16} /> : <Eye size={16} />}
                             </button>
@@ -639,7 +639,7 @@ export default function SellerHub() {
         {activeTab === 'reviews' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Customer Reviews</h1>
+              <h1 className="font-display text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Customer Reviews</h1>
               <p className="text-[#7A6A5B]">Reviews left on your products. Reply publicly to build trust with shoppers.</p>
             </header>
 
@@ -654,7 +654,7 @@ export default function SellerHub() {
               </GlassCard>
             )}
             {!reviewsLoading && !reviewsError && reviews.length === 0 && (
-              <div className="bg-[#F0E7DA]/30 p-8 rounded-lg border border-dashed border-[#231a16]/10 text-center text-[#8A7B6B] text-sm">
+              <div className="bg-[#F0E7DA]/30 p-8 rounded-xl border border-dashed border-[#231a16]/10 text-center text-[#8A7B6B] text-sm">
                 No reviews on your products yet.
               </div>
             )}
@@ -696,16 +696,16 @@ export default function SellerHub() {
                           value={replyDraft}
                           onChange={(e) => setReplyDraft(e.target.value)}
                           placeholder={`Reply to ${review.author}...`}
-                          className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all resize-none placeholder:text-[#8A7B6B]"
+                          className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all resize-none placeholder:text-[#8A7B6B]"
                         />
                         <div className="flex items-center justify-end gap-3">
-                          <button onClick={cancelReply} className="px-4 py-2 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
+                          <button onClick={cancelReply} className="px-4 py-2 rounded-xl border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
                             Cancel
                           </button>
                           <button
                             onClick={() => handleSaveReply(review)}
                             disabled={savingReply}
-                            className="px-4 py-2 rounded-lg bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] text-sm font-bold transition-all disabled:opacity-50"
+                            className="px-4 py-2 rounded-xl bg-[#B7322A] text-[#FDF8F0] text-sm font-bold transition-all disabled:opacity-50"
                           >
                             {savingReply ? 'Saving...' : 'Save Reply'}
                           </button>
@@ -714,7 +714,7 @@ export default function SellerHub() {
                     ) : (
                       <button
                         onClick={() => startReply(review)}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#B7322A]/10 text-[#E0A11C] text-sm font-semibold hover:bg-[#B7322A]/20 transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#B7322A]/10 text-[#E0A11C] text-sm font-semibold hover:bg-[#B7322A]/20 transition-colors"
                       >
                         <MessageSquareWarning size={16} /> {review.sellerReply ? 'Edit Reply' : 'Reply'}
                       </button>
@@ -729,7 +729,7 @@ export default function SellerHub() {
         {activeTab === 'analytics' && (
           <div className="animate-fade-in-up">
             <header className="mb-10">
-              <h1 className="font-[Outfit] text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Store Analytics</h1>
+              <h1 className="font-display text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Store Analytics</h1>
               <p className="text-[#7A6A5B]">Performance metrics computed from your store's live order data.</p>
             </header>
 
@@ -742,7 +742,7 @@ export default function SellerHub() {
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-6">
               <GlassCard className="xl:col-span-8 p-6 lg:p-8">
-                <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
+                <h2 className="font-display text-xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
                   <BarChart3 size={20} className="text-[#B7322A]" /> Revenue — Last 6 Months
                 </h2>
                 {orders.length === 0 ? (
@@ -765,7 +765,7 @@ export default function SellerHub() {
               </GlassCard>
 
               <GlassCard className="xl:col-span-4 p-6 lg:p-8">
-                <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
+                <h2 className="font-display text-xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
                   <ShoppingBag size={20} className="text-[#C8901A]" /> Orders by Status
                 </h2>
                 <div className="flex flex-col gap-3">
@@ -787,7 +787,7 @@ export default function SellerHub() {
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
               <GlassCard className="xl:col-span-7 p-6 lg:p-8">
-                <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
+                <h2 className="font-display text-xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
                   <Package size={20} className="text-[#E0A11C]" /> Top Products by Revenue
                 </h2>
                 {topProducts.length === 0 ? (
@@ -822,7 +822,7 @@ export default function SellerHub() {
               </GlassCard>
 
               <GlassCard className="xl:col-span-5 p-6 lg:p-8">
-                <h2 className="font-[Outfit] text-xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
+                <h2 className="font-display text-xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
                   <Clock size={20} className="text-[#8F2620]" /> Recent Orders
                 </h2>
                 {orders.length === 0 ? (
@@ -840,7 +840,7 @@ export default function SellerHub() {
                             </p>
                           </div>
                           <div className="flex flex-col items-end shrink-0">
-                            <span className="text-[#231A16] font-[Outfit] font-bold text-sm">{inr(share)}</span>
+                            <span className="text-[#231A16] font-display font-bold text-sm">{inr(share)}</span>
                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border mt-1 ${ORDER_STATUS_STYLES[order.status] ?? 'bg-[#231a16]/10 text-[#7A6A5B] border-[#231a16]/10'}`}>
                               {order.status}
                             </span>
@@ -863,17 +863,17 @@ export default function SellerHub() {
             <form onSubmit={handleSendMessageReply} onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8 flex flex-col gap-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <h2 className="font-[Outfit] text-xl sm:text-2xl font-bold text-[#231A16] flex items-center gap-2">
+                  <h2 className="font-display text-xl sm:text-2xl font-bold text-[#231A16] flex items-center gap-2">
                     <MessageSquareWarning className="text-[#B7322A] shrink-0" size={22} /> <span className="truncate">{messageModal.subject}</span>
                   </h2>
                   <p className="text-[#7A6A5B] text-xs mt-1 break-all">{messageModal.name} · {messageModal.email}</p>
                 </div>
-                <button type="button" onClick={() => setMessageModal(null)} className="p-2 -mr-2 rounded-lg text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors shrink-0" aria-label="Close">
+                <button type="button" onClick={() => setMessageModal(null)} className="p-2 -mr-2 rounded-xl text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors shrink-0" aria-label="Close">
                   <X size={22} />
                 </button>
               </div>
 
-              <div className="rounded-lg border border-[#231a16]/10 bg-[#F5ECDE]/60 p-4">
+              <div className="rounded-xl border border-[#231a16]/10 bg-[#F5ECDE]/60 p-4">
                 <p className="text-[#8A7B6B] text-xs font-semibold uppercase tracking-wider mb-2">{formatDate(messageModal.createdAt)}</p>
                 <p className="text-[#2A211B] text-sm whitespace-pre-wrap">{messageModal.message}</p>
                 {messageModal.productName && <p className="text-[#8A7B6B] text-xs mt-3">About product: {messageModal.productName}</p>}
@@ -886,7 +886,7 @@ export default function SellerHub() {
                   value={messageReplyDraft}
                   onChange={(e) => setMessageReplyDraft(e.target.value)}
                   placeholder="Type your response to the customer..."
-                  className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-[#2A211B] outline-none focus:border-[#B7322A] transition-colors resize-none"
+                  className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-[#2A211B] outline-none focus:border-[#B7322A] transition-colors resize-none"
                 />
                 {messageModal.repliedAt && (
                   <p className="text-[#8A7B6B] text-xs mt-2">Last replied {formatDate(messageModal.repliedAt)} — sending again updates it.</p>
@@ -894,10 +894,10 @@ export default function SellerHub() {
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#231a16]/10">
-                <button type="button" onClick={() => setMessageModal(null)} className="px-6 py-2.5 rounded-lg border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
+                <button type="button" onClick={() => setMessageModal(null)} className="px-6 py-2.5 rounded-xl border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
                   Close
                 </button>
-                <button type="submit" disabled={!messageReplyDraft.trim() || savingMessageReply} className="px-6 py-2.5 rounded-lg font-[Outfit] text-sm font-bold flex items-center gap-2 transition-all bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] disabled:bg-[#F0E7DA]/50 disabled:text-[#8A7B6B] disabled:cursor-not-allowed">
+                <button type="submit" disabled={!messageReplyDraft.trim() || savingMessageReply} className="px-6 py-2.5 rounded-xl font-display text-sm font-bold flex items-center gap-2 transition-all bg-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] disabled:bg-[#F0E7DA]/50 disabled:text-[#8A7B6B] disabled:cursor-not-allowed">
                   <Reply size={18} /> {savingMessageReply ? 'Sending...' : messageModal.reply ? 'Update Reply' : 'Send Reply'}
                 </button>
               </div>
@@ -934,7 +934,7 @@ function StatCard({ icon, title, value, trend, negative }) {
   return (
     <GlassCard className="p-6">
       <div className="flex justify-between items-start mb-4">
-        <div className="text-[#B7322A] bg-[#B7322A]/10 p-3 rounded-lg border border-[#B7322A]/20">
+        <div className="text-[#B7322A] bg-[#B7322A]/10 p-3 rounded-xl border border-[#B7322A]/20">
           {icon}
         </div>
         <span className={`text-xs font-bold tracking-wider px-2 py-1 rounded-full ${negative ? 'bg-[#B3261E]/20 text-[#B3261E]' : 'bg-[#B7322A]/20 text-[#B7322A]'}`}>
@@ -943,7 +943,7 @@ function StatCard({ icon, title, value, trend, negative }) {
       </div>
       <div>
         <h3 className="text-[#7A6A5B] text-sm font-semibold uppercase tracking-wider mb-1">{title}</h3>
-        <p className="font-[Outfit] text-3xl font-bold text-[#231A16]">{value}</p>
+        <p className="font-display text-3xl font-bold text-[#231A16]">{value}</p>
       </div>
     </GlassCard>
   );
@@ -991,12 +991,12 @@ function AddProductForm({ categories = [], onAdded }) {
     }
   };
 
-  const inputClass = 'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-lg py-2.5 px-4 text-[#2A211B] outline-none focus:border-[#B7322A] transition-colors';
+  const inputClass = 'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-[#2A211B] outline-none focus:border-[#B7322A] transition-colors';
   const labelClass = 'text-xs text-[#7A6A5B] font-bold uppercase tracking-wider mb-2 block';
 
   return (
     <GlassCard className="p-6 lg:p-8">
-      <h2 className="font-[Outfit] text-2xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
+      <h2 className="font-display text-2xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
         <PlusCircle className="text-[#B7322A]" /> Add Product
       </h2>
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -1032,14 +1032,14 @@ function AddProductForm({ categories = [], onAdded }) {
             accept="image/*"
             multiple
             onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-            className="text-xs text-[#8A7B6B] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#B7322A]/10 file:text-[#B7322A] file:font-semibold file:cursor-pointer hover:file:bg-[#B7322A]/20 transition-colors"
+            className="text-xs text-[#8A7B6B] file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-[#B7322A]/10 file:text-[#B7322A] file:font-semibold file:cursor-pointer hover:file:bg-[#B7322A]/20 transition-colors"
           />
           {files.length > 0 && (
             <p className="text-[11px] text-[#7A6A5B] mt-1.5 flex items-center gap-1"><UploadCloud size={13} /> {files.length} image{files.length === 1 ? '' : 's'} selected</p>
           )}
         </div>
 
-        <button type="submit" disabled={!canSubmit} className={`w-full py-3 rounded-lg font-[Outfit] text-lg font-semibold mt-2 transition-all flex items-center justify-center gap-2 ${canSubmit ? 'bg-gradient-to-br from-[#B7322A] to-[#8F2620] text-[#FDF8F0] hover:shadow-[0_0_7px_rgba(183,50,42,0.22)]' : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'}`}>
+        <button type="submit" disabled={!canSubmit} className={`w-full py-3 rounded-xl font-display text-lg font-semibold mt-2 transition-all flex items-center justify-center gap-2 ${canSubmit ? 'bg-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_7px_rgba(183,50,42,0.22)]' : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'}`}>
           <PlusCircle size={20} /> {busy ? 'Submitting...' : 'Submit for Approval'}
         </button>
       </form>

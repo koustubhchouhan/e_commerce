@@ -22,15 +22,15 @@ export default function NotFound() {
           <Compass size={44} className="text-[#B7322A]" strokeWidth={1.5} />
         </div>
         <div>
-          <h1 className="font-[Outfit] text-7xl font-bold text-[#231A16] text-glow leading-none">404</h1>
-          <p className="font-[Outfit] text-2xl font-semibold text-[#2A211B] mt-3">Lost in the void</p>
+          <h1 className="font-display text-7xl font-bold text-[#231A16] text-glow leading-none">404</h1>
+          <p className="font-display text-2xl font-semibold text-[#2A211B] mt-3">Lost in the void</p>
           <p className="text-[#7A6A5B] mt-2 text-sm">
             The page you're looking for drifted off the grid or never existed.
           </p>
         </div>
         <Link
           to={home}
-          className="flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-[#7A1F1A] to-[#B7322A] text-[#FDF8F0] font-[Outfit] text-base font-bold hover:shadow-[0_0_9px_rgba(183,50,42,0.17)] transition-all"
+          className="flex items-center gap-2 px-8 py-3 rounded-xl bg-[#B7322A] text-[#FDF8F0] font-display text-base font-bold hover:shadow-[0_0_9px_rgba(183,50,42,0.17)] transition-all"
         >
           <ArrowLeft size={18} /> Back to safety
         </Link>
