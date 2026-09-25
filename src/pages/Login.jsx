@@ -89,12 +89,12 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#FDF8F0] flex items-center justify-center px-4 py-8 sm:py-12">
+    <div className="min-h-[100dvh] bg-[#FDF8F0] flex items-center justify-center px-4 py-4 sm:py-12">
       <div className="w-full max-w-5xl">
         <div className="grid md:grid-cols-2 rounded-[2rem] overflow-hidden border border-[#E7DAC8] shadow-[0_24px_60px_rgba(60,40,25,0.12)]">
 
           {/* ── Left: brand panel ── */}
-          <div className="relative bg-[#B7322A] text-[#FDF8F0] p-8 sm:p-12 flex flex-col justify-between min-h-[260px] md:min-h-[560px]">
+          <div className="relative bg-[#B7322A] text-[#FDF8F0] p-6 sm:p-12 flex flex-col justify-between md:min-h-[560px]">
             <div
               className="pointer-events-none absolute -right-16 -top-16 w-64 h-64 rounded-full bg-[#8F2620]/40"
               aria-hidden="true"
@@ -106,12 +106,12 @@ export default function Login() {
               <span className="font-display text-xl font-semibold">Arghya</span>
             </div>
 
-            <div className="relative mt-8">
-              <p className="font-display text-2xl text-[#E0A11C] mb-3">नमस्ते</p>
-              <h2 className="font-display text-3xl sm:text-4xl font-semibold leading-tight max-w-sm">
+            <div className="relative mt-5 sm:mt-8">
+              <p className="font-display text-xl sm:text-2xl text-[#E0A11C] mb-2 sm:mb-3">नमस्ते</p>
+              <h2 className="font-display text-2xl sm:text-4xl font-semibold leading-tight max-w-sm">
                 Everything the everyday asks for.
               </h2>
-              <p className="text-[#FDF8F0]/80 text-sm mt-4 max-w-sm leading-relaxed">
+              <p className="hidden sm:block text-[#FDF8F0]/80 text-sm sm:mt-4 max-w-sm leading-relaxed">
                 Verified sellers, secure payments and honest pricing — from daily essentials to
                 festival specials, delivered to your door.
               </p>
@@ -127,9 +127,9 @@ export default function Login() {
           </div>
 
           {/* ── Right: form panel ── */}
-          <div className="bg-[#FDF8F0] p-8 sm:p-12">
-            <h1 className="font-display text-3xl font-semibold text-[#231A16]">Sign in</h1>
-            <p className="text-sm text-[#7A6A5B] mt-2">
+          <div className="bg-[#FDF8F0] p-6 sm:p-12">
+            <h1 className="font-display text-2xl sm:text-3xl font-semibold text-[#231A16]">Sign in</h1>
+            <p className="text-sm text-[#7A6A5B] mt-1.5 sm:mt-2">
               New here?{' '}
               <Link to="/signup" className="text-[#B7322A] font-semibold underline decoration-[#B7322A]/30 hover:decoration-[#B7322A] transition-all">
                 Create an account
@@ -137,14 +137,14 @@ export default function Login() {
             </p>
 
             {error && (
-              <div className="flex items-start gap-2 mt-6 rounded-2xl border border-[#B3261E]/30 bg-[#FBE3E1]/40 px-4 py-3 text-sm text-[#B3261E]">
+              <div className="flex items-start gap-2 mt-4 sm:mt-6 rounded-2xl border border-[#B3261E]/30 bg-[#FBE3E1]/40 px-4 py-3 text-sm text-[#B3261E]">
                 <AlertCircle size={18} className="mt-0.5 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
-            <form onSubmit={handleLogin} className="mt-6">
-              <div className="mb-4">
+            <form onSubmit={handleLogin} className="mt-4 sm:mt-6">
+              <div className="mb-3 sm:mb-4">
                 <label htmlFor="login-email" className="micro-label block mb-2">Email or mobile</label>
                 <input
                   id="login-email"
@@ -157,7 +157,7 @@ export default function Login() {
                 />
               </div>
 
-              <div className="mb-4">
+              <div className="mb-3 sm:mb-4">
                 <label htmlFor="login-password" className="micro-label block mb-2">Password</label>
                 <div className="relative">
                   <input
@@ -179,7 +179,7 @@ export default function Login() {
                 </div>
               </div>
 
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex justify-between items-center mb-4 sm:mb-6">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" className="accent-[#B7322A] w-4 h-4 rounded" />
                   <span className="text-[#7A6A5B] text-sm">Keep me signed in</span>
@@ -190,7 +190,7 @@ export default function Login() {
               </div>
 
               {/* Optional role guard: verify the account is the role they expect */}
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 <p className="micro-label mb-2">Signing in as</p>
                 <div className="flex flex-wrap gap-2">
                   {LOGIN_ROLES.map((r) => {
@@ -225,7 +225,7 @@ export default function Login() {
             </form>
 
             {/* Divider */}
-            <div className="relative flex items-center justify-center my-6">
+            <div className="relative flex items-center justify-center my-4 sm:my-6">
               <div className="absolute w-full h-px bg-[#E3D5C1]" />
               <span className="relative px-3 text-[11px] font-medium tracking-wide text-[#A79684] uppercase bg-[#FDF8F0]">
                 or
@@ -247,7 +247,7 @@ export default function Login() {
               </p>
             )}
 
-            <p className="text-center text-[11px] text-[#A79684] mt-6 leading-relaxed">
+            <p className="text-center text-[11px] text-[#A79684] mt-4 sm:mt-6 leading-relaxed">
               By continuing you accept the{' '}
               <Link to="/terms" className="text-[#B7322A] hover:underline">Terms</Link> and{' '}
               <Link to="/privacy" className="text-[#B7322A] hover:underline">Privacy Policy</Link>.
@@ -255,7 +255,7 @@ export default function Login() {
           </div>
         </div>
 
-        <nav className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2">
+        <nav className="mt-4 sm:mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2">
           {POLICY_LINKS.map((link) => (
             <Link key={link.to} to={link.to} className="text-[#A79684] text-xs hover:text-[#B7322A] transition-colors">
               {link.label}

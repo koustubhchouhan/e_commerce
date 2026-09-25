@@ -83,12 +83,12 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#FDF8F0] flex items-center justify-center px-4 py-8 sm:py-12">
+    <div className="min-h-[100dvh] bg-[#FDF8F0] flex items-center justify-center px-4 py-4 sm:py-12">
       <div className="w-full max-w-5xl">
         <div className="grid md:grid-cols-2 rounded-[2rem] overflow-hidden border border-[#E7DAC8] shadow-[0_24px_60px_rgba(60,40,25,0.12)]">
 
           {/* ── Left: brand panel ── */}
-          <div className="relative bg-[#B7322A] text-[#FDF8F0] p-8 sm:p-12 flex flex-col justify-between min-h-[240px] md:min-h-[620px]">
+          <div className="relative bg-[#B7322A] text-[#FDF8F0] p-6 sm:p-12 flex flex-col justify-between md:min-h-[620px]">
             <div
               className="pointer-events-none absolute -right-16 -top-16 w-64 h-64 rounded-full bg-[#8F2620]/40"
               aria-hidden="true"
@@ -100,12 +100,12 @@ export default function SignUp() {
               <span className="font-display text-xl font-semibold">Arghya</span>
             </div>
 
-            <div className="relative mt-8">
-              <p className="font-display text-2xl text-[#E0A11C] mb-3">स्वागत</p>
-              <h2 className="font-display text-3xl sm:text-4xl font-semibold leading-tight max-w-sm">
+            <div className="relative mt-5 sm:mt-8">
+              <p className="font-display text-xl sm:text-2xl text-[#E0A11C] mb-2 sm:mb-3">स्वागत</p>
+              <h2 className="font-display text-2xl sm:text-4xl font-semibold leading-tight max-w-sm">
                 Join a market built on trust.
               </h2>
-              <p className="text-[#FDF8F0]/80 text-sm mt-4 max-w-sm leading-relaxed">
+              <p className="hidden sm:block text-[#FDF8F0]/80 text-sm sm:mt-4 max-w-sm leading-relaxed">
                 Create your account to track orders, save addresses and unlock member-only
                 pricing across the storefront.
               </p>
@@ -121,9 +121,9 @@ export default function SignUp() {
           </div>
 
           {/* ── Right: form panel ── */}
-          <div className="bg-[#FDF8F0] p-8 sm:p-12">
-            <h1 className="font-display text-3xl font-semibold text-[#231A16]">Create account</h1>
-            <p className="text-sm text-[#7A6A5B] mt-2">
+          <div className="bg-[#FDF8F0] p-6 sm:p-12">
+            <h1 className="font-display text-2xl sm:text-3xl font-semibold text-[#231A16]">Create account</h1>
+            <p className="text-sm text-[#7A6A5B] mt-1.5 sm:mt-2">
               Already registered?{' '}
               <Link to="/login" className="text-[#B7322A] font-semibold underline decoration-[#B7322A]/30 hover:decoration-[#B7322A] transition-all">
                 Sign in
@@ -131,14 +131,14 @@ export default function SignUp() {
             </p>
 
             {error && (
-              <div className="flex items-start gap-2 mt-6 rounded-2xl border border-[#B3261E]/30 bg-[#FBE3E1]/40 px-4 py-3 text-sm text-[#B3261E]">
+              <div className="flex items-start gap-2 mt-4 sm:mt-6 rounded-2xl border border-[#B3261E]/30 bg-[#FBE3E1]/40 px-4 py-3 text-sm text-[#B3261E]">
                 <AlertCircle size={18} className="mt-0.5 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
-            <form onSubmit={handleSignUp} className="mt-6">
-              <div className="mb-4">
+            <form onSubmit={handleSignUp} className="mt-4 sm:mt-6">
+              <div className="mb-3 sm:mb-4">
                 <label htmlFor="signup-name" className="micro-label block mb-2">Full name</label>
                 <input
                   id="signup-name"
@@ -151,7 +151,7 @@ export default function SignUp() {
                 />
               </div>
 
-              <div className="mb-4">
+              <div className="mb-3 sm:mb-4">
                 <label htmlFor="signup-email" className="micro-label block mb-2">Email</label>
                 <input
                   id="signup-email"
@@ -164,7 +164,7 @@ export default function SignUp() {
                 />
               </div>
 
-              <div className="mb-4">
+              <div className="mb-3 sm:mb-4">
                 <label htmlFor="signup-password" className="micro-label block mb-2">Password</label>
                 <div className="relative">
                   <input
@@ -188,7 +188,7 @@ export default function SignUp() {
               </div>
 
               {/* Account type — admin is never offered here */}
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 <p className="micro-label mb-2">I want to sign up as</p>
                 <div className="flex flex-col gap-2">
                   {SIGNUP_ROLES.map((r) => {
@@ -198,7 +198,7 @@ export default function SignUp() {
                         key={r.key}
                         type="button"
                         onClick={() => setRole(r.key)}
-                        className={`flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border text-left transition-all ${
+                        className={`flex items-center justify-between gap-3 px-4 py-2.5 sm:py-3 rounded-2xl border text-left transition-all ${
                           active
                             ? 'bg-[#FBE3E1]/40 border-[#B7322A] text-[#231A16]'
                             : 'bg-transparent border-[#E3D5C1] text-[#7A6A5B] hover:border-[#B7322A]/40'
@@ -229,7 +229,7 @@ export default function SignUp() {
             </form>
 
             {/* Divider */}
-            <div className="relative flex items-center justify-center my-6">
+            <div className="relative flex items-center justify-center my-4 sm:my-6">
               <div className="absolute w-full h-px bg-[#E3D5C1]" />
               <span className="relative px-3 text-[11px] font-medium tracking-wide text-[#A79684] uppercase bg-[#FDF8F0]">
                 or
