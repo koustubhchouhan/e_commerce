@@ -1,6 +1,6 @@
 import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
-import { loadImagesByProduct, pickCover } from './product-data.js';
+import { loadCoversByProduct } from './product-data.js';
 
 // POST /orders — server-authoritative checkout. Prices never come from the
 // client; the create_orders Postgres function reads them, checks stock under a
@@ -281,7 +281,7 @@ async function attachItems(orders) {
   if (error) throw new AppError(500, `Could not load order items: ${error.message}`);
 
   const productIds = [...new Set((items ?? []).map((i) => i.product_id).filter(Boolean))];
-  const imagesByProduct = await loadImagesByProduct(productIds);
+  const covers = await loadCoversByProduct(productIds);
 
   const byOrder = new Map();
   for (const item of items ?? []) {
@@ -302,7 +302,7 @@ async function attachItems(orders) {
       discountPercent: item.discount_percent,
       quantity: item.quantity,
       lineTotal: Number(item.line_total),
-      coverImage: item.product_id ? pickCover(imagesByProduct.get(item.product_id)) : null,
+      coverImage: item.product_id ? covers.get(item.product_id) ?? null : null,
     })),
   }));
 }

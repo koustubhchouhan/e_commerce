@@ -136,7 +136,7 @@ export default function Home() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [onSaleOnly, setOnSaleOnly] = useState(false);
   const [maxPrice, setMaxPrice] = useState(null);
@@ -154,7 +154,7 @@ export default function Home() {
         ]);
         if (cancelled) return;
         setProducts(toProductCardList(productRes.items));
-        setTotal(productRes.total ?? 0);
+        setHasMore(Boolean(productRes.hasMore));
         setPage(productRes.page ?? 1);
         setCategories(['All', ...categoryRes.map((c) => c.name)]);
       } catch (err) {
@@ -191,7 +191,7 @@ export default function Home() {
     try {
       const res = await api.products({ page: page + 1, limit: PAGE_SIZE });
       setProducts((prev) => [...prev, ...toProductCardList(res.items)]);
-      setTotal(res.total ?? total);
+      setHasMore(Boolean(res.hasMore));
       setPage(res.page ?? page + 1);
     } catch (err) {
       setError(err.message || 'Failed to load more products.');
@@ -407,7 +407,7 @@ export default function Home() {
             {!loading && !error && filtered.length > 0 && (
               <>
                 <ProductGrid items={filtered} adminMode={false} />
-                {filtered.length < total && (
+                {hasMore && (
                   <div className="flex justify-center mt-12">
                     <button onClick={loadMore} disabled={loadingMore} className="btn btn-outline px-8 py-3 text-sm">
                       {loadingMore ? 'Loading more…' : 'Load more products'}

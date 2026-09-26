@@ -2,7 +2,7 @@ import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
 import { removeImage } from './storage.service.js';
 import { serializeReview } from './review.service.js';
-import { loadImagesByProduct, pickCover, serializeProduct } from './product-data.js';
+import { loadCoversByProduct, serializeProduct } from './product-data.js';
 
 // Applications are loaded without an embedded profile relation, because the
 // table has two FKs to profiles (user_id and reviewed_by) and embed hints tied
@@ -227,12 +227,10 @@ export async function listProductsForApproval({ approval_status, limit } = {}) {
   if (error) throw new AppError(500, `Could not load products: ${error.message}`);
 
   const ids = (data ?? []).map((p) => p.id);
-  const imagesByProduct = await loadImagesByProduct(ids);
+  const covers = await loadCoversByProduct(ids);
 
   return {
-    items: (data ?? []).map((row) =>
-      shapeAdminProduct(row, pickCover(imagesByProduct.get(row.id)))
-    ),
+    items: (data ?? []).map((row) => shapeAdminProduct(row, covers.get(row.id))),
   };
 }
 
@@ -259,8 +257,8 @@ export async function setProductApproval(productId, action, reason) {
     .single();
   if (error) throw new AppError(400, `Could not update approval: ${error.message}`);
 
-  const imagesByProduct = await loadImagesByProduct([data.id]);
-  return shapeAdminProduct(data, pickCover(imagesByProduct.get(data.id)));
+  const covers = await loadCoversByProduct([data.id]);
+  return shapeAdminProduct(data, covers.get(data.id));
 }
 
 // DELETE /admin/sellers/:id — revoke: demote back to customer, draft their

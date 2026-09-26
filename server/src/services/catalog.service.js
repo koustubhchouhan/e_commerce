@@ -1,6 +1,6 @@
 import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
-import { loadImagesByProduct, pickCover, serializeProduct } from './product-data.js';
+import { loadCoversByProduct, pickCover, serializeProduct } from './product-data.js';
 
 export async function listCategories() {
   const { data, error } = await db.from('categories').select('id, name, slug').order('name');
@@ -32,11 +32,13 @@ function escapePostgrestTerm(term) {
 // category slug, paginates, and includes each product's cover image + sale price.
 export async function listProducts({ search, category, page, limit }) {
   const from = (page - 1) * limit;
-  const to = from + limit - 1;
+  // Fetch one row past the page to learn whether more exist, instead of paying
+  // for an exact COUNT(*) over the whole filtered table on every request.
+  const to = from + limit;
 
   let query = db
     .from('products')
-    .select('*, categories(id, name, slug), stores(id, name)', { count: 'exact' })
+    .select('*, categories(id, name, slug), stores(id, name)', { count: 'estimated' })
     .eq('status', 'active')
     .eq('approval_status', 'approved');
 
@@ -56,16 +58,17 @@ export async function listProducts({ search, category, page, limit }) {
 
   if (error) throw new AppError(500, `Could not load products: ${error.message}`);
 
-  const ids = (data ?? []).map((p) => p.id);
-  const imagesByProduct = await loadImagesByProduct(ids);
+  const rows = data ?? [];
+  const hasMore = rows.length > limit;
+  const items = hasMore ? rows.slice(0, limit) : rows;
+  const covers = await loadCoversByProduct(items.map((p) => p.id));
 
   return {
-    items: (data ?? []).map((row) =>
-      serializeProduct(row, pickCover(imagesByProduct.get(row.id)))
-    ),
+    items: items.map((row) => serializeProduct(row, covers.get(row.id))),
     page,
     limit,
     total: count ?? 0,
+    hasMore,
   };
 }
 

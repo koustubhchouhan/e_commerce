@@ -1,6 +1,6 @@
 import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
-import { loadImagesByProduct, pickCover, serializeProduct } from './product-data.js';
+import { loadCoversByProduct, loadImagesByProduct, pickCover, serializeProduct } from './product-data.js';
 import { uploadImage, removeImage } from './storage.service.js';
 import { ensureStore } from './store.service.js';
 
@@ -82,8 +82,8 @@ export async function createProduct(userId, role, input) {
 
   if (error) throw new AppError(400, `Could not create product: ${error.message}`);
 
-  const imagesByProduct = await loadImagesByProduct([data.id]);
-  return serializeProduct(data, pickCover(imagesByProduct.get(data.id)));
+  const covers = await loadCoversByProduct([data.id]);
+  return serializeProduct(data, covers.get(data.id));
 }
 
 // POST /products/:id/resubmit — a seller asking for re-review after a rejection.
@@ -100,8 +100,8 @@ export async function resubmitProduct(userId, productId) {
 
   if (error) throw new AppError(400, `Could not resubmit product: ${error.message}`);
 
-  const imagesByProduct = await loadImagesByProduct([data.id]);
-  return serializeProduct(data, pickCover(imagesByProduct.get(data.id)));
+  const covers = await loadCoversByProduct([data.id]);
+  return serializeProduct(data, covers.get(data.id));
 }
 
 // PATCH /products/:id — partial update. Fields are whitelisted by zod already.
@@ -118,8 +118,8 @@ export async function updateProduct(userId, productId, patch) {
 
   if (error) throw new AppError(400, `Could not update product: ${error.message}`);
 
-  const imagesByProduct = await loadImagesByProduct([data.id]);
-  return serializeProduct(data, pickCover(imagesByProduct.get(data.id)));
+  const covers = await loadCoversByProduct([data.id]);
+  return serializeProduct(data, covers.get(data.id));
 }
 
 // DELETE /products/:id → 204. Also removes the product's images from storage.
