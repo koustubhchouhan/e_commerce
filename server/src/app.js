@@ -1,4 +1,5 @@
 import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
@@ -13,12 +14,15 @@ import adminRoutes from './routes/admin.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import contactRoutes from './routes/contact.routes.js';
+import { noStore } from './middleware/cache.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 export function createApp() {
   const app = express();
 
   app.use(cors({ origin: env.clientOrigin, credentials: true }));
+  // gzip/deflate JSON bodies. Tiny responses are skipped automatically.
+  app.use(compression());
   app.use(
     helmet({
       // The API only ever returns JSON, so a strict policy is safe. The SPA's
@@ -45,6 +49,12 @@ export function createApp() {
   app.use('/payments/webhook', express.raw({ type: 'application/json' }));
   app.use(express.json());
   if (env.nodeEnv !== 'test') app.use(morgan('dev'));
+
+  // Every signed-in API surface is per-user; keep it out of all caches.
+  app.use(
+    ['/auth', '/orders', '/seller', '/seller-applications', '/admin', '/contact-messages'],
+    noStore
+  );
 
   // Routes
   app.use('/health', healthRoutes);

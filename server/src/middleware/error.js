@@ -32,5 +32,7 @@ export function errorHandler(err, req, res, next) {
   // Log the full stack for genuine server faults; client errors stay quiet.
   if (status >= 500) console.error('[error]', err);
 
+  // Errors are not a stable representation of the resource; never cache them.
+  res.set('Cache-Control', 'no-store');
   res.status(status).json(payload);
 }
