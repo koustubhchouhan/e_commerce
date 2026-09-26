@@ -201,12 +201,30 @@ export default function Home() {
     }
   };
 
-  // The URL's ?category= param is the single source of truth for the active category
-  const paramCategory = searchParams.get('category');
-  const activeCategory = paramCategory && categories.includes(paramCategory) ? paramCategory : 'All';
+  // The URL's ?category= params are the source of truth for the active categories.
+  // Repeated params (?category=A&category=B) let the sidebar filter by several at once.
+  const activeCategories = useMemo(
+    () => searchParams.getAll('category').filter((cat) => categories.includes(cat)),
+    [searchParams, categories]
+  );
 
-  const setActiveCategory = (cat) => {
-    setSearchParams(cat === 'All' ? {} : { category: cat }, { replace: true });
+  const commitCategories = (cats) => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('category');
+    cats.forEach((cat) => next.append('category', cat));
+    setSearchParams(next, { replace: true });
+  };
+
+  const toggleCategory = (cat) => {
+    if (cat === 'All') {
+      commitCategories([]);
+      return;
+    }
+    commitCategories(
+      activeCategories.includes(cat)
+        ? activeCategories.filter((c) => c !== cat)
+        : [...activeCategories, cat]
+    );
   };
 
   const priceCap = useMemo(
@@ -217,7 +235,7 @@ export default function Home() {
 
   const filtered = useMemo(() => {
     let list = products;
-    if (activeCategory !== 'All') list = list.filter((p) => p.category === activeCategory);
+    if (activeCategories.length > 0) list = list.filter((p) => activeCategories.includes(p.category));
     if (inStockOnly) list = list.filter((p) => (p.stock ?? 1) > 0);
     if (onSaleOnly) list = list.filter((p) => p.oldPrice);
     list = list.filter((p) => Number(p.price) <= priceLimit);
@@ -225,7 +243,7 @@ export default function Home() {
     else if (sort === 'price-desc') list = [...list].sort((a, b) => b.price - a.price);
     else if (sort === 'name-asc') list = [...list].sort((a, b) => a.title.localeCompare(b.title));
     return list;
-  }, [products, activeCategory, inStockOnly, onSaleOnly, priceLimit, sort]);
+  }, [products, activeCategories, inStockOnly, onSaleOnly, priceLimit, sort]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -241,14 +259,17 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  const activeChips = [];
-  if (activeCategory !== 'All') activeChips.push({ key: 'cat', label: activeCategory, clear: () => setActiveCategory('All') });
+  const activeChips = activeCategories.map((cat) => ({
+    key: `cat:${cat}`,
+    label: cat,
+    clear: () => commitCategories(activeCategories.filter((c) => c !== cat)),
+  }));
   if (inStockOnly) activeChips.push({ key: 'stock', label: 'In stock', clear: () => setInStockOnly(false) });
   if (onSaleOnly) activeChips.push({ key: 'sale', label: 'On sale', clear: () => setOnSaleOnly(false) });
   if (maxPrice !== null) activeChips.push({ key: 'price', label: `Up to ${inr(maxPrice)}`, clear: () => setMaxPrice(null) });
 
   const clearAll = () => {
-    setActiveCategory('All');
+    commitCategories([]);
     setInStockOnly(false);
     setOnSaleOnly(false);
     setMaxPrice(null);
@@ -271,8 +292,8 @@ export default function Home() {
           {categories.map((cat) => (
             <CheckRow
               key={cat}
-              checked={activeCategory === cat}
-              onChange={() => setActiveCategory(cat)}
+              checked={cat === 'All' ? activeCategories.length === 0 : activeCategories.includes(cat)}
+              onChange={() => toggleCategory(cat)}
               label={cat}
             />
           ))}
