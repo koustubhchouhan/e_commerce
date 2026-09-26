@@ -19,8 +19,11 @@ export default function WebGLBackground() {
       }
     };
 
-    window.addEventListener('resize', syncSize);
     syncSize();
+
+    const reduceMotion =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const vsSource = `
       attribute vec2 a_position;
@@ -98,22 +101,68 @@ export default function WebGLBackground() {
     };
     window.addEventListener('mousemove', handleMouseMove);
 
-    let animationFrameId;
-    const render = (t) => {
+    let animationFrameId = null;
+    let lastDraw = 0;
+    // The wash drifts slowly, so half the max refresh rate is imperceptible
+    // while halving the GPU work (and the cost of compositing the glass/header
+    // blur that samples this canvas).
+    const FRAME_MS = 1000 / 30;
+
+    const draw = (t) => {
       syncSize();
       gl.viewport(0, 0, canvas.width, canvas.height);
       if (uTime) gl.uniform1f(uTime, t * 0.001);
       if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
       if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    };
+
+    const render = (t) => {
+      animationFrameId = requestAnimationFrame(render);
+      if (t - lastDraw < FRAME_MS) return;
+      lastDraw = t;
+      draw(t);
+    };
+
+    const start = () => {
+      if (animationFrameId !== null) return;
+      // Users who prefer reduced motion get one static frame, no loop.
+      if (reduceMotion) {
+        draw(0);
+        return;
+      }
       animationFrameId = requestAnimationFrame(render);
     };
-    render(0);
+
+    const stop = () => {
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+
+    // A static frame still needs re-drawing after a resize.
+    const handleResize = () => {
+      syncSize();
+      if (reduceMotion) draw(0);
+    };
+
+    if (reduceMotion) draw(0);
+    else if (!document.hidden) start();
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('resize', handleResize);
 
     return () => {
-      window.removeEventListener('resize', syncSize);
+      stop();
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(animationFrameId);
     };
   }, []);
 

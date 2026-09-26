@@ -14,7 +14,7 @@ export default function PolicyLayout() {
   return (
     <div className={isGuest ? 'min-h-[100dvh] flex flex-col' : ''}>
       {isGuest && (
-        <header className="sticky top-0 z-40 border-b border-[#231a16]/5 bg-[#FDF8F0]/90 backdrop-blur-xl">
+        <header className="sticky top-0 z-40 border-b border-[#231a16]/5 bg-[#FDF8F0]/95 backdrop-blur-md">
           <div className="max-w-[1100px] mx-auto px-6 py-4 flex items-center justify-between gap-4">
             <Link to="/login" className="font-display text-xl font-bold text-[#231A16] flex items-center gap-2">
               <Rocket className="text-[#B7322A]" size={22} /> {BUSINESS.brandName}

@@ -610,13 +610,13 @@ export default function AdminPanel() {
       {/* Drawer backdrop (mobile) */}
       {navOpen && (
         <div
-          className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-[90] bg-black/60 lg:hidden"
           onClick={() => setNavOpen(false)}
         />
       )}
 
       {/* Sidebar Navigation — slide-in drawer on mobile, static column on desktop */}
-      <aside className={`fixed inset-y-0 left-0 z-[100] w-[280px] max-w-[80vw] bg-[#F5ECDE] backdrop-blur-xl border-r border-[#231a16]/5 p-6 flex flex-col shrink-0 overflow-y-auto transition-transform duration-300 lg:sticky lg:top-[80px] lg:h-[calc(100dvh-80px)] lg:max-w-none lg:bg-[#F5ECDE]/90 lg:translate-x-0 ${navOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-[100] w-[280px] max-w-[80vw] bg-[#F5ECDE] border-r border-[#231a16]/5 p-6 flex flex-col shrink-0 overflow-y-auto transition-transform duration-300 lg:sticky lg:top-[80px] lg:h-[calc(100dvh-80px)] lg:max-w-none lg:bg-[#F5ECDE] lg:translate-x-0 ${navOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <h2 className="font-display text-2xl font-bold text-[#B7322A] mb-8 px-4">Admin Dashboard</h2>
         
         <nav className="flex flex-col gap-2 flex-1">
@@ -1470,7 +1470,7 @@ export default function AdminPanel() {
 
       {settleTarget && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 animate-fade-in"
           onMouseDown={() => !settling && setSettleTarget(null)}
           role="dialog"
           aria-modal="true"
@@ -1566,7 +1566,7 @@ export default function AdminPanel() {
 
       {orderDetail && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 animate-fade-in"
           onMouseDown={() => setOrderDetail(null)}
           role="dialog"
           aria-modal="true"
@@ -1695,7 +1695,7 @@ export default function AdminPanel() {
 
       {rejecting && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 animate-fade-in"
           onMouseDown={() => { if (!savingApproval) { setRejecting(null); setRejectReason(''); } }}
           role="dialog"
           aria-modal="true"
@@ -1742,7 +1742,7 @@ export default function AdminPanel() {
       )}
 
       {categoryModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in" onMouseDown={() => setCategoryModal(false)} role="dialog" aria-modal="true" aria-label="Add category">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 animate-fade-in" onMouseDown={() => setCategoryModal(false)} role="dialog" aria-modal="true" aria-label="Add category">
           <GlassCard hover={false} className="relative w-full max-w-md animate-scale-in">
             <form onSubmit={handleCreateCategory} onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8 flex flex-col gap-5">
               <div className="flex items-start justify-between">
@@ -1781,7 +1781,7 @@ export default function AdminPanel() {
       )}
 
       {slideModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in" onMouseDown={closeSlideModal} role="dialog" aria-modal="true" aria-label={slideModal.id ? 'Edit hero slide' : 'Add hero slide'}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 animate-fade-in" onMouseDown={closeSlideModal} role="dialog" aria-modal="true" aria-label={slideModal.id ? 'Edit hero slide' : 'Add hero slide'}>
           <GlassCard hover={false} className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
             <form onSubmit={handleSaveSlide} onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8 flex flex-col gap-5">
               <div className="flex items-start justify-between">
@@ -1924,7 +1924,7 @@ export default function AdminPanel() {
       )}
 
       {messageModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in" onMouseDown={() => setMessageModal(null)} role="dialog" aria-modal="true" aria-label="Support message">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 animate-fade-in" onMouseDown={() => setMessageModal(null)} role="dialog" aria-modal="true" aria-label="Support message">
           <GlassCard hover={false} className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto animate-scale-in">
             <form onSubmit={handleSendReply} onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8 flex flex-col gap-5">
               <div className="flex items-start justify-between gap-4">

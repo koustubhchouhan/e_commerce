@@ -327,13 +327,13 @@ export default function SellerHub() {
       {/* Drawer backdrop (mobile) */}
       {navOpen && (
         <div
-          className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-[90] bg-black/60 lg:hidden"
           onClick={() => setNavOpen(false)}
         />
       )}
       
       {/* ═══ Left Sidebar — slide-in drawer on mobile, static column on desktop ═══ */}
-      <aside className={`fixed inset-y-0 left-0 z-[100] w-[280px] max-w-[80vw] bg-[#F5ECDE] backdrop-blur-xl border-r border-[#231a16]/5 p-6 flex flex-col shrink-0 overflow-y-auto transition-transform duration-300 lg:sticky lg:top-[80px] lg:h-[calc(100dvh-80px)] lg:max-w-none lg:bg-[#F5ECDE]/90 lg:translate-x-0 ${navOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-[100] w-[280px] max-w-[80vw] bg-[#F5ECDE] border-r border-[#231a16]/5 p-6 flex flex-col shrink-0 overflow-y-auto transition-transform duration-300 lg:sticky lg:top-[80px] lg:h-[calc(100dvh-80px)] lg:max-w-none lg:bg-[#F5ECDE] lg:translate-x-0 ${navOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         
         {/* Profile Info */}
         <div className="flex flex-col items-center mb-10 text-center">
@@ -858,7 +858,7 @@ export default function SellerHub() {
       </main>
 
       {messageModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in" onMouseDown={() => setMessageModal(null)} role="dialog" aria-modal="true" aria-label="Customer message">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 animate-fade-in" onMouseDown={() => setMessageModal(null)} role="dialog" aria-modal="true" aria-label="Customer message">
           <GlassCard hover={false} className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto animate-scale-in">
             <form onSubmit={handleSendMessageReply} onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8 flex flex-col gap-5">
               <div className="flex items-start justify-between gap-4">

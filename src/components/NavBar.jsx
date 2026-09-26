@@ -253,7 +253,7 @@ export default function NavBar() {
       {/* ══ Mobile Drawer ══ */}
       {mobileOpen && (
         <div className="fixed inset-0 z-[100] flex">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
           <div
             role="dialog"
             aria-modal="true"
