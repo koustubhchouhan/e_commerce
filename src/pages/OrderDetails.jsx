@@ -122,7 +122,7 @@ export default function OrderDetails() {
                 {order.items?.map((item) => (
                   <div key={item.id} className="flex items-center gap-4 py-4 border-b border-[#231a16]/5 last:border-b-0">
                     <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-[#231a16]/10 bg-[#F5ECDE]">
-                      <img src={item.coverImage || FALLBACK_IMG} alt={item.productName} className="w-full h-full object-cover" />
+                      <img src={item.coverImage || FALLBACK_IMG} alt={item.productName} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[#2A211B] font-semibold truncate">{item.productName}</p>

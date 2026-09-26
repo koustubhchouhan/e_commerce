@@ -239,7 +239,7 @@ export default function Checkout() {
               {items.map(({ product, quantity }) => (
                 <div key={product.id} className="flex items-center gap-3 border-b border-[#231a16]/5 pb-3">
                   <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-[#231a16]/10">
-                    <img src={product.img} alt={product.title} className="w-full h-full object-cover" />
+                    <img src={product.img} alt={product.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[#2A211B] text-sm font-semibold truncate">{product.title}</p>

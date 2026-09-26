@@ -166,7 +166,7 @@ export default function ProductDetails() {
         {/* Left: Image Slider */}
         <div className="flex flex-col gap-4">
           <GlassCard className="relative w-full max-w-[560px] mx-auto aspect-square flex items-center justify-center p-6 bg-[#FDF8F0]/50" hover={false}>
-            <img src={images[activeImage]} alt={product.title} className="w-full h-full object-contain transition-opacity duration-500" />
+            <img src={images[activeImage]} alt={product.title} loading="eager" fetchPriority="high" decoding="async" className="w-full h-full object-contain transition-opacity duration-500" />
             {hasGallery && (
               <>
                 <button onClick={() => setActiveImage((prev) => (prev - 1 + images.length) % images.length)} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[#F5ECDE]/80 backdrop-blur-md flex items-center justify-center text-[#B7322A] border border-[#231a16]/10 hover:bg-[#EDE2D2] transition-colors" aria-label="Previous image">
@@ -187,7 +187,7 @@ export default function ProductDetails() {
             <div className="flex gap-4 overflow-x-auto pb-1 w-full max-w-[560px] mx-auto">
               {images.map((img, idx) => (
                 <button key={idx} onClick={() => setActiveImage(idx)} className={`w-24 h-24 rounded-xl overflow-hidden shrink-0 transition-all ${activeImage === idx ? 'border-2 border-[#B7322A] opacity-100' : 'border border-[#231a16]/10 opacity-60 hover:opacity-100'}`}>
-                  <img src={img} alt={`${product.title} view ${idx + 1}`} className="w-full h-full object-cover" />
+                  <img src={img} alt={`${product.title} view ${idx + 1}`} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>

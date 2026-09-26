@@ -706,7 +706,7 @@ export default function AdminPanel() {
                           <div className="flex items-center gap-3">
                             <div className="w-11 h-11 rounded-xl overflow-hidden bg-[#FDF8F0]/60 border border-[#231a16]/10 flex items-center justify-center shrink-0">
                               {product.coverImage
-                                ? <img src={product.coverImage} alt={product.name} className="w-full h-full object-cover" />
+                                ? <img src={product.coverImage} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                                 : <ImageIcon size={18} className="text-[#C4B5A2]" />}
                             </div>
                             <span className="font-display text-base font-semibold text-[#2A211B]">{product.name}</span>
@@ -1205,7 +1205,7 @@ export default function AdminPanel() {
                 {slides.map((slide) => (
                   <GlassCard key={slide.id} className="overflow-hidden flex flex-col">
                     <div className="relative h-44">
-                      <img src={slide.imageUrl} alt={slide.title} className="w-full h-full object-cover" />
+                      <img src={slide.imageUrl} alt={slide.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#FDF8F0]/90 to-transparent" />
                       <span className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${slide.isActive ? 'bg-[#E0A11C]/20 text-[#E0A11C] border-[#E0A11C]/30' : 'bg-[#F0E7DA] text-[#7A6A5B] border-[#231a16]/10'}`}>
                         {slide.isActive ? 'Visible' : 'Hidden'}
@@ -1861,7 +1861,7 @@ export default function AdminPanel() {
                 {slideImageFile ? (
                   <p className="text-[#7A6A5B] text-xs mt-2">Selected: {slideImageFile.name}</p>
                 ) : slideModal.imageUrl ? (
-                  <img src={slideModal.imageUrl} alt="Slide preview" className="mt-3 w-full h-32 object-cover rounded-xl border border-[#231a16]/10" />
+                  <img src={slideModal.imageUrl} alt="Slide preview" loading="lazy" decoding="async" className="mt-3 w-full h-32 object-cover rounded-xl border border-[#231a16]/10" />
                 ) : null}
               </div>
 

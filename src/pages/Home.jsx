@@ -60,6 +60,7 @@ function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor,
           src={img}
           alt={title}
           loading="lazy"
+          decoding="async"
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
         {badge && (
@@ -331,7 +332,7 @@ export default function Home() {
               const buttonClass = `btn ${theme.button} w-fit px-7 py-3 text-sm`;
               return (
                 <div key={slide.id} className="shrink-0 w-[85vw] md:w-[62vw] h-[320px] snap-center rounded-3xl relative overflow-hidden group border border-[#E7DAC8]">
-                  <img src={slide.imageUrl} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" alt={slide.title} />
+                  <img src={slide.imageUrl} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" alt={slide.title} />
                   <div className="absolute inset-0 bg-gradient-to-r from-[#FDF8F0]/95 via-[#FDF8F0]/60 to-transparent" />
                   <div className="absolute inset-0 p-8 md:p-12 flex flex-col justify-center">
                     {slide.eyebrow && (

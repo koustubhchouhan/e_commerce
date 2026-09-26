@@ -339,7 +339,7 @@ export default function SellerHub() {
         <div className="flex flex-col items-center mb-10 text-center">
           <div className="w-24 h-24 rounded-full bg-[#FDF8F0] border-2 border-[#B7322A]/50 overflow-hidden mb-4 shadow-[0_0_7px_rgba(183,50,42,0.11)] flex items-center justify-center">
             {user?.avatarUrl ? (
-              <img src={user.avatarUrl} alt="Seller Profile" className="w-full h-full object-cover" />
+              <img src={user.avatarUrl} alt="Seller Profile" loading="lazy" decoding="async" className="w-full h-full object-cover" />
             ) : (
               <span className="font-display text-3xl font-bold text-[#B7322A]">
                 {(user?.fullName || 'S').charAt(0).toUpperCase()}

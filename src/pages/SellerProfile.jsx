@@ -79,7 +79,7 @@ export default function SellerProfile() {
       <section className="w-full flex flex-col md:flex-row items-start md:items-center gap-6 glass-panel p-6 rounded-xl border-t-4 border-t-[#B7322A]">
         <div className="w-24 h-24 rounded-full bg-[#FDF8F0] border-2 border-[#B7322A]/50 overflow-hidden shrink-0 shadow-[0_0_7px_rgba(183,50,42,0.11)] flex items-center justify-center">
           {user?.avatarUrl ? (
-            <img src={user.avatarUrl} alt="Seller Profile" className="w-full h-full object-cover" />
+            <img src={user.avatarUrl} alt="Seller Profile" loading="lazy" decoding="async" className="w-full h-full object-cover" />
           ) : (
             <span className="font-display text-4xl font-bold text-[#B7322A]">
               {(user?.fullName || 'S').charAt(0).toUpperCase()}

@@ -76,7 +76,7 @@ export default function Categories() {
           <Link key={cat.id} to={`/home?category=${encodeURIComponent(cat.title)}`} className="block">
             <GlassCard hover={false} className={`relative overflow-hidden group cursor-pointer transition-all duration-500 border ${getThemeClasses(cat.theme)}`}>
               <div className="absolute inset-0 z-0">
-                <img src={cat.img} alt={cat.title} className="w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700" />
+                <img src={cat.img} alt={cat.title} loading="lazy" decoding="async" className="w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700" />
               </div>
               <div className={`absolute inset-0 bg-gradient-to-t ${cat.theme === 'festive' ? 'from-[#7A1F1A]/90 to-transparent' : 'from-[#FDF8F0]/90 to-transparent'} z-10`} />
 

@@ -53,7 +53,7 @@ export default function Cart() {
             {items.map(({ product, quantity }) => (
               <GlassCard key={product.id} className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6 group hover:border-[#B7322A]/30 transition-all duration-300">
                 <div className="w-full sm:w-32 h-32 rounded-xl bg-[#FDF8F0]/50 border border-[#231a16]/5 overflow-hidden shrink-0">
-                  <img src={product.img} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <img src={product.img} alt={product.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                 </div>
                 <div className="flex-1 flex flex-col gap-2 w-full">
                   <div className="flex justify-between items-start gap-4">

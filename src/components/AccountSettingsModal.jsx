@@ -208,6 +208,8 @@ export default function AccountSettingsModal({ open, onClose, initialTab = 'prof
                     <img
                       src={avatarPreview || user?.avatarUrl}
                       alt="Avatar preview"
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover"
                     />
                   ) : (

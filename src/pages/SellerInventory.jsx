@@ -235,7 +235,7 @@ export default function SellerInventory() {
                       <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-xl overflow-hidden bg-[#FDF8F0]/60 border border-[#231a16]/10 flex items-center justify-center shrink-0">
                           {item.images && item.images[0]
-                            ? <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
+                            ? <img src={item.images[0]} alt={item.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                             : <Package size={18} className="text-[#C4B5A2]" />}
                         </div>
                         <span className="font-display text-base font-semibold text-[#2A211B]">{item.name}</span>
@@ -446,7 +446,7 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
                 <div className="flex gap-3 flex-wrap mt-3">
                   {images.map((img, idx) => (
                     <div key={idx} className="relative w-20 h-20 rounded-xl overflow-hidden border border-[#231a16]/10 group/thumb">
-                      <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+                      <img src={img.url} alt={img.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); removeImage(idx); }}

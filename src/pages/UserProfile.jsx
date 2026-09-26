@@ -117,7 +117,7 @@ export default function UserProfile() {
           <div className="flex items-center gap-3 pb-5 border-b border-[#E7DAC8]">
             <div className="w-12 h-12 rounded-full bg-[#F0E7DA] border border-[#C4B5A2] flex items-center justify-center overflow-hidden shrink-0">
               {user?.avatarUrl ? (
-                <img className="w-full h-full object-cover" src={user.avatarUrl} alt="User avatar" />
+                <img className="w-full h-full object-cover" src={user.avatarUrl} alt="User avatar" loading="lazy" decoding="async" />
               ) : (
                 <span className="font-display text-xl font-bold text-[#B7322A]">{initial}</span>
               )}
