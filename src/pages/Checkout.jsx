@@ -10,6 +10,25 @@ import { inr } from '../lib/money';
 
 const STEPS = ['Shipping', 'Payment'];
 
+// Client-side guard so the payment step is only reachable with a complete
+// shipping address. The server re-validates on order creation, so this is UX.
+function validateShipping(form) {
+  const errors = {};
+  for (const field of ['firstName', 'lastName', 'address', 'city']) {
+    if (!form[field]?.trim()) errors[field] = 'This field is required.';
+  }
+
+  const pin = form.pin?.trim() ?? '';
+  if (!pin) errors.pin = 'This field is required.';
+  else if (!/^\d{4,10}$/.test(pin)) errors.pin = 'Enter a valid PIN / Zip code.';
+
+  const phone = form.phone?.trim() ?? '';
+  if (!phone) errors.phone = 'This field is required.';
+  else if (phone.replace(/\D/g, '').length < 7) errors.phone = 'Enter a valid phone number.';
+
+  return errors;
+}
+
 const RAZORPAY_SRC = 'https://checkout.razorpay.com/v1/checkout.js';
 
 // Inject Razorpay's checkout script exactly once. Resolves with the global
@@ -53,6 +72,27 @@ export default function Checkout() {
     pin: '',
     phone: '',
   });
+  const [errors, setErrors] = useState({});
+
+  // Update one field and clear its error as soon as the user edits it.
+  const updateField = (key, value) => {
+    setShipping((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const { [key]: _omit, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  const handleContinue = () => {
+    const nextErrors = validateShipping(shipping_form);
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      addToast('Please complete your shipping details.', 'error');
+      return;
+    }
+    setStep(1);
+  };
   const { user } = useAuth();
   const saved = user?.shippingAddress;
   const appliedDefault = useRef(false);
@@ -76,6 +116,15 @@ export default function Checkout() {
   const handlePlaceOrder = async () => {
     if (items.length === 0) {
       addToast('Your cart is empty.', 'error');
+      return;
+    }
+    // Never open the gateway without a complete address, even if the user
+    // somehow reached this step.
+    const shippingErrors = validateShipping(shipping_form);
+    if (Object.keys(shippingErrors).length > 0) {
+      setErrors(shippingErrors);
+      setStep(0);
+      addToast('Please complete your shipping details.', 'error');
       return;
     }
     setPlacing(true);
@@ -181,21 +230,27 @@ export default function Checkout() {
         {/* Form */}
         <div className="lg:col-span-7">
           {step === 0 && (
-            <GlassCard className="p-8 flex flex-col gap-5">
-              <h2 className="font-display text-2xl font-semibold text-[#231A16] mb-2">Shipping Information</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="First Name" value={shipping_form.firstName} onChange={v => setShipping({...shipping_form, firstName: v})} placeholder="Alex" />
-                <Field label="Last Name" value={shipping_form.lastName} onChange={v => setShipping({...shipping_form, lastName: v})} placeholder="Mercer" />
-              </div>
-              <Field label="Address Line" value={shipping_form.address} onChange={v => setShipping({...shipping_form, address: v})} placeholder="1284 Neon Boulevard, Apt 404" />
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="City" value={shipping_form.city} onChange={v => setShipping({...shipping_form, city: v})} placeholder="Neo-Angeles" />
-                <Field label="PIN / Zip Code" value={shipping_form.pin} onChange={v => setShipping({...shipping_form, pin: v})} placeholder="90210" />
-              </div>
-              <Field label="Phone Number" value={shipping_form.phone} onChange={v => setShipping({...shipping_form, phone: v})} placeholder="+1 (555) 000-0000" />
-              <button onClick={() => setStep(1)} className="btn btn-primary w-full py-3.5 text-lg mt-4">
-                Continue to payment <ArrowRight size={20} />
-              </button>
+            <GlassCard className="p-8">
+              <h2 className="font-display text-2xl font-semibold text-[#231A16] mb-5">Shipping Information</h2>
+              <form
+                onSubmit={(e) => { e.preventDefault(); handleContinue(); }}
+                noValidate
+                className="flex flex-col gap-5"
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="First Name" required value={shipping_form.firstName} onChange={v => updateField('firstName', v)} error={errors.firstName} placeholder="Alex" />
+                  <Field label="Last Name" required value={shipping_form.lastName} onChange={v => updateField('lastName', v)} error={errors.lastName} placeholder="Mercer" />
+                </div>
+                <Field label="Address Line" required value={shipping_form.address} onChange={v => updateField('address', v)} error={errors.address} placeholder="1284 Neon Boulevard, Apt 404" />
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="City" required value={shipping_form.city} onChange={v => updateField('city', v)} error={errors.city} placeholder="Neo-Angeles" />
+                  <Field label="PIN / Zip Code" required value={shipping_form.pin} onChange={v => updateField('pin', v)} error={errors.pin} placeholder="90210" />
+                </div>
+                <Field label="Phone Number" required value={shipping_form.phone} onChange={v => updateField('phone', v)} error={errors.phone} placeholder="+1 (555) 000-0000" />
+                <button type="submit" className="btn btn-primary w-full py-3.5 text-lg mt-4">
+                  Continue to payment <ArrowRight size={20} />
+                </button>
+              </form>
             </GlassCard>
           )}
 
@@ -267,17 +322,22 @@ export default function Checkout() {
   );
 }
 
-function Field({ label, value, onChange, placeholder }) {
+function Field({ label, value, onChange, placeholder, error, required = false }) {
   return (
     <div>
-      <label className="micro-label mb-2 block">{label}</label>
+      <label className="micro-label mb-2 block">
+        {label}
+        {required && <span className="text-[#B7322A]"> *</span>}
+      </label>
       <input
         type="text"
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
         className="field"
+        aria-invalid={error ? 'true' : undefined}
       />
+      {error && <p className="text-[#B3261E] text-xs mt-1.5">{error}</p>}
     </div>
   );
 }

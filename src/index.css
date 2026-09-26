@@ -200,6 +200,12 @@
     border-color: #B7322A;
     box-shadow: 0 0 0 3px rgba(183, 50, 42, 0.12);
   }
+  .field[aria-invalid='true'] {
+    border-color: #B3261E;
+  }
+  .field[aria-invalid='true']:focus {
+    box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.15);
+  }
 
   /* ── Small uppercase section label ("PURITY", "CHOOSE ITEMS") ── */
   .micro-label {
