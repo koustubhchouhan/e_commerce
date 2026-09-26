@@ -479,7 +479,7 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
                 className={`${inputClass} ${touched && !nameValid ? 'border-[#B3261E]/60' : ''}`}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Nova Pro X-15 Gaming Laptop"
+                placeholder="e.g. Hawan Samagri 1 kg"
               />
               {touched && !nameValid && <p className="text-[11px] text-[#B3261E] mt-1.5">Please enter a product name.</p>}
             </div>
