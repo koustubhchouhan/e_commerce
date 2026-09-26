@@ -103,7 +103,7 @@ export default function SellerRequests() {
                     type="text"
                     value={storeName}
                     onChange={(e) => setStoreName(e.target.value)}
-                    placeholder="e.g. NeonTech Store"
+                    placeholder="e.g. Shubh Puja Store"
                     className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
                   />
                 </div>

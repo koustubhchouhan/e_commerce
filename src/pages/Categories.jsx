@@ -62,7 +62,7 @@ export default function Categories() {
     <div className="max-w-[1440px] mx-auto px-6 py-10 md:px-12 md:py-12 animate-fade-in-up">
       <header className="mb-12 text-center">
         <h1 className="font-display text-5xl font-bold text-[#231A16] mb-4 text-glow">Browse Categories</h1>
-        <p className="text-[#7A6A5B] max-w-2xl mx-auto">Explore our curated collections of futuristic tech, smart gadgets, and seasonal deals.</p>
+        <p className="text-[#7A6A5B] max-w-2xl mx-auto">Explore our curated collections of puja kits, havan samagri, ghee and festive essentials.</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

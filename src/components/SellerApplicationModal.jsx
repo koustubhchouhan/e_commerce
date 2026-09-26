@@ -138,7 +138,7 @@ export default function SellerApplicationModal({ onClose, onChange }) {
                   type="text"
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
-                  placeholder="e.g. NeonTech Store"
+                  placeholder="e.g. Shubh Puja Store"
                   className={inputClass}
                 />
               </div>
