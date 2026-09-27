@@ -12,6 +12,7 @@ import {
 } from '../controllers/contact.controller.js';
 import { requireAuth, requireRole, optionalAuth } from '../middleware/auth.js';
 import { validate, validateParams } from '../middleware/validate.js';
+import { rateLimit } from '../middleware/rateLimit.js';
 import { uuidParamSchema } from '../validators/catalog.validators.js';
 import {
   createContactMessageSchema,
@@ -21,8 +22,22 @@ import {
 
 const router = Router();
 
+// The contact form is public and writes to the database, so cap submissions
+// per IP to keep out spam bursts.
+const contactLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  message: 'Too many messages sent. Please wait a few minutes and try again.',
+});
+
 // Public — optionalAuth links the message to the account when signed in.
-router.post('/contact', optionalAuth, validate(createContactMessageSchema), createContactMessage);
+router.post(
+  '/contact',
+  contactLimiter,
+  optionalAuth,
+  validate(createContactMessageSchema),
+  createContactMessage
+);
 
 // Customer inbox — the caller's own messages and any replies from support/sellers.
 router.get('/contact-messages/mine', requireAuth, listMyContactMessages);
