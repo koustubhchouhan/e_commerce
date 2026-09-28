@@ -148,6 +148,9 @@ create table if not exists public.categories (
   slug text not null unique
 );
 
+-- Optional thumbnail tile shown on the storefront categories page.
+alter table public.categories add column if not exists image_url text;
+
 -- ---- products -------------------------------------------------------
 create table if not exists public.products (
   id               uuid primary key default gen_random_uuid(),

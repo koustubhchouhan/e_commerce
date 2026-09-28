@@ -15,6 +15,8 @@ export const uuidParamSchema = z.object({
 // POST /admin/categories body
 export const createCategorySchema = z.object({
   name: z.string().trim().min(1, 'Category name is required').max(120),
+  // Optional storefront thumbnail: a valid http(s) URL, or '' when omitted.
+  imageUrl: z.union([z.string().trim().url('Image URL must be a valid URL').max(500), z.literal('')]).optional(),
 });
 
 // POST /products/:id/reviews body
