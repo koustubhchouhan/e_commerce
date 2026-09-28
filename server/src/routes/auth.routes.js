@@ -14,6 +14,7 @@ import {
 } from '../controllers/auth.controller.js';
 import { validate } from '../middleware/validate.js';
 import { requireAuth } from '../middleware/auth.js';
+import { rateLimit, userKey } from '../middleware/rateLimit.js';
 import {
   registerSchema,
   loginSchema,
@@ -32,15 +33,37 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 });
 
-router.post('/register', validate(registerSchema), register);
-router.post('/login', validate(loginSchema), login);
-router.post('/refresh', validate(refreshSchema), refresh);
+// Anonymous endpoints are throttled by client IP; the sensitive signed-in ones
+// by account. Budgets are intentionally generous enough for a person retrying,
+// but small enough to blunt credential stuffing and account-creation spam.
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: 'Too many accounts created from this address. Please try again later.',
+});
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: 'Too many sign-in attempts. Please wait a few minutes and try again.',
+});
+const refreshLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
+const oauthLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
+const accountLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  keyGenerator: userKey,
+  message: 'Too many attempts on this account. Please try again later.',
+});
+
+router.post('/register', registerLimiter, validate(registerSchema), register);
+router.post('/login', loginLimiter, validate(loginSchema), login);
+router.post('/refresh', refreshLimiter, validate(refreshSchema), refresh);
 router.post('/logout', logout);
-router.post('/oauth/session', validate(oauthSessionSchema), oauthSession);
+router.post('/oauth/session', oauthLimiter, validate(oauthSessionSchema), oauthSession);
 router.get('/me', requireAuth, me);
 router.patch('/profile', requireAuth, validate(updateProfileSchema), updateProfile);
 router.post('/profile/avatar', requireAuth, upload.single('avatar'), uploadAvatar);
-router.post('/password', requireAuth, validate(changePasswordSchema), changePassword);
-router.post('/email', requireAuth, validate(changeEmailSchema), changeEmail);
+router.post('/password', requireAuth, accountLimiter, validate(changePasswordSchema), changePassword);
+router.post('/email', requireAuth, accountLimiter, validate(changeEmailSchema), changeEmail);
 
 export default router;

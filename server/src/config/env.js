@@ -29,10 +29,18 @@ if ((process.env.NODE_ENV || 'development') !== 'test') {
   }
 }
 
+// Express `trust proxy` setting. Off by default so a direct client cannot spoof
+// its address via X-Forwarded-For. Set TRUST_PROXY=1 (the number of proxy hops)
+// when the API runs behind a reverse proxy such as Render, so req.ip — and
+// therefore rate limiting — reflects the real client.
+const trustProxyRaw = process.env.TRUST_PROXY;
+const trustProxy = trustProxyRaw === 'true' ? 1 : trustProxyRaw ? Number(trustProxyRaw) : false;
+
 export const env = {
   port: Number(process.env.PORT) || 4000,
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   nodeEnv: process.env.NODE_ENV || 'development',
+  trustProxy,
   // Session cookie policy. `lax` is safe for same-site frontends (the common
   // case); set COOKIE_SAMESITE=none when the API is served from a different
   // site than the SPA (which also requires Secure, i.e. production + HTTPS).

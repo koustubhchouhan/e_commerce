@@ -20,6 +20,10 @@ import { notFound, errorHandler } from './middleware/error.js';
 export function createApp() {
   const app = express();
 
+  // Must be set before anything reads req.ip (rate limiting). Only enabled via
+  // TRUST_PROXY so a direct client cannot forge its address.
+  if (env.trustProxy) app.set('trust proxy', env.trustProxy);
+
   app.use(cors({ origin: env.clientOrigin, credentials: true }));
   // gzip/deflate JSON bodies. Tiny responses are skipped automatically.
   app.use(compression());

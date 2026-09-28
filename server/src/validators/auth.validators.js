@@ -1,8 +1,11 @@
 import { z } from 'zod';
 
 export const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  email: z.string().email().max(254),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(72, 'Password must be at most 72 characters'),
   fullName: z.string().min(1).max(120).optional().default(''),
   // Account type the user picked on the sign-up page. Admin is never
   // self-selectable — admin accounts are created separately by the platform.
@@ -10,15 +13,15 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1, 'Password is required'),
+  email: z.string().email().max(254),
+  password: z.string().min(1, 'Password is required').max(72),
 });
 
 // The refresh token normally arrives in the HttpOnly cookie; the body field is
 // kept optional for non-browser API clients. Tolerates an empty/absent body.
 export const refreshSchema = z
   .object({
-    refreshToken: z.string().min(1, 'refreshToken is required').optional(),
+    refreshToken: z.string().min(1, 'refreshToken is required').max(2048).optional(),
   })
   .optional()
   .transform((value) => value ?? {});
@@ -28,8 +31,8 @@ export const refreshSchema = z
 // `role` is only meaningful for sign-ups (what account type was chosen).
 export const oauthSessionSchema = z.object({
   session: z.object({
-    access_token: z.string().min(1, 'access_token is required'),
-    refresh_token: z.string().min(1, 'refresh_token is required'),
+    access_token: z.string().min(1, 'access_token is required').max(4096),
+    refresh_token: z.string().min(1, 'refresh_token is required').max(4096),
     expires_at: z.number().nullable().optional(),
   }),
   mode: z.enum(['login', 'signup']),
@@ -60,12 +63,16 @@ export const updateProfileSchema = z.object({
 
 // POST /auth/password — current password is optional so Google-only accounts
 // (which have no password yet) can set one without proving a nonexistent one.
+// When the account does have a password, the controller requires it.
 export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1).optional().default(''),
-  newPassword: z.string().min(8, 'New password must be at least 8 characters'),
+  currentPassword: z.string().max(72).optional().default(''),
+  newPassword: z
+    .string()
+    .min(8, 'New password must be at least 8 characters')
+    .max(72, 'New password must be at most 72 characters'),
 });
 
 // POST /auth/email — changing the sign-in email.
 export const changeEmailSchema = z.object({
-  newEmail: z.string().email('Enter a valid email address'),
+  newEmail: z.string().email('Enter a valid email address').max(254),
 });

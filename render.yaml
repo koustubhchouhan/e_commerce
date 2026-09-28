@@ -20,6 +20,10 @@ services:
         value: "22.11.0"
       - key: NODE_ENV
         value: production
+      # Render terminates TLS and forwards to the app, so trust exactly one
+      # proxy hop; otherwise req.ip (and rate limiting) sees Render's address.
+      - key: TRUST_PROXY
+        value: "1"
       # The SPA and API share a site through the Vercel proxy, so 'lax' is
       # correct. Use 'none' only if the browser calls the API directly across
       # sites (requires HTTPS).
