@@ -219,7 +219,22 @@ export const api = {
   adminUpdateOrderStatus: (id, status) =>
     request(`/admin/orders/${id}/status`, { method: 'PATCH', body: { status }, auth: true }),
   adminCategories: () => request('/admin/categories', { auth: true }),
-  createCategory: (name) => request('/admin/categories', { method: 'POST', body: { name }, auth: true }),
+  createCategory: (name, imageUrl) =>
+    request('/admin/categories', {
+      method: 'POST',
+      body: imageUrl ? { name, imageUrl } : { name },
+      auth: true,
+    }),
+  uploadCategoryImage: (file) => {
+    const form = new FormData();
+    form.append('image', file);
+    return request('/admin/categories/image', {
+      method: 'POST',
+      body: form,
+      auth: true,
+      formData: true,
+    });
+  },
   deleteCategory: (id) => request(`/admin/categories/${id}`, { method: 'DELETE', auth: true }),
   adminDeleteProduct: (id) => request(`/admin/products/${id}`, { method: 'DELETE', auth: true }),
   adminProducts: (approvalStatus) => {

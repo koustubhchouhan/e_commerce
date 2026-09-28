@@ -3,9 +3,17 @@ import { AppError } from '../middleware/error.js';
 import { loadCoversByProduct, pickCover, serializeProduct } from './product-data.js';
 
 export async function listCategories() {
-  const { data, error } = await db.from('categories').select('id, name, slug').order('name');
+  const { data, error } = await db
+    .from('categories')
+    .select('id, name, slug, image_url')
+    .order('name');
   if (error) throw new AppError(500, `Could not load categories: ${error.message}`);
-  return data ?? [];
+  return (data ?? []).map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    imageUrl: c.image_url ?? null,
+  }));
 }
 
 // Escapes a user-supplied search term for safe use inside a PostgREST `.or()`

@@ -10,6 +10,7 @@ import {
   updateAdminOrderStatus,
   listCategories,
   createCategory,
+  uploadCategoryImage,
   deleteCategory,
   deleteProduct,
   listAdminProducts,
@@ -103,6 +104,13 @@ router.post(
   requireRole('admin'),
   validate(createCategorySchema),
   createCategory
+);
+router.post(
+  '/admin/categories/image',
+  requireAuth,
+  requireRole('admin'),
+  upload.single('image'),
+  uploadCategoryImage
 );
 router.delete(
   '/admin/categories/:id',

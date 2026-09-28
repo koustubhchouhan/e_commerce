@@ -104,6 +104,8 @@ export default function AdminPanel() {
   const [replyText, setReplyText] = useState('');
   const [replying, setReplying] = useState(false);
   const [newCategory, setNewCategory] = useState('');
+  const [newCategoryImage, setNewCategoryImage] = useState('');
+  const [newCategoryImageFile, setNewCategoryImageFile] = useState(null);
   const [slides, setSlides] = useState([]);
   const [loadingSlides, setLoadingSlides] = useState(true);
   const [slideModal, setSlideModal] = useState(null);
@@ -458,8 +460,15 @@ export default function AdminPanel() {
     if (!name || busy) return;
     setBusy(true);
     try {
-      await api.createCategory(name);
+      let imageUrl = newCategoryImage.trim();
+      if (newCategoryImageFile) {
+        const uploaded = await api.uploadCategoryImage(newCategoryImageFile);
+        imageUrl = uploaded.url;
+      }
+      await api.createCategory(name, imageUrl);
       setNewCategory('');
+      setNewCategoryImage('');
+      setNewCategoryImageFile(null);
       setCategoryModal(false);
       addToast(`"${name}" category created!`, 'success');
       await loadCategories();
@@ -468,6 +477,18 @@ export default function AdminPanel() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const openCategoryModal = () => {
+    setNewCategory('');
+    setNewCategoryImage('');
+    setNewCategoryImageFile(null);
+    setCategoryModal(true);
+  };
+
+  const closeCategoryModal = () => {
+    if (busy) return;
+    setCategoryModal(false);
   };
 
   const handleDeleteCategory = async (id) => {
@@ -1125,7 +1146,7 @@ export default function AdminPanel() {
                 <h1 className="font-display text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Platform Categories</h1>
                 <p className="text-[#7A6A5B]">Manage the main product categories available across the platform.</p>
               </div>
-              <button onClick={() => setCategoryModal(true)} className="py-3 px-6 rounded-xl bg-[#B7322A] text-[#FDF8F0] font-display text-base font-semibold hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all flex items-center gap-2">
+              <button onClick={openCategoryModal} className="py-3 px-6 rounded-xl bg-[#B7322A] text-[#FDF8F0] font-display text-base font-semibold hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] transition-all flex items-center gap-2">
                 <PlusCircle size={20} /> Add Category
               </button>
             </div>
@@ -1150,7 +1171,18 @@ export default function AdminPanel() {
                     {categories.map(cat => (
                       <tr key={cat.id} className="border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors">
                         <td className="py-4 px-4 font-[Inter] text-sm text-[#7A6A5B] uppercase">{shortId(cat.id)}</td>
-                        <td className="py-4 px-4 text-[#231A16] font-semibold text-lg">{cat.name}</td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-3">
+                            {cat.imageUrl ? (
+                              <img src={cat.imageUrl} alt={cat.name} loading="lazy" decoding="async" className="w-10 h-10 rounded-lg object-cover border border-[#231a16]/10 shrink-0" />
+                            ) : (
+                              <span className="w-10 h-10 rounded-lg bg-[#231a16]/5 flex items-center justify-center text-[#C4B5A2] shrink-0">
+                                <ImageIcon size={16} />
+                              </span>
+                            )}
+                            <span className="text-[#231A16] font-semibold text-lg">{cat.name}</span>
+                          </div>
+                        </td>
                         <td className="py-4 px-4 text-[#8A7B6B] text-sm">{cat.slug}</td>
                         <td className="py-4 px-4 text-center text-[#2A211B] font-semibold">{cat.productCount}</td>
                         <td className="py-4 px-4 flex justify-end gap-2">
@@ -1742,7 +1774,7 @@ export default function AdminPanel() {
       )}
 
       {categoryModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 animate-fade-in" onMouseDown={() => setCategoryModal(false)} role="dialog" aria-modal="true" aria-label="Add category">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 animate-fade-in" onMouseDown={closeCategoryModal} role="dialog" aria-modal="true" aria-label="Add category">
           <GlassCard hover={false} className="relative w-full max-w-md animate-scale-in">
             <form onSubmit={handleCreateCategory} onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8 flex flex-col gap-5">
               <div className="flex items-start justify-between">
@@ -1752,7 +1784,7 @@ export default function AdminPanel() {
                   </h2>
                   <p className="text-[#7A6A5B] text-xs mt-1">Create a new product category for the platform.</p>
                 </div>
-                <button type="button" onClick={() => setCategoryModal(false)} className="p-2 -mr-2 rounded-xl text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors" aria-label="Close">
+                <button type="button" onClick={closeCategoryModal} className="p-2 -mr-2 rounded-xl text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors" aria-label="Close">
                   <X size={22} />
                 </button>
               </div>
@@ -1762,13 +1794,35 @@ export default function AdminPanel() {
                   type="text"
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
-                  placeholder="e.g. Wearables"
+                  placeholder="e.g. Puja Thalis"
                   autoFocus
                   className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
                 />
               </div>
+              <div>
+                <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">Tile Image (optional)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setNewCategoryImageFile(e.target.files?.[0] ?? null)}
+                  className="w-full text-xs text-[#7A6A5B] file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-[#F0E7DA] file:text-[#2A211B] file:text-xs file:font-semibold hover:file:bg-[#E0A11C] file:cursor-pointer"
+                />
+                <input
+                  type="url"
+                  value={newCategoryImage}
+                  onChange={(e) => setNewCategoryImage(e.target.value)}
+                  placeholder="...or paste an image URL"
+                  className="w-full mt-3 bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
+                />
+                {newCategoryImageFile ? (
+                  <p className="text-[#7A6A5B] text-xs mt-2">Selected: {newCategoryImageFile.name}</p>
+                ) : newCategoryImage ? (
+                  <img src={newCategoryImage} alt="Category preview" loading="lazy" decoding="async" className="mt-3 w-full h-32 object-cover rounded-xl border border-[#231a16]/10" />
+                ) : null}
+                <p className="text-[#7A6A5B] text-xs mt-2">Shown as the tile on the storefront categories page.</p>
+              </div>
               <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#231a16]/10">
-                <button type="button" onClick={() => setCategoryModal(false)} className="px-6 py-2.5 rounded-xl border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
+                <button type="button" onClick={closeCategoryModal} className="px-6 py-2.5 rounded-xl border border-[#231a16]/10 text-[#2A211B] text-sm font-semibold hover:bg-[#231a16]/5 transition-colors">
                   Cancel
                 </button>
                 <button type="submit" disabled={!newCategory.trim() || busy} className="px-6 py-2.5 rounded-xl font-display text-sm font-bold flex items-center gap-2 transition-all bg-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] disabled:bg-[#F0E7DA]/50 disabled:text-[#8A7B6B] disabled:cursor-not-allowed">

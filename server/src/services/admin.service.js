@@ -1,6 +1,6 @@
 import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
-import { removeImage } from './storage.service.js';
+import { removeImage, uploadImage } from './storage.service.js';
 import { serializeReview } from './review.service.js';
 import { loadCoversByProduct, serializeProduct } from './product-data.js';
 
@@ -123,7 +123,7 @@ export async function listSellers() {
 export async function listCategories() {
   const { data, error } = await db
     .from('categories')
-    .select('id, name, slug, products(count)');
+    .select('id, name, slug, image_url, products(count)');
 
   if (error) throw new AppError(500, `Could not load categories: ${error.message}`);
 
@@ -131,13 +131,15 @@ export async function listCategories() {
     id: c.id,
     name: c.name,
     slug: c.slug,
+    imageUrl: c.image_url ?? null,
     productCount: c.products?.[0]?.count ?? 0,
   }));
 }
 
 // POST /admin/categories — create a category. The slug is auto-derived from
-// the name so it stays unique and URL-safe.
-export async function createCategory({ name }) {
+// the name so it stays unique and URL-safe. An optional thumbnail image_url
+// is stored for the storefront categories page.
+export async function createCategory({ name, imageUrl }) {
   const slug = name
     .trim()
     .toLowerCase()
@@ -148,8 +150,8 @@ export async function createCategory({ name }) {
 
   const { data, error } = await db
     .from('categories')
-    .insert({ name: name.trim(), slug })
-    .select('id, name, slug')
+    .insert({ name: name.trim(), slug, image_url: imageUrl?.trim() || null })
+    .select('id, name, slug, image_url')
     .single();
 
   if (error) {
@@ -157,7 +159,15 @@ export async function createCategory({ name }) {
     throw new AppError(400, `Could not create category: ${error.message}`);
   }
 
-  return { ...data, productCount: 0 };
+  return { id: data.id, name: data.name, slug: data.slug, imageUrl: data.image_url ?? null, productCount: 0 };
+}
+
+// POST /admin/categories/image — upload a thumbnail for a category. Files are
+// stored in the shared public bucket under the `categories` folder.
+export async function uploadCategoryImage(file) {
+  if (!file) throw new AppError(400, 'No image uploaded');
+  const { url } = await uploadImage({ file, folder: 'categories' });
+  return { url };
 }
 
 // DELETE /admin/categories/:id — products keep existing with category null
