@@ -6,6 +6,8 @@ import { inr } from '../lib/money';
 import { useToastStore } from '../store/toastStore';
 import { api } from '../lib/api';
 import { toProductCardList } from '../lib/productShape';
+import PrefetchLink from '../components/PrefetchLink';
+import { ProductGridSkeleton } from '../components/Skeleton';
 
 // Built-in color treatments an admin can pick for a hero slide.
 const SLIDE_THEMES = {
@@ -55,7 +57,7 @@ function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor,
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-[#E7DAC8] bg-[#FFFCF7] transition-shadow duration-300 hover:shadow-[0_14px_30px_rgba(60,40,25,0.10)]">
-      <Link to={`/product/${id}`} className="relative block aspect-[4/3] stripe-placeholder overflow-hidden">
+      <PrefetchLink to={`/product/${id}`} prefetchOnVisible className="relative block aspect-[4/3] stripe-placeholder overflow-hidden">
         <img
           src={img}
           alt={title}
@@ -68,12 +70,12 @@ function ProductCard({ id, title, price, oldPrice, desc, img, badge, badgeColor,
             {badge}
           </span>
         )}
-      </Link>
+      </PrefetchLink>
 
       <div className="p-4 flex flex-col flex-1">
-        <Link to={`/product/${id}`} className="font-display text-base sm:text-lg font-semibold text-[#231A16] leading-snug line-clamp-2 hover:text-[#B7322A] transition-colors">
+        <PrefetchLink to={`/product/${id}`} className="font-display text-base sm:text-lg font-semibold text-[#231A16] leading-snug line-clamp-2 hover:text-[#B7322A] transition-colors">
           {title}
-        </Link>
+        </PrefetchLink>
         {storeName && <p className="micro-label mt-1.5">by {storeName}</p>}
         {desc && <p className="text-[#8A7B6B] text-xs leading-relaxed mt-1.5 line-clamp-2 flex-1">{desc}</p>}
 
@@ -420,9 +422,7 @@ export default function Home() {
               </div>
             </div>
 
-            {loading && (
-              <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading products…</div>
-            )}
+            {loading && <ProductGridSkeleton count={6} />}
             {error && !loading && (
               <div className="flex items-center justify-center h-40 text-[#B3261E]">{error}</div>
             )}

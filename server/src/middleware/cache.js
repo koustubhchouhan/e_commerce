@@ -5,12 +5,13 @@
 // These helpers only decide *who* may cache a response and for how long.
 
 // Public, non-personalised reads (catalog, categories, slides, reviews). Safe
-// for browsers and shared caches; revalidated in the background after maxAge.
+// for browsers and shared caches; revalidated in the background after maxAge,
+// and served stale (rather than erroring) if the origin is briefly down.
 export function publicCache(maxAge = 60, staleWhileRevalidate = 300) {
   return (req, res, next) => {
     res.set(
       'Cache-Control',
-      `public, max-age=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`
+      `public, max-age=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}, stale-if-error=86400`
     );
     next();
   };
@@ -22,7 +23,7 @@ export function privateCache(maxAge = 30, staleWhileRevalidate = 120) {
   return (req, res, next) => {
     res.set(
       'Cache-Control',
-      `private, max-age=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`
+      `private, max-age=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}, stale-if-error=86400`
     );
     next();
   };

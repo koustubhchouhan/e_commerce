@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import { ProductGrid } from './Home';
 import { api } from '../lib/api';
 import { toProductCardList } from '../lib/productShape';
+import { ProductGridSkeleton } from '../components/Skeleton';
 
 export default function SearchResults() {
   const { search } = useLocation();
@@ -50,7 +51,7 @@ export default function SearchResults() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-24 text-[#7A6A5B]">Loading...</div>
+        <ProductGridSkeleton count={6} />
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <Search size={60} className="text-[#F0E7DA]" />

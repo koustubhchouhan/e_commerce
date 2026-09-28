@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Inbox, Loader2, Mail, MessageSquare, Reply } from 'lucide-react';
+import { Inbox, Mail, MessageSquare, Reply } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
+import { MessageListSkeleton } from '../components/Skeleton';
 import { api } from '../lib/api';
 
 const formatDate = (iso) => {
@@ -76,11 +77,7 @@ export default function MyMessages() {
         </Link>
       </div>
 
-      {loading && (
-        <div className="flex items-center justify-center gap-3 h-40 text-[#7A6A5B]">
-          <Loader2 size={20} className="animate-spin text-[#B7322A]" /> Loading your messages...
-        </div>
-      )}
+      {loading && <MessageListSkeleton count={3} />}
 
       {!loading && error && (
         <GlassCard hover={false} className="p-10 flex flex-col items-center text-center gap-4">

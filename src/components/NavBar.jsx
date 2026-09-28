@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   ShoppingBag, ShoppingCart, User, Search, LogOut, Menu, X,
   Home, LayoutGrid, MessageCircle, Package,
@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCartStore } from '../store/cartStore';
+import PrefetchLink from './PrefetchLink';
 
 export default function NavBar() {
   const location = useLocation();
@@ -77,7 +78,7 @@ export default function NavBar() {
   const NavItem = ({ to, label, mobile = false }) => {
     const active = isActive(to);
     return (
-      <Link
+      <PrefetchLink
         to={to}
         onClick={() => setMobileOpen(false)}
         className={`px-3 py-2 rounded-full text-sm font-medium transition-colors ${mobile ? 'text-base w-full' : ''} ${
@@ -87,14 +88,14 @@ export default function NavBar() {
         }`}
       >
         {label}
-      </Link>
+      </PrefetchLink>
     );
   };
 
   const NavItemMobile = ({ to, label }) => {
     const active = isActive(to);
     return (
-      <Link
+      <PrefetchLink
         to={to}
         onClick={() => setMobileOpen(false)}
         className={`px-4 py-3 rounded-2xl text-base transition-colors ${
@@ -102,7 +103,7 @@ export default function NavBar() {
         }`}
       >
         {label}
-      </Link>
+      </PrefetchLink>
     );
   };
 
@@ -157,7 +158,7 @@ export default function NavBar() {
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 h-16 flex items-center gap-3 md:gap-6">
 
           {/* Brand */}
-          <Link
+          <PrefetchLink
             to={userRole === 'admin' ? '/admin' : userRole === 'seller' ? '/seller' : '/home'}
             className="flex items-center gap-2 shrink-0"
           >
@@ -165,7 +166,7 @@ export default function NavBar() {
               <ShoppingBag size={18} />
             </span>
             <span className="font-display text-xl font-semibold tracking-tight text-[#FDF8F0]">Arghya</span>
-          </Link>
+          </PrefetchLink>
 
           {/* Desktop nav links */}
           <nav className="hidden lg:flex items-center gap-1 font-body">
@@ -190,7 +191,7 @@ export default function NavBar() {
           {/* Right actions */}
           <div className="flex items-center gap-1 sm:gap-2 ml-auto relative">
             {userRole === 'customer' && (
-              <Link
+              <PrefetchLink
                 to="/cart"
                 aria-label={`Cart, ${totalItems} item${totalItems === 1 ? '' : 's'}`}
                 className="relative h-11 px-3 flex items-center gap-2 rounded-full hover:bg-[#FDF8F0]/10 transition-colors"
@@ -202,7 +203,7 @@ export default function NavBar() {
                     {totalItems > 9 ? '9+' : totalItems}
                   </span>
                 )}
-              </Link>
+              </PrefetchLink>
             )}
 
             {/* Profile dropdown */}
@@ -222,13 +223,13 @@ export default function NavBar() {
                     <p className="micro-label">{userRole} Account</p>
                   </div>
                   <div className="py-1">
-                    <Link to={profileLink} onClick={() => setProfileOpen(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#231a16]/5 transition-colors">
+                    <PrefetchLink to={profileLink} onClick={() => setProfileOpen(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#231a16]/5 transition-colors">
                       <User size={16} /> {profileLabel}
-                    </Link>
+                    </PrefetchLink>
                     {userRole === 'customer' && (
-                      <Link to="/profile" onClick={() => setProfileOpen(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#231a16]/5 transition-colors">
+                      <PrefetchLink to="/profile" onClick={() => setProfileOpen(false)} className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-[#231a16]/5 transition-colors">
                         <Package size={16} /> My Orders
-                      </Link>
+                      </PrefetchLink>
                     )}
                     <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-[#B3261E] hover:bg-[#231a16]/5 transition-colors text-left">
                       <LogOut size={16} /> Sign Out
@@ -291,9 +292,9 @@ export default function NavBar() {
             </nav>
 
             <div className="border-t border-[#E7DAC8] pt-4 flex flex-col gap-2">
-              <Link to={profileLink} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-4 py-3 text-sm text-[#2A211B] hover:bg-[#231a16]/5 rounded-2xl transition-colors">
+              <PrefetchLink to={profileLink} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-4 py-3 text-sm text-[#2A211B] hover:bg-[#231a16]/5 rounded-2xl transition-colors">
                 <User size={16} /> {profileLabel}
-              </Link>
+              </PrefetchLink>
               <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-3 text-sm text-[#B3261E] hover:bg-[#231a16]/5 rounded-2xl transition-colors text-left">
                 <LogOut size={16} /> Sign Out
               </button>
@@ -322,7 +323,7 @@ export default function NavBar() {
               }
 
               return (
-                <Link key={to} to={to} className={tabClass}>
+                <PrefetchLink key={to} to={to} className={tabClass}>
                   <Icon size={20} />
                   {label}
                   {to === '/cart' && totalItems > 0 && (
@@ -330,7 +331,7 @@ export default function NavBar() {
                       {totalItems > 9 ? '9+' : totalItems}
                     </span>
                   )}
-                </Link>
+                </PrefetchLink>
               );
             })}
           </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import GlassCard from '../components/GlassCard';
+import { CategoryGridSkeleton } from '../components/Skeleton';
 import { api } from '../lib/api';
 
 const THEME_FALLBACKS = [
@@ -65,36 +66,36 @@ export default function Categories() {
         <p className="text-[#7A6A5B] max-w-2xl mx-auto">Explore our curated collections of puja kits, havan samagri, ghee and festive essentials.</p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {loading && (
-          <div className="col-span-full flex items-center justify-center h-40 text-[#7A6A5B]">Loading categories...</div>
-        )}
-        {error && !loading && (
-          <div className="col-span-full flex items-center justify-center h-40 text-[#B3261E]">{error}</div>
-        )}
-        {!loading && !error && categories.map((cat) => (
-          <Link key={cat.id} to={`/home?category=${encodeURIComponent(cat.title)}`} className="block">
-            <GlassCard hover={false} className={`relative overflow-hidden group cursor-pointer transition-all duration-500 border ${getThemeClasses(cat.theme)}`}>
-              <div className="absolute inset-0 z-0">
-                <img src={cat.img} alt={cat.title} loading="lazy" decoding="async" className="w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700" />
-              </div>
-              <div className={`absolute inset-0 bg-gradient-to-t ${cat.theme === 'festive' ? 'from-[#7A1F1A]/90 to-transparent' : 'from-[#FDF8F0]/90 to-transparent'} z-10`} />
+      {loading ? (
+        <CategoryGridSkeleton count={6} />
+      ) : error ? (
+        <div className="flex items-center justify-center h-40 text-[#B3261E]">{error}</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {categories.map((cat) => (
+            <Link key={cat.id} to={`/home?category=${encodeURIComponent(cat.title)}`} className="block">
+              <GlassCard hover={false} className={`relative overflow-hidden group cursor-pointer transition-all duration-500 border ${getThemeClasses(cat.theme)}`}>
+                <div className="absolute inset-0 z-0">
+                  <img src={cat.img} alt={cat.title} loading="lazy" decoding="async" className="w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700" />
+                </div>
+                <div className={`absolute inset-0 bg-gradient-to-t ${cat.theme === 'festive' ? 'from-[#7A1F1A]/90 to-transparent' : 'from-[#FDF8F0]/90 to-transparent'} z-10`} />
 
-              <div className="relative z-20 p-8 h-[300px] flex flex-col justify-end">
-                {cat.theme === 'festive' && (
-                  <span className="absolute top-6 right-6 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider bg-[#E0A11C]/20 text-[#E0A11C] border border-[#E0A11C]/50 animate-pulse">
-                    SPECIAL EVENT
-                  </span>
-                )}
-                <h2 className={`font-display text-3xl font-bold mb-2 ${cat.theme === 'festive' ? 'text-[#E0A11C] drop-shadow-[0_0_4px_rgba(224,161,28,0.44)]' : 'text-[#231A16]'}`}>
-                  {cat.title}
-                </h2>
-                <p className="text-[#2A211B] text-sm opacity-90">{cat.desc}</p>
-              </div>
-            </GlassCard>
-          </Link>
-        ))}
-      </div>
+                <div className="relative z-20 p-8 h-[300px] flex flex-col justify-end">
+                  {cat.theme === 'festive' && (
+                    <span className="absolute top-6 right-6 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider bg-[#E0A11C]/20 text-[#E0A11C] border border-[#E0A11C]/50 animate-pulse">
+                      SPECIAL EVENT
+                    </span>
+                  )}
+                  <h2 className={`font-display text-3xl font-bold mb-2 ${cat.theme === 'festive' ? 'text-[#E0A11C] drop-shadow-[0_0_4px_rgba(224,161,28,0.44)]' : 'text-[#231A16]'}`}>
+                    {cat.title}
+                  </h2>
+                  <p className="text-[#2A211B] text-sm opacity-90">{cat.desc}</p>
+                </div>
+              </GlassCard>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

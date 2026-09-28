@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Package, Truck, CreditCard, Calendar, MapPin, PackageX, XCircle, Loader2 } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
+import { OrderDetailSkeleton } from '../components/Skeleton';
 import { useToastStore } from '../store/toastStore';
 import { api } from '../lib/api';
 import { inr } from '../lib/money';
@@ -83,9 +84,7 @@ export default function OrderDetails() {
         <ArrowLeft size={16} /> Back to My Profile
       </Link>
 
-      {loading && (
-        <GlassCard className="p-12 text-center text-[#7A6A5B]">Loading order details...</GlassCard>
-      )}
+      {loading && <OrderDetailSkeleton />}
 
       {!loading && error && (
         <GlassCard className="p-12 text-center text-[#B3261E]">{error}</GlassCard>

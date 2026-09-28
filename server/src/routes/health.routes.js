@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { cacheStats } from '../middleware/cacheMetrics.js';
 
 const router = Router();
 
@@ -7,6 +8,7 @@ router.get('/', (req, res) => {
     status: 'ok',
     service: 'novamarket-api',
     time: new Date().toISOString(),
+    cache: cacheStats(),
   });
 });
 

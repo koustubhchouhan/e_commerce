@@ -9,6 +9,7 @@ import { inr } from '../lib/money';
 import { useAuth } from '../context/AuthContext';
 import AccountSettingsModal from '../components/AccountSettingsModal';
 import SellerApplicationModal from '../components/SellerApplicationModal';
+import { ListRowsSkeleton } from '../components/Skeleton';
 
 const STATUS_BADGES = {
   pending: 'bg-[#C8901A]/20 text-[#8A5A00] border-[#C8901A]/40',
@@ -183,11 +184,7 @@ export default function UserProfile() {
               <span className="micro-label">{loading ? '' : `${orders.length} total`}</span>
             </div>
 
-            {loading && (
-              <div className="p-4 rounded-2xl border border-dashed border-[#E3D5C1] text-center text-[#8A7B6B] text-sm">
-                Loading orders…
-              </div>
-            )}
+            {loading && <ListRowsSkeleton count={3} />}
 
             {!loading && error && (
               <div className="p-4 rounded-2xl border border-dashed border-[#E3D5C1] text-center text-[#B3261E] text-sm">

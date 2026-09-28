@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
+import { chunk } from "./lib/routeModules";
 import WebGLBackground from "./components/WebGLBackground";
 import NavBar from "./components/NavBar";
 import Footer from "./components/Footer";
@@ -8,34 +9,35 @@ import PolicyLayout from "./components/PolicyLayout";
 
 // Pages are split into per-route chunks so a visitor only downloads the code
 // for the screen they open. Admin and seller tooling is the heaviest part of
-// the app and most visitors never reach it.
-const Home = lazy(() => import("./pages/Home"));
-const Login = lazy(() => import("./pages/Login"));
-const SignUp = lazy(() => import("./pages/SignUp"));
-const AuthCallback = lazy(() => import("./pages/AuthCallback"));
-const ProductDetails = lazy(() => import("./pages/ProductDetails"));
-const AdminPanel = lazy(() => import("./pages/AdminPanel"));
-const SellerHub = lazy(() => import("./pages/SellerHub"));
-const SellerInventory = lazy(() => import("./pages/SellerInventory"));
-const SellerProfile = lazy(() => import("./pages/SellerProfile"));
-const UserProfile = lazy(() => import("./pages/UserProfile"));
-const AdminProfile = lazy(() => import("./pages/AdminProfile"));
-const Categories = lazy(() => import("./pages/Categories"));
-const About = lazy(() => import("./pages/About"));
-const Contact = lazy(() => import("./pages/Contact"));
-const MyMessages = lazy(() => import("./pages/MyMessages"));
-const Cart = lazy(() => import("./pages/Cart"));
-const Checkout = lazy(() => import("./pages/Checkout"));
-const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
-const OrderDetails = lazy(() => import("./pages/OrderDetails"));
-const SearchResults = lazy(() => import("./pages/SearchResults"));
-const SellerRequests = lazy(() => import("./pages/SellerRequests"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const TermsAndConditions = lazy(() => import("./pages/legal/TermsAndConditions"));
-const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
-const RefundPolicy = lazy(() => import("./pages/legal/RefundPolicy"));
-const ShippingPolicy = lazy(() => import("./pages/legal/ShippingPolicy"));
-const ContactUs = lazy(() => import("./pages/legal/ContactUs"));
+// the app and most visitors never reach it. The loaders live in
+// lib/routeModules so PrefetchLink can warm the same chunks on hover/viewport.
+const Home = lazy(chunk.home);
+const Login = lazy(chunk.login);
+const SignUp = lazy(chunk.signup);
+const AuthCallback = lazy(chunk.authCallback);
+const ProductDetails = lazy(chunk.productDetails);
+const AdminPanel = lazy(chunk.adminPanel);
+const SellerHub = lazy(chunk.sellerHub);
+const SellerInventory = lazy(chunk.sellerInventory);
+const SellerProfile = lazy(chunk.sellerProfile);
+const UserProfile = lazy(chunk.userProfile);
+const AdminProfile = lazy(chunk.adminProfile);
+const Categories = lazy(chunk.categories);
+const About = lazy(chunk.about);
+const Contact = lazy(chunk.contact);
+const MyMessages = lazy(chunk.messages);
+const Cart = lazy(chunk.cart);
+const Checkout = lazy(chunk.checkout);
+const OrderConfirmation = lazy(chunk.orderConfirmation);
+const OrderDetails = lazy(chunk.orderDetails);
+const SearchResults = lazy(chunk.searchResults);
+const SellerRequests = lazy(chunk.sellerRequests);
+const NotFound = lazy(chunk.notFound);
+const TermsAndConditions = lazy(chunk.terms);
+const PrivacyPolicy = lazy(chunk.privacy);
+const RefundPolicy = lazy(chunk.refundPolicy);
+const ShippingPolicy = lazy(chunk.shippingPolicy);
+const ContactUs = lazy(chunk.contactUs);
 
 function RouteFallback() {
   return (

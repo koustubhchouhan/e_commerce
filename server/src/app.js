@@ -15,6 +15,7 @@ import orderRoutes from './routes/order.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import contactRoutes from './routes/contact.routes.js';
 import { noStore } from './middleware/cache.js';
+import { cacheMetrics } from './middleware/cacheMetrics.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 export function createApp() {
@@ -53,6 +54,9 @@ export function createApp() {
   app.use('/payments/webhook', express.raw({ type: 'application/json' }));
   app.use(express.json());
   if (env.nodeEnv !== 'test') app.use(morgan('dev'));
+
+  // Tally cacheable GET responses so /health can report the 304 hit rate.
+  app.use(cacheMetrics);
 
   // Every signed-in API surface is per-user; keep it out of all caches.
   app.use(

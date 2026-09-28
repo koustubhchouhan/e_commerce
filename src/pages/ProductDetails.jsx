@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ShoppingCart, ChevronLeft, ChevronRight, CheckCircle, Star, StarHalf, PackageX, MessageCircle } from 'lucide-react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import GlassCard from '../components/GlassCard';
+import { ProductDetailSkeleton, ReviewGridSkeleton } from '../components/Skeleton';
 import { useCartStore } from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
 import { useAuth } from '../context/AuthContext';
@@ -90,11 +91,7 @@ export default function ProductDetails() {
   }, [id]);
 
   if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center px-6 animate-fade-in-up">
-        <div className="text-[#7A6A5B]">Loading product...</div>
-      </div>
-    );
+    return <ProductDetailSkeleton />;
   }
 
   if (notFound || !product) {
@@ -302,7 +299,7 @@ export default function ProductDetails() {
         )}
 
         {reviewLoading ? (
-          <div className="flex items-center justify-center h-32 text-[#7A6A5B]">Loading reviews...</div>
+          <ReviewGridSkeleton count={3} />
         ) : reviewError ? (
           <div className="bg-[#F7D5D2]/20 p-8 rounded-xl border border-[#B3261E]/30 text-center text-[#B3261E] text-sm">
             {reviewError}
