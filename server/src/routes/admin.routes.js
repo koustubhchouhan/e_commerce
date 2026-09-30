@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import multer from 'multer';
 import {
   listApplications,
   reviewApplication,
@@ -22,6 +21,11 @@ import {
   deleteReview,
 } from '../controllers/admin.controller.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import {
+  imageUploadSingle,
+  CATEGORY_IMAGE_POLICY,
+  SLIDE_IMAGE_POLICY,
+} from '../middleware/upload.js';
 import { validate, validateQuery, validateParams } from '../middleware/validate.js';
 import {
   adminListSlides,
@@ -51,12 +55,6 @@ import {
 } from '../validators/product.validators.js';
 
 const router = Router();
-
-// In-memory multipart parsing for hero slide image uploads (lands in req.file).
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-});
 
 router.get(
   '/admin/seller-applications',
@@ -109,7 +107,7 @@ router.post(
   '/admin/categories/image',
   requireAuth,
   requireRole('admin'),
-  upload.single('image'),
+  ...imageUploadSingle('image', CATEGORY_IMAGE_POLICY),
   uploadCategoryImage
 );
 router.delete(
@@ -179,7 +177,7 @@ router.post(
   '/admin/hero-slides/image',
   requireAuth,
   requireRole('admin'),
-  upload.single('image'),
+  ...imageUploadSingle('image', SLIDE_IMAGE_POLICY),
   uploadSlideImage
 );
 router.patch(

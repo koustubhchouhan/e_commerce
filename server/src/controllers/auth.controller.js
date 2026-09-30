@@ -316,9 +316,6 @@ export const updateProfile = asyncHandler(async (req, res) => {
 export const uploadAvatar = asyncHandler(async (req, res) => {
   const file = req.file;
   if (!file) throw new AppError(400, 'No avatar file uploaded');
-  if (!/^image\//.test(file.mimetype)) {
-    throw new AppError(400, 'Avatar must be an image file (JPG, PNG, WebP...)');
-  }
 
   const { url } = await uploadImage({ file, folder: 'avatars' });
 

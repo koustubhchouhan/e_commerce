@@ -129,9 +129,6 @@ export async function deleteSlide(id) {
 // client then submits as `imageUrl`.
 export async function uploadSlideImage(file) {
   if (!file) throw new AppError(400, 'No image file uploaded');
-  if (!/^image\//.test(file.mimetype)) {
-    throw new AppError(400, 'Image must be a JPG, PNG or WebP file');
-  }
 
   const { url } = await uploadImage({ file, folder: 'hero-slides' });
   return { url };

@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import multer from 'multer';
 import {
   listSellerProducts,
   createProduct,
@@ -16,6 +15,7 @@ import {
   replyToStoreReview,
 } from '../controllers/seller.controller.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
+import { imageUploadArray, PRODUCT_IMAGE_POLICY } from '../middleware/upload.js';
 import { validate, validateParams } from '../middleware/validate.js';
 import { createProductSchema, updateProductSchema } from '../validators/product.validators.js';
 import { uuidParamSchema } from '../validators/catalog.validators.js';
@@ -26,12 +26,6 @@ import {
 } from '../validators/seller.validators.js';
 
 const router = Router();
-
-// In-memory multipart parsing for image uploads (files land in req.files).
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024, files: 8 }, // 5MB each, max 8
-});
 
 router.get('/seller/products', requireAuth, requireRole('seller', 'admin'), listSellerProducts);
 router.get('/seller/orders', requireAuth, requireRole('seller', 'admin'), listSellerOrders);
@@ -94,7 +88,7 @@ router.post(
   requireAuth,
   requireRole('seller', 'admin'),
   validateParams(uuidParamSchema),
-  upload.array('images', 8),
+  ...imageUploadArray('images', 8, PRODUCT_IMAGE_POLICY),
   addProductImages
 );
 

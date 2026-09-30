@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import multer from 'multer';
 import {
   register,
   login,
@@ -15,6 +14,7 @@ import {
 import { validate } from '../middleware/validate.js';
 import { requireAuth } from '../middleware/auth.js';
 import { rateLimit, userKey } from '../middleware/rateLimit.js';
+import { imageUploadSingle, AVATAR_POLICY } from '../middleware/upload.js';
 import {
   registerSchema,
   loginSchema,
@@ -26,12 +26,6 @@ import {
 } from '../validators/auth.validators.js';
 
 const router = Router();
-
-// In-memory multipart parsing for the avatar upload (file lands in req.file).
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-});
 
 // Anonymous endpoints are throttled by client IP; the sensitive signed-in ones
 // by account. Budgets are intentionally generous enough for a person retrying,
@@ -62,7 +56,7 @@ router.post('/logout', logout);
 router.post('/oauth/session', oauthLimiter, validate(oauthSessionSchema), oauthSession);
 router.get('/me', requireAuth, me);
 router.patch('/profile', requireAuth, validate(updateProfileSchema), updateProfile);
-router.post('/profile/avatar', requireAuth, upload.single('avatar'), uploadAvatar);
+router.post('/profile/avatar', requireAuth, ...imageUploadSingle('avatar', AVATAR_POLICY), uploadAvatar);
 router.post('/password', requireAuth, accountLimiter, validate(changePasswordSchema), changePassword);
 router.post('/email', requireAuth, accountLimiter, validate(changeEmailSchema), changeEmail);
 
