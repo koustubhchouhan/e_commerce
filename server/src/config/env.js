@@ -36,11 +36,18 @@ if ((process.env.NODE_ENV || 'development') !== 'test') {
 const trustProxyRaw = process.env.TRUST_PROXY;
 const trustProxy = trustProxyRaw === 'true' ? 1 : trustProxyRaw ? Number(trustProxyRaw) : false;
 
+// Optional shared store for rate limiting. When set (redis:// or rediss://),
+// limiter counters are kept in Redis so they are shared across instances and
+// survive restarts. Left unset, limits are enforced per process — correct for
+// the single-instance deployment, insufficient once the API scales out.
+const redisUrl = process.env.REDIS_URL || '';
+
 export const env = {
   port: Number(process.env.PORT) || 4000,
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   nodeEnv: process.env.NODE_ENV || 'development',
   trustProxy,
+  redisUrl,
   // Session cookie policy. `lax` is safe for same-site frontends (the common
   // case); set COOKIE_SAMESITE=none when the API is served from a different
   // site than the SPA (which also requires Secure, i.e. production + HTTPS).

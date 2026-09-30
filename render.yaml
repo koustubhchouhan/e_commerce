@@ -24,6 +24,11 @@ services:
       # proxy hop; otherwise req.ip (and rate limiting) sees Render's address.
       - key: TRUST_PROXY
         value: "1"
+      # Optional shared rate-limit store. Leave unset for a single instance;
+      # set to a Redis URL (from a Render Redis instance or elsewhere) once the
+      # API runs on more than one instance so limits are shared across them.
+      - key: REDIS_URL
+        sync: false
       # The SPA and API share a site through the Vercel proxy, so 'lax' is
       # correct. Use 'none' only if the browser calls the API directly across
       # sites (requires HTTPS).

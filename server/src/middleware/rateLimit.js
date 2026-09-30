@@ -1,23 +1,40 @@
-// A tiny in-process rate limiter.
+// Fixed-window rate limiting.
 //
-// Fixed-window counters keyed by client IP or account id. State lives in a Map
-// inside this process, which fits the single-instance deployment this API runs
-// on. A multi-instance setup would need a shared store (e.g. Redis); otherwise
-// each instance would enforce the limit independently and the effective limit
-// would scale with the number of instances.
+// Counters live in a store (see lib/rateLimitStore.js): an in-process Map by
+// default, or Redis when REDIS_URL is set. The default is correct for the
+// single-instance deployment this API runs on; configuring Redis makes the
+// limits shared and restart-proof when the API scales horizontally.
 //
-// Deliberately dependency-free: a Map of counters plus the standard
+// Dependency-free by itself: it delegates storage and only sets the standard
 // RateLimit-* response headers (draft-ietf-httpapi-ratelimit-headers).
 import { AppError } from './error.js';
+import { env } from '../config/env.js';
+import { createMemoryStore, createRedisStore } from '../lib/rateLimitStore.js';
 
 const DEFAULT_WINDOW_MS = 60 * 1000; // 1 minute
 const DEFAULT_MAX = 60;
 
-// Guards against unbounded growth when a limiter sees many distinct keys (e.g.
-// a bot cycling source IPs). Once the map reaches this size we drop expired
-// entries; if it is still full we reset it, preferring availability over
-// perfect accounting.
-const MAX_KEYS = 10_000;
+// A single store is shared by every limiter in the process — that is what
+// makes the counters shared. Keys are namespaced per limiter (see `name`) so
+// distinct limiters never collide in the shared store.
+let sharedStorePromise;
+
+export function getRateLimitStore() {
+  if (!sharedStorePromise) {
+    sharedStorePromise = env.redisUrl
+      ? createRedisStore({ url: env.redisUrl }).catch((err) => {
+          // A shared store that cannot be reached at boot must not take the
+          // whole API down; keep serving with per-process limits and say so.
+          console.error(
+            '[rateLimit] Redis store unavailable, falling back to in-memory:',
+            err.message
+          );
+          return createMemoryStore();
+        })
+      : Promise.resolve(createMemoryStore());
+  }
+  return sharedStorePromise;
+}
 
 // Prefer the authenticated account so one user cannot escape its budget by
 // changing IP; fall back to the client IP for anonymous callers.
@@ -31,12 +48,11 @@ export function ipKey(req) {
   return req.ip || req.socket?.remoteAddress || 'unknown';
 }
 
-function prune(hits, now) {
-  if (hits.size < MAX_KEYS) return;
-  for (const [key, entry] of hits) {
-    if (now >= entry.resetAt) hits.delete(key);
-  }
-  if (hits.size >= MAX_KEYS) hits.clear();
+// Distinguishes one limiter's counters from another's in a shared store. A
+// stable default is derived from the configuration so every instance (and
+// every restart) maps the same limiter to the same namespace.
+function defaultName({ windowMs, max }) {
+  return `${windowMs}:${max}`;
 }
 
 export function rateLimit({
@@ -44,21 +60,28 @@ export function rateLimit({
   max = DEFAULT_MAX,
   keyGenerator = ipKey,
   message = 'Too many requests, please try again later',
+  name,
+  store,
 } = {}) {
-  const hits = new Map();
+  const namespace = name || defaultName({ windowMs, max });
+  // `store` is injectable for tests; production uses the shared store.
+  const storePromise = store ? Promise.resolve(store) : getRateLimitStore();
 
-  const middleware = (req, res, next) => {
+  const middleware = async (req, res, next) => {
     const now = Date.now();
-    const key = keyGenerator(req) || 'unknown';
+    const key = `${namespace}:${keyGenerator(req) || 'unknown'}`;
 
-    prune(hits, now);
-
-    let entry = hits.get(key);
-    if (!entry || now >= entry.resetAt) {
-      entry = { count: 0, resetAt: now + windowMs };
-      hits.set(key, entry);
+    let entry;
+    try {
+      const resolved = await storePromise;
+      entry = await resolved.increment(key, windowMs, now);
+    } catch (err) {
+      // Availability over strict accounting: if the shared store is
+      // unreachable mid-flight, allow the request rather than lock everyone
+      // out. Redis being down is not a reason to reject all traffic.
+      console.warn('[rateLimit] store unavailable, allowing request:', err.message);
+      return next();
     }
-    entry.count += 1;
 
     // Seconds until the current window rolls over; at least 1 so clients never
     // read a Retry-After of zero.
@@ -75,7 +98,11 @@ export function rateLimit({
   };
 
   // Exposed for tests; carries no runtime behaviour.
-  middleware.reset = () => hits.clear();
+  middleware.reset = async () => {
+    const resolved = await storePromise;
+    await resolved.reset?.();
+  };
   middleware.limit = { windowMs, max };
+  middleware.namespace = namespace;
   return middleware;
 }

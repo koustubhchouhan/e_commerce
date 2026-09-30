@@ -33,18 +33,21 @@ const router = Router();
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 10,
+  name: 'auth:register',
   message: 'Too many accounts created from this address. Please try again later.',
 });
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
+  name: 'auth:login',
   message: 'Too many sign-in attempts. Please wait a few minutes and try again.',
 });
-const refreshLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
-const oauthLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
+const refreshLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, name: 'auth:refresh' });
+const oauthLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, name: 'auth:oauth' });
 const accountLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
+  name: 'auth:account',
   keyGenerator: userKey,
   message: 'Too many attempts on this account. Please try again later.',
 });

@@ -27,6 +27,7 @@ const router = Router();
 const reviewLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 10,
+  name: 'reviews:create',
   keyGenerator: userKey,
   message: 'Too many review submissions. Please try again later.',
 });

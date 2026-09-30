@@ -27,6 +27,7 @@ const router = Router();
 const contactLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   max: 5,
+  name: 'contact:create',
   message: 'Too many messages sent. Please wait a few minutes and try again.',
 });
 
