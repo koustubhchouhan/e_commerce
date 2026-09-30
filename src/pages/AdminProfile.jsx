@@ -3,6 +3,7 @@ import { Shield, Users, UserCheck, Store, Check, X, Clock, CheckCircle, Trash2, 
 import { useToastStore } from '../store/toastStore';
 import { api } from '../lib/api';
 import AccountSettingsModal from '../components/AccountSettingsModal';
+import { PanelRowsSkeleton } from '../components/Skeleton';
 
 const timeAgo = (iso) => {
   if (!iso) return 'recently';
@@ -147,7 +148,7 @@ export default function AdminProfile() {
           </div>
 
           {loading && (
-            <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading seller data...</div>
+            <PanelRowsSkeleton rows={4} />
           )}
           {error && !loading && (
             <div className="flex items-center justify-center h-40 text-[#B3261E]">{error}</div>

@@ -137,6 +137,29 @@ export function ListRowsSkeleton({ count = 3 }) {
   );
 }
 
+// Generic card rows for the admin/seller panels (tables, inboxes, request
+// queues, ledger lines). Wide and neutral so it fits any of those containers.
+export function PanelRowsSkeleton({ rows = 5 }) {
+  return (
+    <div role="status" className="flex flex-col gap-3">
+      <LoadingAnnouncement />
+      {Array.from({ length: rows }, (_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-4 rounded-2xl border border-[#E7DAC8] bg-[#FBF3E7] p-4"
+        >
+          <Skeleton className="w-12 h-12 rounded-xl shrink-0" />
+          <div className="flex flex-col gap-2 flex-1">
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="h-3 w-1/4" />
+          </div>
+          <Skeleton className="h-8 w-24 rounded-full shrink-0" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Two-column product detail: gallery on the left, buy box on the right, then a
 // row of thumbnail tiles.
 export function ProductDetailSkeleton() {

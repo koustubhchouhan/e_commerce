@@ -4,6 +4,7 @@ import GlassCard from '../components/GlassCard';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useToastStore } from '../store/toastStore';
+import { PanelRowsSkeleton } from '../components/Skeleton';
 
 const STATUS_META = {
   pending: { label: 'Pending Review', icon: <Clock size={16} />, badge: 'bg-[#B8860B]/20 text-[#C8901A] border-[#C8901A]/30' },
@@ -133,7 +134,9 @@ export default function SellerRequests() {
           )}
 
           {loading && (
-            <GlassCard className="p-8 text-center text-[#7A6A5B] text-sm">Loading applications...</GlassCard>
+            <GlassCard className="p-8">
+              <PanelRowsSkeleton rows={3} />
+            </GlassCard>
           )}
 
           {!loading && error && (

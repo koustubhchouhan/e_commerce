@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useToastStore } from '../store/toastStore';
 import AccountSettingsModal from '../components/AccountSettingsModal';
+import { PanelRowsSkeleton } from '../components/Skeleton';
 
 const shortId = (id) => (id ? String(id).slice(0, 8).toUpperCase() : '');
 
@@ -126,7 +127,7 @@ export default function SellerProfile() {
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading store details...</div>
+            <PanelRowsSkeleton rows={3} />
           ) : error ? (
             <div className="flex items-center justify-center h-40 text-[#B3261E]">{error}</div>
           ) : (

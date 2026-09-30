@@ -4,6 +4,7 @@ import GlassCard from '../components/GlassCard';
 import { useToastStore } from '../store/toastStore';
 import { api } from '../lib/api';
 import { inr } from '../lib/money';
+import { PanelRowsSkeleton } from '../components/Skeleton';
 
 const STATUSES = ['Active', 'Out of Stock'];
 
@@ -209,7 +210,7 @@ export default function SellerInventory() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading inventory...</div>
+          <PanelRowsSkeleton rows={5} />
         ) : error ? (
           <div className="flex items-center justify-center h-40 text-[#B3261E]">{error}</div>
         ) : (

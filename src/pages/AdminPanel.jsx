@@ -6,6 +6,7 @@ import { useToastStore } from '../store/toastStore';
 import { api } from '../lib/api';
 import { toProductCardList } from '../lib/productShape';
 import { inr } from '../lib/money';
+import { ProductGridSkeleton, PanelRowsSkeleton } from '../components/Skeleton';
 
 const timeAgo = (iso) => {
   if (!iso) return 'recently';
@@ -686,7 +687,7 @@ export default function AdminPanel() {
               </div>
             </div>
             <ProductGrid items={allApprovedProducts} adminMode={true} adminOnDelete={handleRemoveProduct} />
-            {loadingProducts && <div className="text-center py-16 text-[#7A6A5B]">Loading products...</div>}
+            {loadingProducts && <ProductGridSkeleton count={6} />}
             {!loadingProducts && productSearchTerm && allApprovedProducts.length === 0 && (
               <div className="text-center py-16 text-[#7A6A5B]">No products match "{productSearch.trim()}".</div>
             )}
@@ -702,7 +703,7 @@ export default function AdminPanel() {
             </header>
 
             {loadingApprovals ? (
-              <div className="text-center py-16 text-[#7A6A5B]">Loading pending products...</div>
+              <PanelRowsSkeleton rows={4} />
             ) : pendingProducts.length === 0 ? (
               <GlassCard className="p-10 text-center">
                 <ClipboardCheck size={40} className="mx-auto text-[#C4B5A2] mb-3" />
@@ -773,7 +774,7 @@ export default function AdminPanel() {
               </div>
             </div>
             <ProductGrid items={featuredProducts} adminMode={true} adminOnDelete={handleRemoveProduct} />
-            {loadingProducts && <div className="text-center py-16 text-[#7A6A5B]">Loading products...</div>}
+            {loadingProducts && <ProductGridSkeleton count={6} />}
           </div>
         )}
 
@@ -805,7 +806,7 @@ export default function AdminPanel() {
 
             <GlassCard className="p-6 lg:p-8">
               {loadingOrders && (
-                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading orders...</div>
+                <PanelRowsSkeleton rows={4} />
               )}
               {!loadingOrders && (
               <div className="overflow-x-auto">
@@ -906,7 +907,7 @@ export default function AdminPanel() {
 
             <GlassCard className="p-6 lg:p-8">
               {loadingMessages && (
-                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading messages...</div>
+                <PanelRowsSkeleton rows={4} />
               )}
               {!loadingMessages && messagesError && (
                 <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
@@ -1017,7 +1018,7 @@ export default function AdminPanel() {
 
             <GlassCard className="p-6 lg:p-8">
               {loadingReviews && (
-                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading reviews...</div>
+                <PanelRowsSkeleton rows={4} />
               )}
               {!loadingReviews && (
               <div className="overflow-x-auto">
@@ -1105,7 +1106,7 @@ export default function AdminPanel() {
 
             <div className="flex flex-col gap-6">
               {loadingRequests && (
-                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading seller requests...</div>
+                <PanelRowsSkeleton rows={4} />
               )}
               {!loadingRequests && sellerRequests.length === 0 && (
                 <div className="bg-[#F0E7DA]/30 p-8 rounded-xl border border-dashed border-[#231a16]/10 text-center text-[#8A7B6B] text-sm">
@@ -1153,7 +1154,7 @@ export default function AdminPanel() {
             
             <GlassCard className="p-6 lg:p-8">
               {loadingCategories && (
-                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading categories...</div>
+                <PanelRowsSkeleton rows={4} />
               )}
               {!loadingCategories && (
               <div className="overflow-x-auto">
@@ -1219,7 +1220,7 @@ export default function AdminPanel() {
             </div>
 
             {loadingSlides && (
-              <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading slides...</div>
+              <PanelRowsSkeleton rows={4} />
             )}
 
             {!loadingSlides && slides.length === 0 && (
@@ -1278,7 +1279,7 @@ export default function AdminPanel() {
             </div>
 
             {loadingLedger && (
-              <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading ledger...</div>
+              <PanelRowsSkeleton rows={4} />
             )}
 
             {!loadingLedger && ledger && ledger.summary && (
@@ -1629,9 +1630,7 @@ export default function AdminPanel() {
               </div>
 
               {loadingOrderDetail ? (
-                <div className="flex items-center justify-center h-40 text-[#7A6A5B] gap-2">
-                  <Loader2 size={18} className="animate-spin" /> Loading order details...
-                </div>
+                <PanelRowsSkeleton rows={3} />
               ) : (
                 <div className="flex flex-col gap-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

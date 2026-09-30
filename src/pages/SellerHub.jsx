@@ -5,6 +5,7 @@ import GlassCard from '../components/GlassCard';
 import { api } from '../lib/api';
 import { useToastStore } from '../store/toastStore';
 import { useAuth } from '../context/AuthContext';
+import { ProductGridSkeleton, PanelRowsSkeleton } from '../components/Skeleton';
 
 const shortId = (id) => (id ? String(id).slice(0, 8).toUpperCase() : '');
 
@@ -401,7 +402,7 @@ export default function SellerHub() {
                   <h2 className="font-display text-2xl font-semibold text-[#231A16] mb-6">Your Inventory</h2>
                   
                   {loadingProducts ? (
-                    <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading inventory...</div>
+                    <ProductGridSkeleton count={6} />
                   ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
@@ -473,7 +474,7 @@ export default function SellerHub() {
             
             <GlassCard className="p-6 lg:p-8">
               {loadingOrders && (
-                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading orders...</div>
+                <PanelRowsSkeleton rows={4} />
               )}
               {!loadingOrders && ordersError && (
                 <div className="flex items-center justify-center h-40 text-[#B3261E]">{ordersError}</div>
@@ -554,7 +555,7 @@ export default function SellerHub() {
 
             <GlassCard className="p-6 lg:p-8">
               {messagesLoading && (
-                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading messages...</div>
+                <PanelRowsSkeleton rows={4} />
               )}
               {!messagesLoading && messagesError && (
                 <div className="flex items-center justify-center h-40 text-[#B3261E]">{messagesError}</div>
@@ -645,7 +646,7 @@ export default function SellerHub() {
 
             {reviewsLoading && (
               <GlassCard className="p-6 lg:p-8">
-                <div className="flex items-center justify-center h-40 text-[#7A6A5B]">Loading reviews...</div>
+                <PanelRowsSkeleton rows={3} />
               </GlassCard>
             )}
             {!reviewsLoading && reviewsError && (
