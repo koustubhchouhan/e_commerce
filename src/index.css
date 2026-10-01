@@ -100,6 +100,36 @@
   }
 }
 
+/* Form controls live in the components layer, which Tailwind emits *before* the
+   utilities layer. That lets per-element overrides like `pl-11` (search icon)
+   and `pr-16` (password toggle) win over the base `.field` padding shorthand. */
+@layer components {
+  /* ── Pill form field on cream ── */
+  .field {
+    width: 100%;
+    background: #FBF3E7;
+    border: 1px solid #E3D5C1;
+    border-radius: 9999px;
+    padding: 0.8rem 1.25rem;
+    color: #2A211B;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .field::placeholder {
+    color: #A79684;
+  }
+  .field:focus {
+    border-color: #B7322A;
+    box-shadow: 0 0 0 3px rgba(183, 50, 42, 0.12);
+  }
+  .field[aria-invalid='true'] {
+    border-color: #B3261E;
+  }
+  .field[aria-invalid='true']:focus {
+    box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.15);
+  }
+}
+
 @layer utilities {
   /* Soft paper card — replaces the old glass/neon panel. Cream surface with a
      warm hairline border and a barely-there lift, matching the mockups. */
@@ -180,31 +210,6 @@
   .btn-gold:hover:not(:disabled) {
     background: #C8901A;
     border-color: #C8901A;
-  }
-
-  /* ── Pill form field on cream ── */
-  .field {
-    width: 100%;
-    background: #FBF3E7;
-    border: 1px solid #E3D5C1;
-    border-radius: 9999px;
-    padding: 0.8rem 1.25rem;
-    color: #2A211B;
-    outline: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  }
-  .field::placeholder {
-    color: #A79684;
-  }
-  .field:focus {
-    border-color: #B7322A;
-    box-shadow: 0 0 0 3px rgba(183, 50, 42, 0.12);
-  }
-  .field[aria-invalid='true'] {
-    border-color: #B3261E;
-  }
-  .field[aria-invalid='true']:focus {
-    box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.15);
   }
 
   /* ── Small uppercase section label ("PURITY", "CHOOSE ITEMS") ── */
