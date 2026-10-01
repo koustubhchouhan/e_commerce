@@ -9,6 +9,7 @@ import {
   issueCsrfToken,
   setSessionCookies,
 } from '../services/session-cookies.js';
+import { revokeSupabaseSession } from '../services/session-revocation.js';
 
 // Maps a `profiles` row to the user object every auth endpoint returns.
 // Roles come from our table only, never from client input.
@@ -56,14 +57,9 @@ async function buildAuthResponse(res, user, session, { csrfToken } = {}) {
     { accessToken: session.access_token, refreshToken: session.refresh_token },
     { csrfToken: csrfToken ?? issueCsrfToken() }
   );
-  return {
-    user: shapedUser,
-    session: {
-      accessToken: session.access_token,
-      refreshToken: session.refresh_token,
-      expiresAt: session.expires_at,
-    },
-  };
+  // The tokens travel only in HttpOnly cookies. Never echo them in the body,
+  // where page scripts, devtools or logs could capture and replay them.
+  return { user: shapedUser };
 }
 
 // Creates a "become a seller" application on behalf of a brand-new account that
@@ -191,10 +187,15 @@ export const refresh = asyncHandler(async (req, res) => {
   );
 });
 
-// POST /auth/logout — clears the session cookies so the browser stops sending
-// them. (Supabase refresh tokens remain valid server-side until they expire or
-// are rotated, which is acceptable for this prototype.)
+// POST /auth/logout — revokes the Supabase session server-side so the refresh
+// token cannot be replayed, then clears the session cookies. Revocation is
+// best-effort: a Supabase hiccup must never leave the browser stuck signed in.
 export const logout = asyncHandler(async (req, res) => {
+  try {
+    await revokeSupabaseSession(req);
+  } catch (err) {
+    console.warn('[auth] logout could not revoke the Supabase session:', err.message);
+  }
   clearSessionCookies(res);
   res.json({ message: 'Signed out' });
 });
