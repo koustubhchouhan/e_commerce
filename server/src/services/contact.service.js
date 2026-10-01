@@ -35,7 +35,7 @@ export async function createContactMessage({ first_name, last_name, email, subje
       .select('store_id')
       .eq('id', product_id)
       .maybeSingle();
-    if (prodErr) throw new AppError(500, `Could not look up product: ${prodErr.message}`);
+    if (prodErr) throw new AppError(500, 'Could not look up product', { cause: prodErr });
     if (!product) throw new AppError(400, 'The referenced product no longer exists');
     // The product decides which store gets the message, so a stale/wrong
     // store_id can never mis-route an inquiry.
@@ -48,7 +48,7 @@ export async function createContactMessage({ first_name, last_name, email, subje
       .select('id')
       .eq('id', resolvedStoreId)
       .maybeSingle();
-    if (storeErr) throw new AppError(500, `Could not look up store: ${storeErr.message}`);
+    if (storeErr) throw new AppError(500, 'Could not look up store', { cause: storeErr });
     if (!store) throw new AppError(400, 'The referenced store no longer exists');
   }
 
@@ -58,7 +58,7 @@ export async function createContactMessage({ first_name, last_name, email, subje
     .select(MESSAGE_SELECT)
     .single();
 
-  if (error) throw new AppError(500, `Could not send message: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not send message', { cause: error });
   return mapMessage(data);
 }
 
@@ -69,7 +69,7 @@ export async function listContactMessages() {
     .select(MESSAGE_SELECT)
     .order('created_at', { ascending: false });
 
-  if (error) throw new AppError(500, `Could not load messages: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load messages', { cause: error });
   return { items: (data ?? []).map(mapMessage) };
 }
 
@@ -87,7 +87,7 @@ export async function listMyContactMessages(userId, email) {
     .or(filter)
     .order('created_at', { ascending: false });
 
-  if (error) throw new AppError(500, `Could not load messages: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load messages', { cause: error });
   return { items: (data ?? []).map(mapMessage) };
 }
 
@@ -98,7 +98,7 @@ export async function listSellerContactMessages(sellerId) {
     .from('stores')
     .select('id')
     .eq('owner_id', sellerId);
-  if (storeErr) throw new AppError(500, `Could not load store: ${storeErr.message}`);
+  if (storeErr) throw new AppError(500, 'Could not load store', { cause: storeErr });
   if (!stores?.length) return { items: [] };
 
   const storeIds = stores.map((s) => s.id);
@@ -108,7 +108,7 @@ export async function listSellerContactMessages(sellerId) {
     .in('store_id', storeIds)
     .order('created_at', { ascending: false });
 
-  if (error) throw new AppError(500, `Could not load messages: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load messages', { cause: error });
   return { items: (data ?? []).map(mapMessage) };
 }
 
@@ -122,7 +122,7 @@ async function applyReadUpdate(messageId, isRead) {
 
   if (error) {
     if (error.code === 'PGRST116') throw new AppError(404, 'Message not found');
-    throw new AppError(500, `Could not update message: ${error.message}`);
+    throw new AppError(500, 'Could not update message', { cause: error });
   }
   return mapMessage(data);
 }
@@ -140,7 +140,7 @@ async function requireSellerMessage(sellerId, messageId) {
     .eq('id', messageId)
     .maybeSingle();
 
-  if (error) throw new AppError(500, `Could not load message: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load message', { cause: error });
   if (!message) throw new AppError(404, 'Message not found');
   if (!message.store_id) throw new AppError(403, 'This message was not addressed to your store');
 
@@ -150,7 +150,7 @@ async function requireSellerMessage(sellerId, messageId) {
     .eq('id', message.store_id)
     .eq('owner_id', sellerId)
     .maybeSingle();
-  if (storeErr) throw new AppError(500, `Could not load store: ${storeErr.message}`);
+  if (storeErr) throw new AppError(500, 'Could not load store', { cause: storeErr });
   if (!store) throw new AppError(403, 'This message was not addressed to your store');
 
   return message;
@@ -178,7 +178,7 @@ async function applyReply(messageId, reply, repliedBy) {
 
   if (error) {
     if (error.code === 'PGRST116') throw new AppError(404, 'Message not found');
-    throw new AppError(500, `Could not save reply: ${error.message}`);
+    throw new AppError(500, 'Could not save reply', { cause: error });
   }
   return mapMessage(data);
 }
@@ -205,7 +205,7 @@ export async function deleteContactMessage(messageId) {
 
   if (error) {
     if (error.code === 'PGRST116') throw new AppError(404, 'Message not found');
-    throw new AppError(500, `Could not delete message: ${error.message}`);
+    throw new AppError(500, 'Could not delete message', { cause: error });
   }
   return { id: data.id };
 }

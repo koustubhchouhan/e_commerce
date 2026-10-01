@@ -16,6 +16,7 @@ import paymentRoutes from './routes/payment.routes.js';
 import contactRoutes from './routes/contact.routes.js';
 import { noStore } from './middleware/cache.js';
 import { cacheMetrics } from './middleware/cacheMetrics.js';
+import { requestId } from './middleware/requestId.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 export function createApp() {
@@ -24,6 +25,9 @@ export function createApp() {
   // Must be set before anything reads req.ip (rate limiting). Only enabled via
   // TRUST_PROXY so a direct client cannot forge its address.
   if (env.trustProxy) app.set('trust proxy', env.trustProxy);
+
+  // Correlate every request's logs and error responses with a stable id.
+  app.use(requestId);
 
   app.use(cors({ origin: env.clientOrigin, credentials: true }));
   // gzip/deflate JSON bodies. Tiny responses are skipped automatically.
@@ -53,7 +57,10 @@ export function createApp() {
   // Razorpay signs the raw webhook body, so capture it before the JSON parser.
   app.use('/payments/webhook', express.raw({ type: 'application/json' }));
   app.use(express.json());
-  if (env.nodeEnv !== 'test') app.use(morgan('dev'));
+  if (env.nodeEnv !== 'test') {
+    morgan.token('id', (req) => req.id);
+    app.use(morgan(':id :method :url :status :response-time ms'));
+  }
 
   // Tally cacheable GET responses so /health can report the 304 hit rate.
   app.use(cacheMetrics);

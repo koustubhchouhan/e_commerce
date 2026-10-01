@@ -36,10 +36,9 @@ async function readProfileUser(userId, fallbackEmail) {
     .single();
 
   if (error) {
-    throw new AppError(
-      500,
-      `Could not read the profiles table (${error.message}). Did you run server/db/schema.sql?`
-    );
+    throw new AppError(500, 'Could not read the profiles table. Did you run server/db/schema.sql?', {
+      cause: error,
+    });
   }
   if (!profile) {
     throw new AppError(500, 'No profile row for this user — is the handle_new_user trigger installed?');
@@ -73,7 +72,7 @@ async function ensurePendingSellerApplication(userId, fullName, email) {
     .eq('user_id', userId)
     .in('status', ['pending', 'approved'])
     .maybeSingle();
-  if (checkErr) throw new AppError(500, `Could not check seller application: ${checkErr.message}`);
+  if (checkErr) throw new AppError(500, 'Could not check seller application', { cause: checkErr });
 
   if (existing) {
     return {
@@ -89,7 +88,7 @@ async function ensurePendingSellerApplication(userId, fullName, email) {
     .insert({ user_id: userId, store_name: storeName, contact_email: email })
     .select('id, store_name, status')
     .single();
-  if (insertErr) throw new AppError(500, `Could not submit seller application: ${insertErr.message}`);
+  if (insertErr) throw new AppError(500, 'Could not submit seller application', { cause: insertErr });
 
   return { status: inserted.status, storeName: inserted.store_name };
 }
@@ -106,7 +105,7 @@ async function backfillProfileFromProvider(profileId, profile, meta) {
   if (Object.keys(patch).length === 0) return patch;
 
   const { error } = await db.from('profiles').update(patch).eq('id', profileId);
-  if (error) throw new AppError(500, `Could not update profile: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not update profile', { cause: error });
   return patch;
 }
 
@@ -123,7 +122,14 @@ export const register = asyncHandler(async (req, res) => {
     email_confirm: true,
     user_metadata: { full_name: fullName },
   });
-  if (createErr) throw new AppError(400, createErr.message);
+  if (createErr) {
+    const exists = /already|exists|registered/i.test(createErr.message || '');
+    throw new AppError(
+      exists ? 409 : 400,
+      exists ? 'An account with this email already exists' : 'Could not create the account',
+      { cause: createErr }
+    );
+  }
 
   // The handle_new_user trigger inserts the profile row (role defaults to
   // 'customer'). Set the display name explicitly so it doesn't depend on
@@ -136,7 +142,8 @@ export const register = asyncHandler(async (req, res) => {
     if (profileErr) {
       throw new AppError(
         500,
-        `Account created, but the profile could not be updated (${profileErr.message}). Did you run server/db/schema.sql?`
+        'Account created, but the profile could not be updated. Did you run server/db/schema.sql?',
+        { cause: profileErr }
       );
     }
   }
@@ -225,7 +232,7 @@ export const oauthSession = asyncHandler(async (req, res) => {
     .select('id, role, full_name, avatar_url, auth_provider, created_at')
     .eq('id', supabaseUser.id)
     .maybeSingle();
-  if (profileErr) throw new AppError(500, `Could not read profile: ${profileErr.message}`);
+  if (profileErr) throw new AppError(500, 'Could not read profile', { cause: profileErr });
 
   // An OAuth sign-up inserts the auth user (and, via the trigger, the profile)
   // moments before this call. Anything older is a returning account.
@@ -282,7 +289,7 @@ export const oauthSession = asyncHandler(async (req, res) => {
       .update({ auth_provider: 'google' })
       .eq('id', profile.id);
     if (tagErr) {
-      throw new AppError(500, `Could not update profile: ${tagErr.message}`);
+      throw new AppError(500, 'Could not update profile', { cause: tagErr });
     }
   }
 
@@ -306,7 +313,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
   }
 
   const { error } = await db.from('profiles').update(patch).eq('id', req.user.id);
-  if (error) throw new AppError(500, `Could not update profile: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not update profile', { cause: error });
 
   res.json({ user: await readProfileUser(req.user.id, req.user.email) });
 });
@@ -332,7 +339,7 @@ export const uploadAvatar = asyncHandler(async (req, res) => {
     .eq('id', req.user.id);
   if (error) {
     await removeImage(url);
-    throw new AppError(500, `Could not save avatar: ${error.message}`);
+    throw new AppError(500, 'Could not save avatar', { cause: error });
   }
 
   // Clean up the old avatar object only after the new one is safely persisted.
@@ -369,7 +376,7 @@ export const changePassword = asyncHandler(async (req, res) => {
   }
 
   const { error } = await db.auth.admin.updateUserById(req.user.id, { password: newPassword });
-  if (error) throw new AppError(400, `Could not update password: ${error.message}`);
+  if (error) throw new AppError(400, 'Could not update password', { cause: error });
 
   res.json({ message: 'Password updated' });
 });
@@ -384,13 +391,13 @@ export const changeEmail = asyncHandler(async (req, res) => {
     email: newEmail,
     email_confirm: true,
   });
-  if (authErr) throw new AppError(409, `Could not update email: ${authErr.message}`);
+  if (authErr) throw new AppError(409, 'Could not update email', { cause: authErr });
 
   const { error: profileErr } = await db
     .from('profiles')
     .update({ email: newEmail })
     .eq('id', req.user.id);
-  if (profileErr) throw new AppError(500, `Could not update profile: ${profileErr.message}`);
+  if (profileErr) throw new AppError(500, 'Could not update profile', { cause: profileErr });
 
   res.json({ user: await readProfileUser(req.user.id, newEmail) });
 });

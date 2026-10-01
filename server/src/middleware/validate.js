@@ -7,7 +7,7 @@ const parse = (schema, source) => (req, res, next) => {
       path: issue.path.join('.'),
       message: issue.message,
     }));
-    return next(new AppError(422, 'Validation failed', details));
+    return next(new AppError(422, 'Validation failed', { details }));
   }
   req[source] = result.data;
   next();

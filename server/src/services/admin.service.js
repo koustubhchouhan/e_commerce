@@ -1,5 +1,5 @@
 import { db } from '../config/supabase.js';
-import { AppError } from '../middleware/error.js';
+import { AppError, isBusinessRuleError } from '../middleware/error.js';
 import { removeImage, uploadImage } from './storage.service.js';
 import { serializeReview } from './review.service.js';
 import { loadCoversByProduct, serializeProduct } from './product-data.js';
@@ -17,7 +17,7 @@ export async function listApplications({ status } = {}) {
   if (status) query = query.eq('status', status);
 
   const { data, error } = await query.order('created_at', { ascending: false });
-  if (error) throw new AppError(500, `Could not load applications: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load applications', { cause: error });
 
   const applications = data ?? [];
   if (applications.length === 0) return [];
@@ -28,7 +28,7 @@ export async function listApplications({ status } = {}) {
     .select('id, full_name')
     .in('id', userIds);
 
-  if (profileErr) throw new AppError(500, `Could not load applicants: ${profileErr.message}`);
+  if (profileErr) throw new AppError(500, 'Could not load applicants', { cause: profileErr });
 
   const nameById = new Map((applicants ?? []).map((p) => [p.id, p.full_name]));
 
@@ -52,7 +52,7 @@ export async function reviewApplication(adminId, applicationId, action) {
     .eq('id', applicationId)
     .maybeSingle();
 
-  if (error) throw new AppError(500, `Could not load application: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load application', { cause: error });
   if (!application) throw new AppError(404, 'Application not found');
   if (application.status !== 'pending') {
     throw new AppError(400, `Application was already ${application.status}`);
@@ -65,7 +65,7 @@ export async function reviewApplication(adminId, applicationId, action) {
       .from('seller_applications')
       .update({ status: 'rejected', reviewed_at, reviewed_by: adminId })
       .eq('id', applicationId);
-    if (rejectErr) throw new AppError(400, `Could not reject application: ${rejectErr.message}`);
+    if (rejectErr) throw new AppError(400, 'Could not reject application', { cause: rejectErr });
     return { status: 'rejected' };
   }
 
@@ -75,7 +75,7 @@ export async function reviewApplication(adminId, applicationId, action) {
     .from('profiles')
     .update({ role: 'seller' })
     .eq('id', application.user_id);
-  if (roleErr) throw new AppError(500, `Could not upgrade user to seller: ${roleErr.message}`);
+  if (roleErr) throw new AppError(500, 'Could not upgrade user to seller', { cause: roleErr });
 
   const { data: store } = await db
     .from('stores')
@@ -87,14 +87,14 @@ export async function reviewApplication(adminId, applicationId, action) {
     const { error: storeErr } = await db
       .from('stores')
       .insert({ owner_id: application.user_id, name: application.store_name });
-    if (storeErr) throw new AppError(500, `Could not create store: ${storeErr.message}`);
+    if (storeErr) throw new AppError(500, 'Could not create store', { cause: storeErr });
   }
 
   const { error: appErr } = await db
     .from('seller_applications')
     .update({ status: 'approved', reviewed_at, reviewed_by: adminId })
     .eq('id', applicationId);
-  if (appErr) throw new AppError(400, `Could not approve application: ${appErr.message}`);
+  if (appErr) throw new AppError(400, 'Could not approve application', { cause: appErr });
 
   return { status: 'approved' };
 }
@@ -107,7 +107,7 @@ export async function listSellers() {
     .eq('role', 'seller')
     .order('created_at', { ascending: false });
 
-  if (error) throw new AppError(500, `Could not load sellers: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load sellers', { cause: error });
 
   return (data ?? []).map((s) => ({
     id: s.id,
@@ -125,7 +125,7 @@ export async function listCategories() {
     .from('categories')
     .select('id, name, slug, image_url, products(count)');
 
-  if (error) throw new AppError(500, `Could not load categories: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load categories', { cause: error });
 
   return (data ?? []).map((c) => ({
     id: c.id,
@@ -156,7 +156,7 @@ export async function createCategory({ name, imageUrl }) {
 
   if (error) {
     if (error.code === '23505') throw new AppError(409, 'A category with this name already exists');
-    throw new AppError(400, `Could not create category: ${error.message}`);
+    throw new AppError(400, 'Could not create category', { cause: error });
   }
 
   return { id: data.id, name: data.name, slug: data.slug, imageUrl: data.image_url ?? null, productCount: 0 };
@@ -178,11 +178,11 @@ export async function deleteCategory(categoryId) {
     .select('id')
     .eq('id', categoryId)
     .maybeSingle();
-  if (existErr) throw new AppError(500, `Could not load category: ${existErr.message}`);
+  if (existErr) throw new AppError(500, 'Could not load category', { cause: existErr });
   if (!existing) throw new AppError(404, 'Category not found');
 
   const { error } = await db.from('categories').delete().eq('id', categoryId);
-  if (error) throw new AppError(400, `Could not delete category: ${error.message}`);
+  if (error) throw new AppError(400, 'Could not delete category', { cause: error });
 }
 
 // DELETE /admin/products/:id — admins may remove any product on the platform,
@@ -193,17 +193,17 @@ export async function deleteAnyProduct(productId) {
     .select('id')
     .eq('id', productId)
     .maybeSingle();
-  if (prodErr) throw new AppError(500, `Could not load product: ${prodErr.message}`);
+  if (prodErr) throw new AppError(500, 'Could not load product', { cause: prodErr });
   if (!product) throw new AppError(404, 'Product not found');
 
   const { data: images, error: imgErr } = await db
     .from('product_images')
     .select('url')
     .eq('product_id', productId);
-  if (imgErr) throw new AppError(500, `Could not load product images: ${imgErr.message}`);
+  if (imgErr) throw new AppError(500, 'Could not load product images', { cause: imgErr });
 
   const { error } = await db.from('products').delete().eq('id', productId);
-  if (error) throw new AppError(400, `Could not delete product: ${error.message}`);
+  if (error) throw new AppError(400, 'Could not delete product', { cause: error });
 
   await Promise.all((images ?? []).map((i) => removeImage(i.url)));
 }
@@ -234,7 +234,7 @@ export async function listProductsForApproval({ approval_status, limit } = {}) {
     .order('created_at', { ascending: false })
     .limit(limit ?? 100);
 
-  if (error) throw new AppError(500, `Could not load products: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load products', { cause: error });
 
   const ids = (data ?? []).map((p) => p.id);
   const covers = await loadCoversByProduct(ids);
@@ -251,7 +251,7 @@ export async function setProductApproval(productId, action, reason) {
     .select('id')
     .eq('id', productId)
     .maybeSingle();
-  if (findErr) throw new AppError(500, `Could not load product: ${findErr.message}`);
+  if (findErr) throw new AppError(500, 'Could not load product', { cause: findErr });
   if (!existing) throw new AppError(404, 'Product not found');
 
   const patch =
@@ -265,7 +265,7 @@ export async function setProductApproval(productId, action, reason) {
     .eq('id', productId)
     .select(ADMIN_PRODUCT_SELECT)
     .single();
-  if (error) throw new AppError(400, `Could not update approval: ${error.message}`);
+  if (error) throw new AppError(400, 'Could not update approval', { cause: error });
 
   const covers = await loadCoversByProduct([data.id]);
   return shapeAdminProduct(data, covers.get(data.id));
@@ -281,7 +281,7 @@ export async function revokeSeller(adminId, sellerId) {
     .eq('id', sellerId)
     .maybeSingle();
 
-  if (error) throw new AppError(500, `Could not load seller: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load seller', { cause: error });
   if (!profile || profile.role !== 'seller') throw new AppError(404, 'Seller not found');
 
   const { data: store } = await db
@@ -295,14 +295,14 @@ export async function revokeSeller(adminId, sellerId) {
       .from('products')
       .update({ status: 'draft' })
       .eq('store_id', store.id);
-    if (draftErr) throw new AppError(500, `Could not draft products: ${draftErr.message}`);
+    if (draftErr) throw new AppError(500, 'Could not draft products', { cause: draftErr });
   }
 
   const { error: demoteErr } = await db
     .from('profiles')
     .update({ role: 'customer' })
     .eq('id', sellerId);
-  if (demoteErr) throw new AppError(500, `Could not revoke seller role: ${demoteErr.message}`);
+  if (demoteErr) throw new AppError(500, 'Could not revoke seller role', { cause: demoteErr });
 
   // Clear the approved application; otherwise the demoted customer's profile
   // still reports a live storefront and blocks a fresh application.
@@ -311,7 +311,7 @@ export async function revokeSeller(adminId, sellerId) {
     .update({ status: 'rejected', reviewed_at: new Date().toISOString(), reviewed_by: adminId })
     .eq('user_id', sellerId)
     .eq('status', 'approved');
-  if (appErr) throw new AppError(500, `Could not reset seller application: ${appErr.message}`);
+  if (appErr) throw new AppError(500, 'Could not reset seller application', { cause: appErr });
 }
 
 // =====================================================================
@@ -337,7 +337,7 @@ export async function listReviews() {
     .select(ADMIN_REVIEW_SELECT)
     .order('created_at', { ascending: false });
 
-  if (error) throw new AppError(500, `Could not load reviews: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load reviews', { cause: error });
   return (data ?? []).map(serializeAdminReview);
 }
 
@@ -348,21 +348,21 @@ export async function setReviewHidden(reviewId, isHidden) {
     .select('id')
     .eq('id', reviewId)
     .maybeSingle();
-  if (findErr) throw new AppError(500, `Could not load review: ${findErr.message}`);
+  if (findErr) throw new AppError(500, 'Could not load review', { cause: findErr });
   if (!existing) throw new AppError(404, 'Review not found');
 
   const { error } = await db
     .from('reviews')
     .update({ is_hidden: isHidden })
     .eq('id', reviewId);
-  if (error) throw new AppError(400, `Could not update review: ${error.message}`);
+  if (error) throw new AppError(400, 'Could not update review', { cause: error });
 
   const { data, error: readErr } = await db
     .from('reviews')
     .select(ADMIN_REVIEW_SELECT)
     .eq('id', reviewId)
     .single();
-  if (readErr) throw new AppError(500, `Could not load review: ${readErr.message}`);
+  if (readErr) throw new AppError(500, 'Could not load review', { cause: readErr });
   return serializeAdminReview(data);
 }
 
@@ -373,11 +373,11 @@ export async function deleteReview(reviewId) {
     .select('id')
     .eq('id', reviewId)
     .maybeSingle();
-  if (findErr) throw new AppError(500, `Could not load review: ${findErr.message}`);
+  if (findErr) throw new AppError(500, 'Could not load review', { cause: findErr });
   if (!existing) throw new AppError(404, 'Review not found');
 
   const { error } = await db.from('reviews').delete().eq('id', reviewId);
-  if (error) throw new AppError(400, `Could not delete review: ${error.message}`);
+  if (error) throw new AppError(400, 'Could not delete review', { cause: error });
 }
 
 // =====================================================================
@@ -399,7 +399,7 @@ export async function getPlatformLedger() {
     .from('orders')
     .select('id, status, total, created_at, store_id, profiles(full_name)')
     .order('created_at', { ascending: false });
-  if (error) throw new AppError(500, `Could not load orders: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load orders', { cause: error });
 
   const all = orders ?? [];
   const revenueOrders = all.filter((o) => REVENUE_STATUSES.includes(o.status));
@@ -417,14 +417,14 @@ export async function getPlatformLedger() {
       .from('order_items')
       .select('order_id, product_id, quantity, line_total')
       .in('order_id', revenueIds);
-    if (itemErr) throw new AppError(500, `Could not load order items: ${itemErr.message}`);
+    if (itemErr) throw new AppError(500, 'Could not load order items', { cause: itemErr });
 
     // Orders already covered by a settlement are no longer owed to the seller.
     const { data: settled, error: settledErr } = await db
       .from('settlement_orders')
       .select('order_id')
       .in('order_id', revenueIds);
-    if (settledErr) throw new AppError(500, `Could not load settlements: ${settledErr.message}`);
+    if (settledErr) throw new AppError(500, 'Could not load settlements', { cause: settledErr });
     settledOrderIds = new Set((settled ?? []).map((s) => s.order_id));
 
     const productIds = [...new Set((items ?? []).map((i) => i.product_id).filter(Boolean))];
@@ -436,7 +436,7 @@ export async function getPlatformLedger() {
         .from('products')
         .select('id, store_id')
         .in('id', productIds);
-      if (prodErr) throw new AppError(500, `Could not load products: ${prodErr.message}`);
+      if (prodErr) throw new AppError(500, 'Could not load products', { cause: prodErr });
 
       const storeIds = [...new Set((products ?? []).map((p) => p.store_id).filter(Boolean))];
       if (storeIds.length > 0) {
@@ -444,7 +444,7 @@ export async function getPlatformLedger() {
           .from('stores')
           .select('id, name, owner_id, is_official, profiles(full_name)')
           .in('id', storeIds);
-        if (storeErr) throw new AppError(500, `Could not load stores: ${storeErr.message}`);
+        if (storeErr) throw new AppError(500, 'Could not load stores', { cause: storeErr });
         for (const s of stores ?? []) {
           pendingSellers.set(s.id, {
             name: s.name,
@@ -557,7 +557,7 @@ export async function getPlatformLedger() {
     .select('id, store_id, gross, fee, net, order_count, note, created_at, stores(name), profiles(full_name)')
     .order('created_at', { ascending: false })
     .limit(50);
-  if (settlementErr) throw new AppError(500, `Could not load settlements: ${settlementErr.message}`);
+  if (settlementErr) throw new AppError(500, 'Could not load settlements', { cause: settlementErr });
   const settlements = (settlementRows ?? []).map((s) => ({
     id: s.id,
     storeId: s.store_id,
@@ -605,7 +605,12 @@ export async function createSettlement({ storeId, orderIds, note, adminId }) {
     p_created_by: adminId ?? null,
     p_note: note ?? null,
   });
-  if (error) throw new AppError(400, error.message);
+  // create_settlement raises deliberate business-rule exceptions (unsettleable
+  // orders, no orders supplied); surface those, hide anything else.
+  if (error) {
+    if (isBusinessRuleError(error)) throw new AppError(400, error.message);
+    throw new AppError(400, 'Could not create the settlement', { cause: error });
+  }
   return {
     id: data.id,
     storeId: data.store_id,

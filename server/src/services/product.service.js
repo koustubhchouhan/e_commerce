@@ -15,7 +15,7 @@ async function loadOwnedProduct(userId, productId) {
     .eq('id', productId)
     .maybeSingle();
 
-  if (error) throw new AppError(500, `Could not load product: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load product', { cause: error });
   if (!product) throw new AppError(404, 'Product not found');
   if (product.stores?.owner_id !== userId) {
     throw new AppError(403, 'You can only manage products from your own store');
@@ -30,7 +30,7 @@ async function validateCategory(categoryId) {
     .select('id')
     .eq('id', categoryId)
     .maybeSingle();
-  if (error) throw new AppError(500, `Could not validate category: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not validate category', { cause: error });
   if (!data) throw new AppError(400, 'Category does not exist');
 }
 
@@ -44,7 +44,7 @@ export async function listSellerProducts(userId, role) {
     .eq('store_id', store.id)
     .order('created_at', { ascending: false });
 
-  if (error) throw new AppError(500, `Could not load your products: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load your products', { cause: error });
 
   const ids = (data ?? []).map((p) => p.id);
   const imagesByProduct = await loadImagesByProduct(ids);
@@ -80,7 +80,7 @@ export async function createProduct(userId, role, input) {
     .select(PRODUCT_SELECT)
     .single();
 
-  if (error) throw new AppError(400, `Could not create product: ${error.message}`);
+  if (error) throw new AppError(400, 'Could not create product', { cause: error });
 
   const covers = await loadCoversByProduct([data.id]);
   return serializeProduct(data, covers.get(data.id));
@@ -98,7 +98,7 @@ export async function resubmitProduct(userId, productId) {
     .select(PRODUCT_SELECT)
     .single();
 
-  if (error) throw new AppError(400, `Could not resubmit product: ${error.message}`);
+  if (error) throw new AppError(400, 'Could not resubmit product', { cause: error });
 
   const covers = await loadCoversByProduct([data.id]);
   return serializeProduct(data, covers.get(data.id));
@@ -116,7 +116,7 @@ export async function updateProduct(userId, productId, patch) {
     .select(PRODUCT_SELECT)
     .single();
 
-  if (error) throw new AppError(400, `Could not update product: ${error.message}`);
+  if (error) throw new AppError(400, 'Could not update product', { cause: error });
 
   const covers = await loadCoversByProduct([data.id]);
   return serializeProduct(data, covers.get(data.id));
@@ -130,10 +130,10 @@ export async function deleteProduct(userId, productId) {
     .from('product_images')
     .select('url')
     .eq('product_id', productId);
-  if (imgErr) throw new AppError(500, `Could not load product images: ${imgErr.message}`);
+  if (imgErr) throw new AppError(500, 'Could not load product images', { cause: imgErr });
 
   const { error } = await db.from('products').delete().eq('id', productId);
-  if (error) throw new AppError(400, `Could not delete product: ${error.message}`);
+  if (error) throw new AppError(400, 'Could not delete product', { cause: error });
 
   await Promise.all((images ?? []).map((i) => removeImage(i.url)));
 }
@@ -148,7 +148,7 @@ export async function addProductImages(userId, productId, files) {
     .from('product_images')
     .select('is_cover')
     .eq('product_id', productId);
-  if (existErr) throw new AppError(500, `Could not read existing images: ${existErr.message}`);
+  if (existErr) throw new AppError(500, 'Could not read existing images', { cause: existErr });
 
   const alreadyHasCover = (existing ?? []).some((i) => i.is_cover);
   let position = existing?.length ?? 0;
@@ -172,7 +172,7 @@ export async function addProductImages(userId, productId, files) {
         .select('id, url, is_cover, position')
         .single();
 
-      if (error) throw new AppError(400, `Could not save image: ${error.message}`);
+      if (error) throw new AppError(400, 'Could not save image', { cause: error });
       saved.push(data);
     }
   } catch (err) {

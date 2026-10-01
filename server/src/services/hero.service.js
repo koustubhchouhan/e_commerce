@@ -28,7 +28,7 @@ async function loadSlide(id) {
     .eq('id', id)
     .maybeSingle();
 
-  if (error) throw new AppError(500, `Could not load slide: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load slide', { cause: error });
   if (!data) throw new AppError(404, 'Slide not found');
   return data;
 }
@@ -43,7 +43,7 @@ export async function listActiveSlides() {
     .order('position', { ascending: true })
     .order('created_at', { ascending: true });
 
-  if (error) throw new AppError(500, `Could not load slides: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load slides', { cause: error });
   return (data ?? []).map(serializeSlide);
 }
 
@@ -55,7 +55,7 @@ export async function listAllSlides() {
     .order('position', { ascending: true })
     .order('created_at', { ascending: true });
 
-  if (error) throw new AppError(500, `Could not load slides: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load slides', { cause: error });
   return (data ?? []).map(serializeSlide);
 }
 
@@ -77,7 +77,7 @@ export async function createSlide(input) {
     .select(SLIDE_SELECT)
     .single();
 
-  if (error) throw new AppError(400, `Could not create slide: ${error.message}`);
+  if (error) throw new AppError(400, 'Could not create slide', { cause: error });
   return serializeSlide(data);
 }
 
@@ -106,7 +106,7 @@ export async function updateSlide(id, patch) {
     .select(SLIDE_SELECT)
     .single();
 
-  if (error) throw new AppError(400, `Could not update slide: ${error.message}`);
+  if (error) throw new AppError(400, 'Could not update slide', { cause: error });
 
   if (patch.imageUrl !== undefined && patch.imageUrl !== existing.image_url) {
     await removeImage(existing.image_url);
@@ -120,7 +120,7 @@ export async function deleteSlide(id) {
   const existing = await loadSlide(id);
 
   const { error } = await db.from('hero_slides').delete().eq('id', id);
-  if (error) throw new AppError(400, `Could not delete slide: ${error.message}`);
+  if (error) throw new AppError(400, 'Could not delete slide', { cause: error });
 
   await removeImage(existing.image_url);
 }

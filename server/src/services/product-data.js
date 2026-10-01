@@ -17,7 +17,7 @@ export async function loadImagesByProduct(productIds) {
     .select('id, product_id, url, is_cover, position')
     .in('product_id', productIds);
 
-  if (error) throw new AppError(500, `Could not load product images: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load product images', { cause: error });
 
   for (const img of data ?? []) {
     if (!map.has(img.product_id)) map.set(img.product_id, []);
@@ -39,7 +39,7 @@ export async function loadCoversByProduct(productIds) {
     .in('product_id', productIds)
     .eq('is_cover', true);
 
-  if (error) throw new AppError(500, `Could not load product images: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load product images', { cause: error });
   for (const img of flagged ?? []) {
     if (!covers.has(img.product_id)) covers.set(img.product_id, img.url);
   }
@@ -51,7 +51,7 @@ export async function loadCoversByProduct(productIds) {
       .select('product_id, url, position')
       .in('product_id', missing)
       .order('position');
-    if (firstErr) throw new AppError(500, `Could not load product images: ${firstErr.message}`);
+    if (firstErr) throw new AppError(500, 'Could not load product images', { cause: firstErr });
     for (const img of firsts ?? []) {
       if (!covers.has(img.product_id)) covers.set(img.product_id, img.url);
     }

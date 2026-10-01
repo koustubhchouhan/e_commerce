@@ -69,8 +69,14 @@ async function razorpayRequest(method, path, body) {
   }
 
   if (!res.ok) {
-    const reason = data?.error?.description || data?.error?.reason || res.statusText;
-    throw new AppError(502, `Razorpay request failed: ${reason}`);
+    throw new AppError(502, 'Payment gateway request failed', {
+      cause: {
+        status: res.status,
+        statusText: res.statusText,
+        reason:
+          data?.error?.description || data?.error?.reason || data?.error?.code || undefined,
+      },
+    });
   }
   return data;
 }
@@ -101,14 +107,14 @@ export async function createPaymentOrder(userId, { items, shipping_address }) {
     })
     .select('id')
     .single();
-  if (payErr) throw new AppError(500, `Could not record payment: ${payErr.message}`);
+  if (payErr) throw new AppError(500, 'Could not record payment', { cause: payErr });
 
   // Link the payment to every order it will pay for (one per seller).
   const links = checkout.orders.map((o) => ({ payment_id: payment.id, order_id: o.orderId }));
   const { error: linkErr } = await db.from('payment_orders').insert(links);
   if (linkErr) {
     await db.rpc('mark_payment_failed', { p_payment_id: payment.id, p_raw_payload: null });
-    throw new AppError(500, `Could not link payment to orders: ${linkErr.message}`);
+    throw new AppError(500, 'Could not link payment to orders', { cause: linkErr });
   }
 
   let gatewayOrder;
@@ -129,7 +135,7 @@ export async function createPaymentOrder(userId, { items, shipping_address }) {
     .from('payments')
     .update({ gateway_order_id: gatewayOrder.id, updated_at: new Date().toISOString() })
     .eq('id', payment.id);
-  if (updateErr) throw new AppError(500, `Could not save gateway order id: ${updateErr.message}`);
+  if (updateErr) throw new AppError(500, 'Could not save gateway order id', { cause: updateErr });
 
   return {
     keyId: env.razorpay.keyId,
@@ -154,7 +160,7 @@ export async function verifyPayment(userId, { razorpay_order_id, razorpay_paymen
     .eq('gateway_order_id', razorpay_order_id)
     .eq('user_id', userId)
     .maybeSingle();
-  if (error) throw new AppError(500, `Could not load payment: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load payment', { cause: error });
   if (!payment) throw new AppError(404, 'Payment order not found');
 
   if (!verifyPaymentSignature(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
@@ -165,7 +171,7 @@ export async function verifyPayment(userId, { razorpay_order_id, razorpay_paymen
     p_gateway_order_id: razorpay_order_id,
     p_gateway_payment_id: razorpay_payment_id,
   });
-  if (rpcErr) throw new AppError(500, `Could not capture payment: ${rpcErr.message}`);
+  if (rpcErr) throw new AppError(500, 'Could not capture payment', { cause: rpcErr });
 
   return { paymentId: data.payment_id, status: data.status, orderIds: data.order_ids };
 }

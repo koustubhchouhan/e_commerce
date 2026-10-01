@@ -15,7 +15,7 @@ export async function ensureStore(userId, role) {
     .eq('owner_id', userId)
     .maybeSingle();
 
-  if (error) throw new AppError(500, `Could not load your store: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load your store', { cause: error });
   if (store) return store;
 
   if (role !== 'admin') {
@@ -38,7 +38,7 @@ export async function ensureStore(userId, role) {
     .eq('owner_id', userId)
     .maybeSingle();
   if (rereadErr || !existing) {
-    throw new AppError(500, `Could not create the platform store: ${createErr.message}`);
+    throw new AppError(500, 'Could not create the platform store', { cause: createErr });
   }
   return existing;
 }

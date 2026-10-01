@@ -1,5 +1,5 @@
 import { db } from '../config/supabase.js';
-import { AppError } from '../middleware/error.js';
+import { AppError, isBusinessRuleError } from '../middleware/error.js';
 import { loadCoversByProduct } from './product-data.js';
 
 // POST /orders — server-authoritative checkout. Prices never come from the
@@ -13,7 +13,12 @@ export async function createOrder(userId, { items, shipping_address }) {
     p_shipping: shipping_address ?? null,
   });
 
-  if (error) throw new AppError(400, error.message);
+  // create_orders raises deliberate business-rule exceptions (insufficient
+  // stock, single-store checkout); surface those, hide anything else.
+  if (error) {
+    if (isBusinessRuleError(error)) throw new AppError(400, error.message);
+    throw new AppError(400, 'Could not create the order', { cause: error });
+  }
 
   const orders = (data ?? []).map((o) => ({
     orderId: o.order_id,
@@ -40,7 +45,7 @@ export async function listOrders(userId) {
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
-  if (error) throw new AppError(500, `Could not load orders: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load orders', { cause: error });
   return { items: await attachItems(orders ?? []) };
 }
 
@@ -51,7 +56,7 @@ export async function listAllOrders() {
     .select('id, status, subtotal, total, created_at, profiles(full_name)')
     .order('created_at', { ascending: false });
 
-  if (error) throw new AppError(500, `Could not load orders: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load orders', { cause: error });
   const withItems = await attachItems(orders ?? []);
 
   return {
@@ -77,7 +82,7 @@ export async function listSellerOrders(sellerId) {
     .select('id')
     .eq('owner_id', sellerId)
     .maybeSingle();
-  if (storeErr) throw new AppError(500, `Could not load store: ${storeErr.message}`);
+  if (storeErr) throw new AppError(500, 'Could not load store', { cause: storeErr });
   if (!store) return { items: [] };
 
   const { data: orders, error } = await db
@@ -85,7 +90,7 @@ export async function listSellerOrders(sellerId) {
     .select('id, status, total, created_at, profiles(full_name)')
     .eq('store_id', store.id)
     .order('created_at', { ascending: false });
-  if (error) throw new AppError(500, `Could not load orders: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load orders', { cause: error });
 
   const withItems = await attachItems(orders ?? []);
 
@@ -112,7 +117,7 @@ export async function getOrder(userId, userRole, orderId) {
     .eq('id', orderId)
     .maybeSingle();
 
-  if (error) throw new AppError(500, `Could not load order: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load order', { cause: error });
   if (!order) throw new AppError(404, 'Order not found');
   if (order.user_id !== userId && userRole !== 'admin') {
     throw new AppError(403, 'You can only view your own orders');
@@ -134,7 +139,7 @@ export async function getOrderForAdmin(orderId) {
     .eq('id', orderId)
     .maybeSingle();
 
-  if (error) throw new AppError(500, `Could not load order: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load order', { cause: error });
   if (!order) throw new AppError(404, 'Order not found');
 
   const [withItems] = await attachItems([order]);
@@ -174,7 +179,7 @@ export async function updateOrderStatus(actorUserId, actorRole, orderId, nextSta
     .select('id, status, store_id')
     .eq('id', orderId)
     .maybeSingle();
-  if (error) throw new AppError(500, `Could not load order: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load order', { cause: error });
   if (!order) throw new AppError(404, 'Order not found');
 
   const allowed = STATUS_TRANSITIONS[order.status] ?? [];
@@ -193,7 +198,7 @@ export async function updateOrderStatus(actorUserId, actorRole, orderId, nextSta
       .select('id')
       .eq('owner_id', actorUserId)
       .maybeSingle();
-    if (storeErr) throw new AppError(500, `Could not load store: ${storeErr.message}`);
+    if (storeErr) throw new AppError(500, 'Could not load store', { cause: storeErr });
     if (!store || order.store_id !== store.id) {
       throw new AppError(403, 'This order belongs to another store');
     }
@@ -214,7 +219,7 @@ export async function cancelOrder(userId, userRole, orderId) {
     .select('id, user_id, status')
     .eq('id', orderId)
     .maybeSingle();
-  if (error) throw new AppError(500, `Could not load order: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load order', { cause: error });
   if (!order) throw new AppError(404, 'Order not found');
 
   if (order.user_id !== userId && userRole !== 'admin') {
@@ -237,7 +242,7 @@ async function restoreStockForOrder(orderId) {
     .from('order_items')
     .select('product_id, quantity')
     .eq('order_id', orderId);
-  if (itemErr) throw new AppError(500, `Could not load order items: ${itemErr.message}`);
+  if (itemErr) throw new AppError(500, 'Could not load order items', { cause: itemErr });
 
   for (const item of orderItems ?? []) {
     if (!item.product_id) continue;
@@ -251,7 +256,7 @@ async function restoreStockForOrder(orderId) {
       .from('products')
       .update({ stock: Number(product.stock) + Number(item.quantity) })
       .eq('id', item.product_id);
-    if (updateErr) throw new AppError(500, `Could not restore stock: ${updateErr.message}`);
+    if (updateErr) throw new AppError(500, 'Could not restore stock', { cause: updateErr });
   }
 }
 
@@ -263,7 +268,7 @@ async function setOrderStatus(orderId, status) {
     .eq('id', orderId)
     .select('id, status')
     .single();
-  if (updateErr) throw new AppError(500, `Could not update order: ${updateErr.message}`);
+  if (updateErr) throw new AppError(500, 'Could not update order', { cause: updateErr });
   return { id: updated.id, status: updated.status };
 }
 
@@ -278,7 +283,7 @@ async function attachItems(orders) {
     .select('id, order_id, product_id, product_name, unit_price, discount_percent, quantity, line_total')
     .in('order_id', ids);
 
-  if (error) throw new AppError(500, `Could not load order items: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load order items', { cause: error });
 
   const productIds = [...new Set((items ?? []).map((i) => i.product_id).filter(Boolean))];
   const covers = await loadCoversByProduct(productIds);

@@ -13,7 +13,7 @@ export async function createApplication(userId, { store_name, contact_email }) {
     .in('status', ['pending', 'approved'])
     .maybeSingle();
 
-  if (error) throw new AppError(500, `Could not check existing applications: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not check existing applications', { cause: error });
   if (existing) {
     const verb = existing.status === 'pending' ? 'under review' : 'already approved';
     throw new AppError(400, `You already have an application that is ${verb}`);
@@ -25,7 +25,7 @@ export async function createApplication(userId, { store_name, contact_email }) {
     .select('id, store_name, contact_email, status, created_at')
     .single();
 
-  if (insertErr) throw new AppError(400, `Could not submit application: ${insertErr.message}`);
+  if (insertErr) throw new AppError(400, 'Could not submit application', { cause: insertErr });
   return data;
 }
 
@@ -37,7 +37,7 @@ export async function getMyApplications(userId) {
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
-  if (error) throw new AppError(500, `Could not load your applications: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load your applications', { cause: error });
   return data ?? [];
 }
 
@@ -64,7 +64,7 @@ export async function updateStore(userId, role, patch) {
     .select('id, name, description, created_at')
     .single();
 
-  if (error) throw new AppError(400, `Could not update store: ${error.message}`);
+  if (error) throw new AppError(400, 'Could not update store', { cause: error });
   if (!data) throw new AppError(404, 'No store found for this account');
 
   return {
@@ -83,7 +83,7 @@ async function requireOwnStore(userId) {
     .eq('owner_id', userId)
     .maybeSingle();
 
-  if (error) throw new AppError(500, `Could not load your store: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load your store', { cause: error });
   if (!data) throw new AppError(403, 'You need an approved store to manage reviews');
   return data;
 }
@@ -102,7 +102,7 @@ export async function listStoreReviews(userId) {
     .eq('products.store_id', store.id)
     .order('created_at', { ascending: false });
 
-  if (error) throw new AppError(500, `Could not load reviews: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load reviews', { cause: error });
 
   return (data ?? []).map((r) => ({
     ...serializeReview(r),
@@ -121,7 +121,7 @@ export async function replyToReview(userId, reviewId, reply) {
     .eq('id', reviewId)
     .maybeSingle();
 
-  if (error) throw new AppError(500, `Could not load review: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load review', { cause: error });
   if (!review) throw new AppError(404, 'Review not found');
   if (review.products?.store_id !== store.id) {
     throw new AppError(403, 'You can only reply to reviews of your own products');
@@ -138,7 +138,7 @@ export async function replyToReview(userId, reviewId, reply) {
     })
     .eq('id', reviewId);
 
-  if (updateErr) throw new AppError(400, `Could not save reply: ${updateErr.message}`);
+  if (updateErr) throw new AppError(400, 'Could not save reply', { cause: updateErr });
 
   return { id: reviewId, sellerReply: trimmed || null, sellerRepliedAt: trimmed ? now : null };
 }

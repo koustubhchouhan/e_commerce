@@ -7,7 +7,7 @@ export async function listCategories() {
     .from('categories')
     .select('id, name, slug, image_url')
     .order('name');
-  if (error) throw new AppError(500, `Could not load categories: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load categories', { cause: error });
   return (data ?? []).map((c) => ({
     id: c.id,
     name: c.name,
@@ -64,7 +64,7 @@ export async function listProducts({ search, category, page, limit }) {
     .order('created_at', { ascending: false })
     .range(from, to);
 
-  if (error) throw new AppError(500, `Could not load products: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load products', { cause: error });
 
   const rows = data ?? [];
   const hasMore = rows.length > limit;
@@ -90,7 +90,7 @@ export async function getProduct(id, viewer) {
     .eq('id', id)
     .maybeSingle();
 
-  if (error) throw new AppError(500, `Could not load product: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load product', { cause: error });
   if (!row) throw new AppError(404, 'Product not found');
 
   const live = row.status === 'active' && (row.approval_status ?? 'approved') === 'approved';
@@ -106,7 +106,7 @@ export async function getProduct(id, viewer) {
     .eq('product_id', id)
     .order('position');
 
-  if (imgErr) throw new AppError(500, `Could not load product images: ${imgErr.message}`);
+  if (imgErr) throw new AppError(500, 'Could not load product images', { cause: imgErr });
 
   return {
     ...serializeProduct(row, pickCover(images ?? [])),

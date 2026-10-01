@@ -22,7 +22,7 @@ export async function uploadImage({ file, folder }) {
     contentType: type,
     upsert: false,
   });
-  if (error) throw new AppError(400, `Image upload failed: ${error.message}`);
+  if (error) throw new AppError(400, 'Image upload failed', { cause: error });
 
   const { data } = db.storage.from(BUCKET).getPublicUrl(path);
   return { url: data.publicUrl, path };

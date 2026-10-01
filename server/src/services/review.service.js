@@ -34,7 +34,7 @@ export async function canUserReview(userId, productId) {
     .eq('user_id', userId)
     .eq('status', 'delivered');
 
-  if (orderErr) throw new AppError(500, `Could not verify your purchase: ${orderErr.message}`);
+  if (orderErr) throw new AppError(500, 'Could not verify your purchase', { cause: orderErr });
 
   const orderIds = (orders ?? []).map((o) => o.id);
   if (orderIds.length === 0) return false;
@@ -46,7 +46,7 @@ export async function canUserReview(userId, productId) {
     .in('order_id', orderIds)
     .limit(1);
 
-  if (itemErr) throw new AppError(500, `Could not verify your purchase: ${itemErr.message}`);
+  if (itemErr) throw new AppError(500, 'Could not verify your purchase', { cause: itemErr });
   return (items ?? []).length > 0;
 }
 
@@ -61,7 +61,7 @@ export async function listReviews(productId) {
     .eq('is_hidden', false)
     .order('created_at', { ascending: false });
 
-  if (error) throw new AppError(500, `Could not load reviews: ${error.message}`);
+  if (error) throw new AppError(500, 'Could not load reviews', { cause: error });
 
   const items = (data ?? []).map(serializeReview);
 
@@ -81,7 +81,7 @@ export async function createReview(userId, productId, { rating, comment }) {
     .select('id')
     .eq('id', productId)
     .maybeSingle();
-  if (prodErr) throw new AppError(500, `Could not load product: ${prodErr.message}`);
+  if (prodErr) throw new AppError(500, 'Could not load product', { cause: prodErr });
   if (!product) throw new AppError(404, 'Product not found');
 
   if (!(await canUserReview(userId, productId))) {
@@ -102,7 +102,7 @@ export async function createReview(userId, productId, { rating, comment }) {
     .select(REVIEW_SELECT)
     .single();
 
-  if (error) throw new AppError(400, `Could not save review: ${error.message}`);
+  if (error) throw new AppError(400, 'Could not save review', { cause: error });
 
   return serializeReview(data);
 }
