@@ -17,11 +17,11 @@ export default function ToastContainer() {
   const { toasts, removeToast } = useToastStore();
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none">
+    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[9999] flex w-[calc(100%-2rem)] max-w-sm flex-col items-center gap-3 pointer-events-none lg:bottom-6">
       {toasts.map(toast => (
         <div
           key={toast.id}
-          className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl bg-[#F5ECDE]/95 backdrop-blur-xl border border-[#231a16]/10 border-l-4 ${borders[toast.type]} shadow-xl max-w-sm animate-fade-in-up`}
+          className={`pointer-events-auto flex w-full items-center gap-3 px-4 py-3 rounded-xl bg-[#F5ECDE]/95 backdrop-blur-xl border border-[#231a16]/10 border-l-4 ${borders[toast.type]} shadow-xl max-w-sm animate-fade-in-up`}
         >
           {icons[toast.type]}
           <p className="text-sm text-[#2A211B] font-[Inter] font-medium flex-1">{toast.message}</p>

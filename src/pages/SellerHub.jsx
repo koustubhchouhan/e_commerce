@@ -1,6 +1,6 @@
-import { Package, TrendingUp, IndianRupee, PlusCircle, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, Clock, Check, UploadCloud, Truck, X, Eye, EyeOff, Star, Menu, Reply } from 'lucide-react';
+import { Package, TrendingUp, IndianRupee, ShoppingBag, LayoutDashboard, BarChart3, MessageSquareWarning, Clock, Check, Truck, X, Eye, EyeOff, Star, Menu, Reply } from 'lucide-react';
 import { inr } from '../lib/money';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import GlassCard from '../components/GlassCard';
 import { api } from '../lib/api';
 import { useToastStore } from '../store/toastStore';
@@ -48,7 +48,6 @@ export default function SellerHub() {
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [ordersError, setOrdersError] = useState('');
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [store, setStore] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
@@ -75,12 +74,6 @@ export default function SellerHub() {
         if (!active) return;
         setOrders(orderRes.items ?? []);
         setProducts(productRes.items ?? []);
-        try {
-          const cats = await api.categories();
-          if (active) setCategories(cats.map((c) => ({ id: c.id, name: c.name })));
-        } catch {
-          // categories are a nicety for the add form; non-fatal
-        }
         try {
           const storeData = await api.getSellerStore();
           if (active) setStore(storeData);
@@ -379,7 +372,7 @@ export default function SellerHub() {
           <div className="animate-fade-in-up">
             <header className="mb-10">
               <h1 className="font-display text-2xl sm:text-4xl font-bold text-[#231A16] mb-2 text-glow">Store Overview</h1>
-              <p className="text-[#7A6A5B]">Monitor your recent analytics, add new products, and track inventory.</p>
+              <p className="text-[#7A6A5B]">Monitor your recent analytics and track your inventory.</p>
             </header>
 
             {/* Analytics Row */}
@@ -390,78 +383,69 @@ export default function SellerHub() {
               <StatCard icon={<TrendingUp size={24} />} title="Inventory Items" value={String(products.length)} trend={loadingProducts ? 'loading...' : 'live'} />
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-              {/* Add Product Form */}
-              <div className="xl:col-span-1">
-                <AddProductForm categories={categories} onAdded={() => api.sellerProducts().then((r) => setProducts(r.items ?? []))} />
-              </div>
+            {/* Inventory List */}
+            <GlassCard className="p-6 lg:p-8 min-h-[500px]">
+              <h2 className="font-display text-2xl font-semibold text-[#231A16] mb-6">Your Inventory</h2>
 
-              {/* Inventory List */}
-              <div className="xl:col-span-2">
-                <GlassCard className="p-6 lg:p-8 min-h-[500px]">
-                  <h2 className="font-display text-2xl font-semibold text-[#231A16] mb-6">Your Inventory</h2>
-                  
-                  {loadingProducts ? (
-                    <ProductGridSkeleton count={6} />
-                  ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider">
-                          <th className="py-4 px-4 font-semibold">Product</th>
-                          <th className="py-4 px-4 font-semibold text-right">Price</th>
-                          <th className="py-4 px-4 font-semibold text-center">Sales</th>
-                          <th className="py-4 px-4 font-semibold text-right">Approval</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {products.map((item) => {
-                          const approval = item.approvalStatus ?? 'approved';
-                          return (
-                          <tr key={item.id} className="border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors">
-                            <td className="py-4 px-4 font-display text-lg font-semibold text-[#2A211B]">{item.name}</td>
-                            <td className="py-4 px-4 text-right text-[#B7322A] font-semibold">{inr(item.price)}</td>
-                            <td className="py-4 px-4 text-center text-[#231A16]">{salesByProduct[item.id] ?? 0}</td>
-                            <td className="py-4 px-4 text-right">
-                              <div className="flex flex-col items-end gap-1.5">
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${approvalBadgeClass(approval)}`}>
-                                  {approvalLabel(approval)}
-                                </span>
-                                {approval === 'rejected' && (
-                                  <>
-                                    {item.rejectionReason && (
-                                      <span className="text-[10px] text-[#B3261E]/80 max-w-[220px] text-right">{item.rejectionReason}</span>
-                                    )}
-                                    <button
-                                      type="button"
-                                      disabled={resubmittingId === item.id}
-                                      onClick={() => handleResubmit(item)}
-                                      className="text-[10px] font-bold uppercase tracking-wider text-[#B7322A] hover:text-[#E0A11C] transition-colors disabled:opacity-50"
-                                    >
-                                      {resubmittingId === item.id ? 'Resubmitting...' : 'Resubmit'}
-                                    </button>
-                                  </>
+              {loadingProducts ? (
+                <ProductGridSkeleton count={6} />
+              ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider">
+                      <th className="py-4 px-4 font-semibold">Product</th>
+                      <th className="py-4 px-4 font-semibold text-right">Price</th>
+                      <th className="py-4 px-4 font-semibold text-center">Sales</th>
+                      <th className="py-4 px-4 font-semibold text-right">Approval</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map((item) => {
+                      const approval = item.approvalStatus ?? 'approved';
+                      return (
+                      <tr key={item.id} className="border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors">
+                        <td className="py-4 px-4 font-display text-lg font-semibold text-[#2A211B]">{item.name}</td>
+                        <td className="py-4 px-4 text-right text-[#B7322A] font-semibold">{inr(item.price)}</td>
+                        <td className="py-4 px-4 text-center text-[#231A16]">{salesByProduct[item.id] ?? 0}</td>
+                        <td className="py-4 px-4 text-right">
+                          <div className="flex flex-col items-end gap-1.5">
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${approvalBadgeClass(approval)}`}>
+                              {approvalLabel(approval)}
+                            </span>
+                            {approval === 'rejected' && (
+                              <>
+                                {item.rejectionReason && (
+                                  <span className="text-[10px] text-[#B3261E]/80 max-w-[220px] text-right">{item.rejectionReason}</span>
                                 )}
-                                {item.status === 'out_of_stock' && (
-                                  <span className="text-[10px] text-[#8A7B6B]">Out of stock</span>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                          );
-                        })}
-                        {products.length === 0 && (
-                          <tr>
-                            <td colSpan={4} className="py-16 text-center text-[#8A7B6B] text-sm">No products yet. Add your first one on the left.</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                  )}
-                </GlassCard>
+                                <button
+                                  type="button"
+                                  disabled={resubmittingId === item.id}
+                                  onClick={() => handleResubmit(item)}
+                                  className="text-[10px] font-bold uppercase tracking-wider text-[#B7322A] hover:text-[#E0A11C] transition-colors disabled:opacity-50"
+                                >
+                                  {resubmittingId === item.id ? 'Resubmitting...' : 'Resubmit'}
+                                </button>
+                              </>
+                            )}
+                            {item.status === 'out_of_stock' && (
+                              <span className="text-[10px] text-[#8A7B6B]">Out of stock</span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                      );
+                    })}
+                    {products.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="py-16 text-center text-[#8A7B6B] text-sm">No products yet. Add your first product from Inventory Management.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            </div>
+              )}
+            </GlassCard>
           </div>
         )}
 
@@ -946,104 +930,6 @@ function StatCard({ icon, title, value, trend, negative }) {
         <h3 className="text-[#7A6A5B] text-sm font-semibold uppercase tracking-wider mb-1">{title}</h3>
         <p className="font-display text-3xl font-bold text-[#231A16]">{value}</p>
       </div>
-    </GlassCard>
-  );
-}
-
-function AddProductForm({ categories = [], onAdded }) {
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState('');
-  const [category, setCategory] = useState(categories[0]?.name ?? '');
-  const [description, setDescription] = useState('');
-  const [files, setFiles] = useState([]);
-  const [busy, setBusy] = useState(false);
-  const fileInputRef = useRef(null);
-  const addToast = useToastStore((s) => s.addToast);
-
-  const priceNum = parseFloat(price) || 0;
-  const canSubmit = name.trim().length > 0 && priceNum > 0 && !busy;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!canSubmit) return;
-    setBusy(true);
-    try {
-      const categoryId = categories.find((c) => c.name === category)?.id ?? null;
-      const created = await api.createProduct({
-        name: name.trim(),
-        description: description.trim(),
-        price: priceNum,
-        discount_percent: 0,
-        stock: 0,
-        category_id: categoryId,
-      });
-      if (files.length) await api.uploadProductImages(created.id, files);
-      setName('');
-      setPrice('');
-      setDescription('');
-      setFiles([]);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      addToast(`"${name.trim()}" submitted for approval!`, 'success');
-      onAdded?.();
-    } catch (err) {
-      addToast(err.message || 'Failed to add product.', 'error');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const inputClass = 'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-[#2A211B] outline-none focus:border-[#B7322A] transition-colors';
-  const labelClass = 'text-xs text-[#7A6A5B] font-bold uppercase tracking-wider mb-2 block';
-
-  return (
-    <GlassCard className="p-6 lg:p-8">
-      <h2 className="font-display text-2xl font-semibold text-[#231A16] mb-6 flex items-center gap-2">
-        <PlusCircle className="text-[#B7322A]" /> Add Product
-      </h2>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <div>
-          <label className={labelClass}>Product Name</label>
-          <input type="text" className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter name..." />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={labelClass}>Price (INR)</label>
-            <input type="number" min="0" step="0.01" className={inputClass} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" />
-          </div>
-          <div>
-            <label className={labelClass}>Category</label>
-            <select className={inputClass} value={category} onChange={(e) => setCategory(e.target.value)}>
-              {categories.length === 0 && <option value="">No categories</option>}
-              {categories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className={labelClass}>Description</label>
-          <textarea rows="3" className={`${inputClass} resize-none`} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Details..."></textarea>
-        </div>
-
-        <div>
-          <label className={labelClass}>Images</label>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-            className="text-xs text-[#8A7B6B] file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-[#B7322A]/10 file:text-[#B7322A] file:font-semibold file:cursor-pointer hover:file:bg-[#B7322A]/20 transition-colors"
-          />
-          {files.length > 0 && (
-            <p className="text-[11px] text-[#7A6A5B] mt-1.5 flex items-center gap-1"><UploadCloud size={13} /> {files.length} image{files.length === 1 ? '' : 's'} selected</p>
-          )}
-        </div>
-
-        <button type="submit" disabled={!canSubmit} className={`w-full py-3 rounded-xl font-display text-lg font-semibold mt-2 transition-all flex items-center justify-center gap-2 ${canSubmit ? 'bg-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_7px_rgba(183,50,42,0.22)]' : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'}`}>
-          <PlusCircle size={20} /> {busy ? 'Submitting...' : 'Submit for Approval'}
-        </button>
-      </form>
     </GlassCard>
   );
 }
