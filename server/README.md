@@ -226,7 +226,8 @@ only.
 
 | Method | Path | Auth | Notes |
 | --- | --- | --- | --- |
-| POST | `/seller-applications` | customer | `{ store_name, contact_email }` → `201`. One pending/approved application per user. |
+| POST | `/seller-applications` | customer | `{ store_name, contact_email, contact_phone, storefront_image_url }` → `201`. One pending/approved application per user. |
+| POST | `/seller-applications/image` | customer | Multipart `image` → `{ url }`. Upload a storefront photo before submitting the application. |
 | GET | `/seller-applications/me` | ✓ | The caller's applications, newest first. |
 
 ### Contact messages

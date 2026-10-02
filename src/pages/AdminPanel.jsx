@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp, MessageSquare, Menu, Reply, Image as ImageIcon, Pencil, ClipboardCheck, Search } from 'lucide-react';
+import { LayoutDashboard, Users, Grid, Star, CreditCard, ShoppingBag, UserCheck, Check, X, PlusCircle, Trash2, Truck, Loader2, Inbox, Eye, EyeOff, Wallet, Percent, IndianRupee, TrendingUp, MessageSquare, Menu, Reply, Image as ImageIcon, Pencil, ClipboardCheck, Search, Phone } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ProductGrid } from './Home';
 import GlassCard from '../components/GlassCard';
@@ -171,6 +171,8 @@ export default function AdminPanel() {
           id: r.id,
           user: r.applicant ?? '—',
           email: r.contactEmail,
+          phone: r.contactPhone ?? null,
+          storefrontImageUrl: r.storefrontImageUrl ?? null,
           storeName: r.storeName,
           date: timeAgo(r.createdAt),
           status: 'Pending',
@@ -1116,12 +1118,23 @@ export default function AdminPanel() {
               {sellerRequests.map((req) => (
                 <GlassCard key={req.id} className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#B7322A]/10 text-[#B7322A] flex items-center justify-center shrink-0 border border-[#B7322A]/20">
-                      <Users size={24} />
-                    </div>
+                    {req.storefrontImageUrl ? (
+                      <a href={req.storefrontImageUrl} target="_blank" rel="noreferrer" className="shrink-0" title="Open storefront photo">
+                        <img src={req.storefrontImageUrl} alt={`${req.storeName} storefront`} loading="lazy" decoding="async" className="w-16 h-16 rounded-xl object-cover border border-[#231a16]/10 hover:opacity-90 transition-opacity" />
+                      </a>
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-[#B7322A]/10 text-[#B7322A] flex items-center justify-center shrink-0 border border-[#B7322A]/20">
+                        <Users size={24} />
+                      </div>
+                    )}
                     <div>
                       <h3 className="font-display text-xl font-semibold text-[#231A16]">{req.storeName}</h3>
                       <p className="text-[#7A6A5B] text-sm mt-1">Applicant: <span className="text-[#2A211B]">{req.user}</span> ({req.email})</p>
+                      {req.phone && (
+                        <p className="text-[#7A6A5B] text-sm mt-0.5 flex items-center gap-1.5">
+                          <Phone size={13} /> <a href={`tel:${req.phone}`} className="hover:text-[#B7322A] transition-colors">{req.phone}</a>
+                        </p>
+                      )}
                       <p className="text-[#8A7B6B] text-xs mt-1">Applied: {req.date}</p>
                     </div>
                   </div>

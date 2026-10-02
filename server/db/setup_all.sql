@@ -153,6 +153,11 @@ create table if not exists public.seller_applications (
   reviewed_by   uuid references public.profiles(id)
 );
 
+-- A reachable mobile number and a photo of the physical storefront, so an admin
+-- can contact the applicant and verify the shop actually exists before approving.
+alter table public.seller_applications add column if not exists contact_phone text;
+alter table public.seller_applications add column if not exists storefront_image_url text;
+
 -- ---- categories -----------------------------------------------------
 create table if not exists public.categories (
   id   uuid primary key default gen_random_uuid(),

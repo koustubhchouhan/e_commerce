@@ -5,6 +5,10 @@ export const createApplication = asyncHandler(async (req, res) => {
   res.status(201).json(await sellerService.createApplication(req.user.id, req.body));
 });
 
+export const uploadStorefrontImage = asyncHandler(async (req, res) => {
+  res.status(201).json(await sellerService.uploadStorefrontImage(req.file));
+});
+
 export const getMyApplications = asyncHandler(async (req, res) => {
   res.json({ items: await sellerService.getMyApplications(req.user.id) });
 });

@@ -44,6 +44,19 @@ export const CATEGORY_IMAGE_POLICY = {
   maxPixels: 36_000_000,
 };
 
+// A photo of the applicant's physical storefront, uploaded with a seller
+// application so an admin can confirm the shop actually exists.
+export const STOREFRONT_IMAGE_POLICY = {
+  label: 'storefront image',
+  allowed: RASTER_MIME_TYPES,
+  maxBytes: 5 * MB,
+  minWidth: 64,
+  minHeight: 64,
+  maxWidth: 8000,
+  maxHeight: 8000,
+  maxPixels: 36_000_000,
+};
+
 export const SLIDE_IMAGE_POLICY = {
   label: 'slide image',
   allowed: RASTER_MIME_TYPES,

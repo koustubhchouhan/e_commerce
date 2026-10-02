@@ -3,6 +3,19 @@ import { z } from 'zod';
 export const createApplicationSchema = z.object({
   store_name: z.string().trim().min(1, 'Store name is required').max(120),
   contact_email: z.string().email('Invalid email').max(200),
+  // Reachable mobile number so an admin can call the applicant if needed.
+  contact_phone: z
+    .string()
+    .trim()
+    .min(6, 'Mobile number is required')
+    .max(20, 'Mobile number is too long')
+    .regex(/^\+?[0-9][0-9\s()-]{4,19}$/, 'Enter a valid mobile number'),
+  // Public URL of a storefront photo, uploaded via POST /seller-applications/image.
+  storefront_image_url: z
+    .string()
+    .trim()
+    .url('Upload a storefront image')
+    .max(500, 'Image URL is too long'),
 });
 
 export const reviewApplicationSchema = z.object({
