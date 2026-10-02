@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { CheckCircle, Clock, XCircle, Store, PackageX, FileText, Send } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { CheckCircle, Clock, XCircle, Store, PackageX, FileText, Send, Phone, ImagePlus } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -25,7 +25,30 @@ export default function SellerRequests() {
   const [error, setError] = useState('');
   const [storeName, setStoreName] = useState('');
   const [contactEmail, setContactEmail] = useState(user?.email ?? '');
+  const [contactPhone, setContactPhone] = useState('');
+  const [storefrontFile, setStorefrontFile] = useState(null);
+  const [storefrontPreview, setStorefrontPreview] = useState('');
+  const [storefrontUrl, setStorefrontUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const previewRef = useRef('');
+
+  const setPreview = (url) => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+    previewRef.current = url;
+    setStorefrontPreview(url);
+  };
+
+  useEffect(() => () => {
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current);
+  }, []);
+
+  const handleStorefrontChange = (e) => {
+    const file = e.target.files?.[0] ?? null;
+    setStorefrontFile(file);
+    setStorefrontUrl('');
+    setPreview(file ? URL.createObjectURL(file) : '');
+  };
 
   const loadApplications = async () => {
     setLoading(true);
@@ -51,20 +74,41 @@ export default function SellerRequests() {
   );
   const canApply = !loading && !hasActiveApplication;
 
+  const nameTrim = storeName.trim();
+  const emailTrim = contactEmail.trim();
+  const phoneTrim = contactPhone.trim();
+  const canSubmitForm =
+    Boolean(nameTrim && emailTrim && phoneTrim && storefrontFile) && !submitting && !uploading;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const name = storeName.trim();
-    const email = contactEmail.trim();
-    if (!name || !email || submitting) return;
+    if (!canSubmitForm) return;
     setSubmitting(true);
     try {
-      await api.createSellerApplication({ store_name: name, contact_email: email });
+      let imageUrl = storefrontUrl;
+      if (!imageUrl) {
+        setUploading(true);
+        const uploaded = await api.uploadStorefrontImage(storefrontFile);
+        imageUrl = uploaded.url;
+        setStorefrontUrl(imageUrl);
+      }
+      await api.createSellerApplication({
+        store_name: nameTrim,
+        contact_email: emailTrim,
+        contact_phone: phoneTrim,
+        storefront_image_url: imageUrl,
+      });
       setStoreName('');
+      setContactPhone('');
+      setStorefrontFile(null);
+      setPreview('');
+      setStorefrontUrl('');
       addToast('Application submitted! It is now pending review.', 'success');
       await loadApplications();
     } catch (err) {
       addToast(err.message || 'Failed to submit application.', 'error');
     } finally {
+      setUploading(false);
       setSubmitting(false);
     }
   };
@@ -118,16 +162,54 @@ export default function SellerRequests() {
                     className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
                   />
                 </div>
+                <div>
+                  <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">Mobile Number <span className="text-[#B3261E]">*</span></label>
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#7A6A5B] text-xs font-semibold uppercase tracking-wider mb-2">Storefront Photo <span className="text-[#B3261E]">*</span></label>
+                  <p className="text-[#8A7B6B] text-xs mb-2">A clear photo of your shop or stall, so an admin can verify it exists.</p>
+                  {storefrontPreview ? (
+                    <div className="relative rounded-xl overflow-hidden border border-[#231a16]/10">
+                      <img src={storefrontPreview} alt="Storefront preview" className="w-full h-40 object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreview('');
+                          setStorefrontFile(null);
+                          setStorefrontUrl('');
+                        }}
+                        className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 text-[#FDF8F0] hover:bg-black/80 transition-colors"
+                        aria-label="Remove storefront photo"
+                      >
+                        <XCircle size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center gap-2 w-full py-6 rounded-xl border border-dashed border-[#231a16]/20 bg-[#F5ECDE]/50 text-[#7A6A5B] text-sm cursor-pointer hover:border-[#B7322A]/40 transition-colors">
+                      <ImagePlus size={22} className="text-[#B7322A]" />
+                      Tap to upload a storefront photo
+                      <input type="file" accept="image/*" onChange={handleStorefrontChange} className="hidden" />
+                    </label>
+                  )}
+                </div>
                 <button
                   type="submit"
-                  disabled={!storeName.trim() || !contactEmail.trim() || submitting}
+                  disabled={!canSubmitForm}
                   className={`w-full py-3 rounded-xl font-display text-base font-semibold flex items-center justify-center gap-2 transition-all ${
-                    storeName.trim() && contactEmail.trim() && !submitting
+                    canSubmitForm
                       ? 'bg-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]'
                       : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'
                   }`}
                 >
-                  <Send size={18} /> {submitting ? 'Submitting...' : 'Submit Application'}
+                  <Send size={18} /> {uploading ? 'Uploading photo...' : submitting ? 'Submitting...' : 'Submit Application'}
                 </button>
               </form>
             </GlassCard>
@@ -168,6 +250,9 @@ export default function SellerRequests() {
                         </span>
                       </div>
                       <p className="text-[#7A6A5B] text-sm mt-1">Contact: <span className="text-[#2A211B]">{app.contactEmail}</span></p>
+                      {app.contactPhone && (
+                        <p className="text-[#7A6A5B] text-xs mt-1 flex items-center gap-1"><Phone size={12} /> {app.contactPhone}</p>
+                      )}
                       <p className="text-[#8A7B6B] text-xs mt-0.5">
                         Applied {formatDate(app.createdAt)}
                         {app.reviewedAt ? ` · Reviewed ${formatDate(app.reviewedAt)}` : ''}
@@ -175,6 +260,16 @@ export default function SellerRequests() {
                     </div>
                   </div>
                 </div>
+
+                {app.storefrontImageUrl && (
+                  <img
+                    src={app.storefrontImageUrl}
+                    alt={`${app.storeName} storefront`}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-40 object-cover rounded-xl border border-[#231a16]/10 mb-4"
+                  />
+                )}
 
                 {app.status === 'pending' && (
                   <div className="bg-[#F5ECDE]/80 p-4 rounded-xl border border-[#C8901A]/20 text-[#C8901A] text-sm flex items-start gap-2">

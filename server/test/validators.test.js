@@ -11,6 +11,7 @@ import {
   changePasswordSchema,
   changeEmailSchema,
 } from '../src/validators/auth.validators.js';
+import { createApplicationSchema } from '../src/validators/seller.validators.js';
 
 test('register accepts a normal sign-up', () => {
   const result = registerSchema.safeParse({
@@ -66,4 +67,37 @@ test('change email rejects an invalid or over-long address', () => {
   assert.equal(changeEmailSchema.safeParse({ newEmail: 'not-an-email' }).success, false);
   assert.equal(changeEmailSchema.safeParse({ newEmail: `${'a'.repeat(250)}@b.com` }).success, false);
   assert.equal(changeEmailSchema.safeParse({ newEmail: 'a@b.com' }).success, true);
+});
+
+const sellerApplication = {
+  store_name: 'Shubh Puja Store',
+  contact_email: 'a@b.com',
+  contact_phone: '+91 98765 43210',
+  storefront_image_url: 'https://example.com/shop.jpg',
+};
+
+test('seller application accepts a complete submission', () => {
+  assert.equal(createApplicationSchema.safeParse(sellerApplication).success, true);
+});
+
+test('seller application requires a mobile number', () => {
+  const withoutPhone = { ...sellerApplication };
+  delete withoutPhone.contact_phone;
+  assert.equal(createApplicationSchema.safeParse(withoutPhone).success, false);
+  assert.equal(
+    createApplicationSchema.safeParse({ ...sellerApplication, contact_phone: 'not a phone' }).success,
+    false
+  );
+});
+
+test('seller application requires a valid storefront image URL', () => {
+  assert.equal(
+    createApplicationSchema.safeParse({ ...sellerApplication, storefront_image_url: 'not-a-url' })
+      .success,
+    false
+  );
+  assert.equal(
+    createApplicationSchema.safeParse({ ...sellerApplication, storefront_image_url: undefined }).success,
+    false
+  );
 });

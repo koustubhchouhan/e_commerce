@@ -2,10 +2,14 @@ import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
 import { serializeReview } from './review.service.js';
 import { ensureStore } from './store.service.js';
+import { uploadImage } from './storage.service.js';
 
 // POST /seller-applications — a customer asks to become a seller.
 // Rule: at most one active application per user (a rejected one may re-apply).
-export async function createApplication(userId, { store_name, contact_email }) {
+export async function createApplication(
+  userId,
+  { store_name, contact_email, contact_phone, storefront_image_url }
+) {
   const { data: existing, error } = await db
     .from('seller_applications')
     .select('id, status')
@@ -21,24 +25,51 @@ export async function createApplication(userId, { store_name, contact_email }) {
 
   const { data, error: insertErr } = await db
     .from('seller_applications')
-    .insert({ user_id: userId, store_name, contact_email })
-    .select('id, store_name, contact_email, status, created_at')
+    .insert({
+      user_id: userId,
+      store_name,
+      contact_email,
+      contact_phone,
+      storefront_image_url,
+    })
+    .select('id, store_name, contact_email, contact_phone, storefront_image_url, status, created_at')
     .single();
 
   if (insertErr) throw new AppError(400, 'Could not submit application', { cause: insertErr });
   return data;
 }
 
+// POST /seller-applications/image — upload the storefront photo that accompanies
+// an application. Stored in the shared public bucket under the `storefronts`
+// folder; the returned URL is then passed to createApplication.
+export async function uploadStorefrontImage(file) {
+  if (!file) throw new AppError(400, 'No image uploaded');
+  const { url } = await uploadImage({ file, folder: 'storefronts' });
+  return { url };
+}
+
 // GET /seller-applications/me — the caller's own application(s), newest first.
 export async function getMyApplications(userId) {
   const { data, error } = await db
     .from('seller_applications')
-    .select('id, store_name, contact_email, status, created_at, reviewed_at')
+    .select(
+      'id, store_name, contact_email, contact_phone, storefront_image_url, status, created_at, reviewed_at'
+    )
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) throw new AppError(500, 'Could not load your applications', { cause: error });
-  return data ?? [];
+
+  return (data ?? []).map((a) => ({
+    id: a.id,
+    storeName: a.store_name,
+    contactEmail: a.contact_email,
+    contactPhone: a.contact_phone ?? null,
+    storefrontImageUrl: a.storefront_image_url ?? null,
+    status: a.status,
+    createdAt: a.created_at,
+    reviewedAt: a.reviewed_at,
+  }));
 }
 
 // GET /seller/store — the caller's storefront (seller + admin only).

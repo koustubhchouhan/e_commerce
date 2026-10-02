@@ -199,6 +199,16 @@ export const api = {
   // ---- Seller applications ----
   createSellerApplication: (data) =>
     request('/seller-applications', { method: 'POST', body: data, auth: true }),
+  uploadStorefrontImage: (file) => {
+    const form = new FormData();
+    form.append('image', file);
+    return request('/seller-applications/image', {
+      method: 'POST',
+      body: form,
+      auth: true,
+      formData: true,
+    });
+  },
   mySellerApplications: () => request('/seller-applications/me', { auth: true }),
 
   // ---- Seller store profile ----

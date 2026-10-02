@@ -9,7 +9,7 @@ import { loadCoversByProduct, serializeProduct } from './product-data.js';
 // to the exact constraint name are fragile across DBs. We fetch the applicant
 // names in a second query instead.
 const APPLICATION_SELECT =
-  'id, user_id, store_name, contact_email, status, created_at, reviewed_at';
+  'id, user_id, store_name, contact_email, contact_phone, storefront_image_url, status, created_at, reviewed_at';
 
 // GET /admin/seller-applications — optionally filtered by status (default all).
 export async function listApplications({ status } = {}) {
@@ -36,6 +36,8 @@ export async function listApplications({ status } = {}) {
     id: a.id,
     storeName: a.store_name,
     contactEmail: a.contact_email,
+    contactPhone: a.contact_phone ?? null,
+    storefrontImageUrl: a.storefront_image_url ?? null,
     status: a.status,
     createdAt: a.created_at,
     reviewedAt: a.reviewed_at,
