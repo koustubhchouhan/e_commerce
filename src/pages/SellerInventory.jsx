@@ -77,7 +77,7 @@ export default function SellerInventory() {
         await api.uploadProductImages(created.id, files);
       }
       setModalOpen(false);
-      addToast(`"${name}" added to your inventory!`, 'success');
+      addToast(`"${name}" submitted for approval!`, 'success');
       await loadInventory();
     } catch (err) {
       addToast(err.message || 'Failed to add product.', 'error');
@@ -572,7 +572,7 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
               disabled={!canSubmit || busy}
               className={`px-6 py-2.5 rounded-xl font-display text-sm font-bold flex items-center gap-2 transition-all ${canSubmit && !busy ? 'bg-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)]' : 'bg-[#F0E7DA]/50 text-[#8A7B6B] cursor-not-allowed'}`}
             >
-              <PlusCircle size={18} /> {busy ? 'Saving...' : isEdit ? 'Save Changes' : 'Add Product'}
+              <PlusCircle size={18} /> {busy ? 'Saving...' : isEdit ? 'Save Changes' : 'Submit for Approval'}
             </button>
           </div>
         </form>
