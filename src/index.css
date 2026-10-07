@@ -286,7 +286,11 @@
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    /* End on `none`, not `translateY(0)`: with `fill-mode: both` a retained
+       transform turns the animated wrapper into the containing block for
+       `position: fixed` descendants, which misplaces modals (and traps their
+       z-index). */
+    transform: none;
   }
 }
 
