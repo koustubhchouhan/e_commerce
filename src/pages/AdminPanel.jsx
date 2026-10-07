@@ -101,6 +101,7 @@ export default function AdminPanel() {
   const [orderDetail, setOrderDetail] = useState(null);
   const [loadingOrderDetail, setLoadingOrderDetail] = useState(false);
   const [categoryModal, setCategoryModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
   const [messageModal, setMessageModal] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [replying, setReplying] = useState(false);
@@ -457,7 +458,7 @@ export default function AdminPanel() {
     }
   };
 
-  const handleCreateCategory = async (e) => {
+  const handleSaveCategory = async (e) => {
     e.preventDefault();
     const name = newCategory.trim();
     if (!name || busy) return;
@@ -468,23 +469,38 @@ export default function AdminPanel() {
         const uploaded = await api.uploadCategoryImage(newCategoryImageFile);
         imageUrl = uploaded.url;
       }
-      await api.createCategory(name, imageUrl);
+      if (editingCategory) {
+        await api.updateCategory(editingCategory.id, name, imageUrl);
+        addToast(`"${name}" category updated!`, 'success');
+      } else {
+        await api.createCategory(name, imageUrl);
+        addToast(`"${name}" category created!`, 'success');
+      }
       setNewCategory('');
       setNewCategoryImage('');
       setNewCategoryImageFile(null);
       setCategoryModal(false);
-      addToast(`"${name}" category created!`, 'success');
+      setEditingCategory(null);
       await loadCategories();
     } catch (err) {
-      addToast(err.message || 'Failed to create category.', 'error');
+      addToast(err.message || `Failed to ${editingCategory ? 'update' : 'create'} category.`, 'error');
     } finally {
       setBusy(false);
     }
   };
 
   const openCategoryModal = () => {
+    setEditingCategory(null);
     setNewCategory('');
     setNewCategoryImage('');
+    setNewCategoryImageFile(null);
+    setCategoryModal(true);
+  };
+
+  const openEditCategory = (cat) => {
+    setEditingCategory(cat);
+    setNewCategory(cat.name ?? '');
+    setNewCategoryImage(cat.imageUrl ?? '');
     setNewCategoryImageFile(null);
     setCategoryModal(true);
   };
@@ -492,6 +508,7 @@ export default function AdminPanel() {
   const closeCategoryModal = () => {
     if (busy) return;
     setCategoryModal(false);
+    setEditingCategory(null);
   };
 
   const handleDeleteCategory = async (id) => {
@@ -1200,6 +1217,9 @@ export default function AdminPanel() {
                         <td className="py-4 px-4 text-[#8A7B6B] text-sm">{cat.slug}</td>
                         <td className="py-4 px-4 text-center text-[#2A211B] font-semibold">{cat.productCount}</td>
                         <td className="py-4 px-4 flex justify-end gap-2">
+                          <button onClick={() => openEditCategory(cat)} disabled={busy} className="p-2 rounded-xl bg-[#231a16]/5 text-[#2A211B] hover:bg-[#231a16]/10 transition-colors disabled:opacity-50" title="Edit">
+                            <Pencil size={16} />
+                          </button>
                           <button onClick={() => handleDeleteCategory(cat.id)} disabled={busy} className="p-2 rounded-xl bg-[#B3261E]/10 text-[#B3261E] hover:bg-[#B3261E]/20 transition-colors disabled:opacity-50" title="Delete">
                             <Trash2 size={16} />
                           </button>
@@ -1786,15 +1806,15 @@ export default function AdminPanel() {
       )}
 
       {categoryModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 animate-fade-in" onMouseDown={closeCategoryModal} role="dialog" aria-modal="true" aria-label="Add category">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 animate-fade-in" onMouseDown={closeCategoryModal} role="dialog" aria-modal="true" aria-label={editingCategory ? 'Edit category' : 'Add category'}>
           <GlassCard hover={false} className="relative w-full max-w-md animate-scale-in">
-            <form onSubmit={handleCreateCategory} onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8 flex flex-col gap-5">
+            <form onSubmit={handleSaveCategory} onMouseDown={(e) => e.stopPropagation()} className="p-6 md:p-8 flex flex-col gap-5">
               <div className="flex items-start justify-between">
                 <div>
                   <h2 className="font-display text-2xl font-bold text-[#231A16] flex items-center gap-2">
-                    <PlusCircle className="text-[#B7322A]" size={24} /> Add Category
+                    {editingCategory ? <Pencil className="text-[#B7322A]" size={24} /> : <PlusCircle className="text-[#B7322A]" size={24} />} {editingCategory ? 'Edit Category' : 'Add Category'}
                   </h2>
-                  <p className="text-[#7A6A5B] text-xs mt-1">Create a new product category for the platform.</p>
+                  <p className="text-[#7A6A5B] text-xs mt-1">{editingCategory ? 'Update this category name or tile image.' : 'Create a new product category for the platform.'}</p>
                 </div>
                 <button type="button" onClick={closeCategoryModal} className="p-2 -mr-2 rounded-xl text-[#7A6A5B] hover:text-[#231A16] hover:bg-[#231a16]/5 transition-colors" aria-label="Close">
                   <X size={22} />
@@ -1838,7 +1858,7 @@ export default function AdminPanel() {
                   Cancel
                 </button>
                 <button type="submit" disabled={!newCategory.trim() || busy} className="px-6 py-2.5 rounded-xl font-display text-sm font-bold flex items-center gap-2 transition-all bg-[#B7322A] text-[#FDF8F0] hover:shadow-[0_0_9px_rgba(183,50,42,0.22)] disabled:bg-[#F0E7DA]/50 disabled:text-[#8A7B6B] disabled:cursor-not-allowed">
-                  <PlusCircle size={18} /> {busy ? 'Creating...' : 'Create Category'}
+                  {editingCategory ? <Pencil size={18} /> : <PlusCircle size={18} />} {busy ? (editingCategory ? 'Saving...' : 'Creating...') : (editingCategory ? 'Save Changes' : 'Create Category')}
                 </button>
               </div>
             </form>

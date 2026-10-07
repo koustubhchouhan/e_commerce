@@ -235,6 +235,12 @@ export const api = {
       body: imageUrl ? { name, imageUrl } : { name },
       auth: true,
     }),
+  updateCategory: (id, name, imageUrl) =>
+    request(`/admin/categories/${id}`, {
+      method: 'PATCH',
+      body: imageUrl ? { name, imageUrl } : { name },
+      auth: true,
+    }),
   uploadCategoryImage: (file) => {
     const form = new FormData();
     form.append('image', file);

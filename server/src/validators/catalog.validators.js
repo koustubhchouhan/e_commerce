@@ -19,6 +19,9 @@ export const createCategorySchema = z.object({
   imageUrl: z.union([z.string().trim().url('Image URL must be a valid URL').max(500), z.literal('')]).optional(),
 });
 
+// PATCH /admin/categories/:id body — same shape as create.
+export const updateCategorySchema = createCategorySchema;
+
 // POST /products/:id/reviews body
 export const createReviewSchema = z.object({
   rating: z.number().int().min(1).max(5),

@@ -138,17 +138,22 @@ export async function listCategories() {
   }));
 }
 
-// POST /admin/categories — create a category. The slug is auto-derived from
-// the name so it stays unique and URL-safe. An optional thumbnail image_url
-// is stored for the storefront categories page.
-export async function createCategory({ name, imageUrl }) {
+// Derive a unique, URL-safe slug from a category name; both create and update
+// use it so the slug always tracks the name.
+function slugifyCategoryName(name) {
   const slug = name
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
-
   if (!slug) throw new AppError(400, 'Category name must contain letters or numbers');
+  return slug;
+}
+
+// POST /admin/categories — create a category. An optional thumbnail image_url
+// is stored for the storefront categories page.
+export async function createCategory({ name, imageUrl }) {
+  const slug = slugifyCategoryName(name);
 
   const { data, error } = await db
     .from('categories')
@@ -162,6 +167,34 @@ export async function createCategory({ name, imageUrl }) {
   }
 
   return { id: data.id, name: data.name, slug: data.slug, imageUrl: data.image_url ?? null, productCount: 0 };
+}
+
+// PATCH /admin/categories/:id — rename and/or replace the thumbnail. The slug
+// is re-derived so it keeps matching the name; products keep their category_id.
+export async function updateCategory(categoryId, { name, imageUrl }) {
+  const { data: existing, error: existErr } = await db
+    .from('categories')
+    .select('id')
+    .eq('id', categoryId)
+    .maybeSingle();
+  if (existErr) throw new AppError(500, 'Could not load category', { cause: existErr });
+  if (!existing) throw new AppError(404, 'Category not found');
+
+  const slug = slugifyCategoryName(name);
+
+  const { data, error } = await db
+    .from('categories')
+    .update({ name: name.trim(), slug, image_url: imageUrl?.trim() || null })
+    .eq('id', categoryId)
+    .select('id, name, slug, image_url')
+    .single();
+
+  if (error) {
+    if (error.code === '23505') throw new AppError(409, 'A category with this name already exists');
+    throw new AppError(400, 'Could not update category', { cause: error });
+  }
+
+  return { id: data.id, name: data.name, slug: data.slug, imageUrl: data.image_url ?? null };
 }
 
 // POST /admin/categories/image — upload a thumbnail for a category. Files are

@@ -26,6 +26,10 @@ export const createCategory = asyncHandler(async (req, res) => {
   res.status(201).json(await adminService.createCategory(req.body));
 });
 
+export const updateCategory = asyncHandler(async (req, res) => {
+  res.json(await adminService.updateCategory(req.params.id, req.body));
+});
+
 export const uploadCategoryImage = asyncHandler(async (req, res) => {
   res.status(201).json(await adminService.uploadCategoryImage(req.file));
 });

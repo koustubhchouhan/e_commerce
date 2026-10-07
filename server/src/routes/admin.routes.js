@@ -9,6 +9,7 @@ import {
   updateAdminOrderStatus,
   listCategories,
   createCategory,
+  updateCategory,
   uploadCategoryImage,
   deleteCategory,
   deleteProduct,
@@ -41,6 +42,7 @@ import {
 import {
   uuidParamSchema,
   createCategorySchema,
+  updateCategorySchema,
   updateReviewVisibilitySchema,
 } from '../validators/catalog.validators.js';
 import {
@@ -102,6 +104,14 @@ router.post(
   requireRole('admin'),
   validate(createCategorySchema),
   createCategory
+);
+router.patch(
+  '/admin/categories/:id',
+  requireAuth,
+  requireRole('admin'),
+  validateParams(uuidParamSchema),
+  validate(updateCategorySchema),
+  updateCategory
 );
 router.post(
   '/admin/categories/image',
