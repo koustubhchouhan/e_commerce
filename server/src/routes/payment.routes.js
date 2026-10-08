@@ -1,8 +1,17 @@
 import { Router } from 'express';
-import { createPaymentOrder, verifyPayment, webhook } from '../controllers/payment.controller.js';
+import {
+  createPaymentOrder,
+  verifyPayment,
+  cancelPayment,
+  webhook,
+} from '../controllers/payment.controller.js';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { createPaymentOrderSchema, verifyPaymentSchema } from '../validators/payment.validators.js';
+import {
+  createPaymentOrderSchema,
+  verifyPaymentSchema,
+  cancelPaymentSchema,
+} from '../validators/payment.validators.js';
 
 const router = Router();
 
@@ -10,6 +19,7 @@ const router = Router();
 // requireAuth automatically.
 router.post('/order', requireAuth, validate(createPaymentOrderSchema), createPaymentOrder);
 router.post('/verify', requireAuth, validate(verifyPaymentSchema), verifyPayment);
+router.post('/cancel', requireAuth, validate(cancelPaymentSchema), cancelPayment);
 
 // No auth and no CSRF: the caller is Razorpay, verified by its own signature.
 router.post('/webhook', webhook);

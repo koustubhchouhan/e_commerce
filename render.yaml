@@ -53,3 +53,7 @@ services:
       # Signs the raw webhook body. Server-only.
       - key: RAZORPAY_WEBHOOK_SECRET
         sync: false
+      # Minutes an unpaid checkout holds reserved stock before the sweeper
+      # expires it. Optional; defaults to 5.
+      - key: PAYMENT_EXPIRY_MINUTES
+        value: "5"

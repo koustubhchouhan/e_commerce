@@ -185,8 +185,12 @@ declare
   v_payment_id uuid;
   v_order_ids  uuid[];
   v_status     payment_status;
+  v_order_id   uuid;
+  v_missing    int;
+  v_reinstated uuid[] := '{}';
+  v_failed     uuid[] := '{}';
 begin
-  select id into v_payment_id
+  select id, status into v_payment_id, v_status
     from public.payments
     where gateway_order_id = p_gateway_order_id
     for update;
@@ -199,7 +203,9 @@ begin
     from public.payment_orders
     where payment_id = v_payment_id;
 
-  -- Only a payment that has not reached a terminal state flips.
+  -- Capture the payment. Idempotent (a webhook retry racing /payments/verify
+  -- affects zero rows the second time) and it also revives a payment the
+  -- sweeper already failed, so a late capture is never dropped.
   update public.payments
     set status             = 'captured',
         gateway_payment_id = coalesce(gateway_payment_id, p_gateway_payment_id),
@@ -207,19 +213,57 @@ begin
         raw_payload        = coalesce(p_raw_payload, raw_payload),
         updated_at         = now()
     where id = v_payment_id
-      and status in ('created', 'authorized');
+      and status in ('created', 'authorized', 'failed');
 
+  -- Orders still awaiting payment simply flip to paid.
   update public.orders
     set status = 'paid'
     where id = any(coalesce(v_order_ids, '{}'::uuid[]))
       and status = 'pending';
+
+  -- Late capture: the sweeper (or an early cancel) already released these and
+  -- marked them expired/cancelled. Re-reserve their stock under a row lock and
+  -- reinstate them as paid. If the stock is genuinely gone, leave the order
+  -- cancelled and report it so the capture is refunded instead of silently lost.
+  for v_order_id in
+    select id from public.orders
+    where id = any(coalesce(v_order_ids, '{}'::uuid[]))
+      and status in ('expired', 'cancelled')
+  loop
+    perform 1
+      from public.products p
+      join public.order_items oi on oi.product_id = p.id
+      where oi.order_id = v_order_id
+      for update of p;
+
+    select count(*) into v_missing
+      from public.order_items oi
+      left join public.products p on p.id = oi.product_id
+      where oi.order_id = v_order_id
+        and (oi.product_id is null or p.stock < oi.quantity);
+
+    if v_missing = 0 then
+      update public.products p
+        set stock = p.stock - oi.quantity
+        from public.order_items oi
+        where oi.order_id = v_order_id
+          and oi.product_id = p.id;
+
+      update public.orders set status = 'paid' where id = v_order_id;
+      v_reinstated := v_reinstated || v_order_id;
+    else
+      v_failed := v_failed || v_order_id;
+    end if;
+  end loop;
 
   select status into v_status from public.payments where id = v_payment_id;
 
   return jsonb_build_object(
     'payment_id', v_payment_id,
     'status',     v_status,
-    'order_ids',  coalesce(to_jsonb(v_order_ids), '[]'::jsonb)
+    'order_ids',  coalesce(to_jsonb(v_order_ids), '[]'::jsonb),
+    'reinstated_order_ids',  to_jsonb(v_reinstated),
+    'unfulfillable_order_ids', to_jsonb(v_failed)
   );
 end;
 $$;
@@ -295,6 +339,85 @@ revoke all on function public.mark_payment_captured(text, text, jsonb) from publ
 revoke all on function public.mark_payment_failed(text, text, jsonb, uuid) from public, anon, authenticated;
 grant execute on function public.mark_payment_captured(text, text, jsonb) to service_role;
 grant execute on function public.mark_payment_failed(text, text, jsonb, uuid) to service_role;
+
+-- =====================================================================
+-- expire_stale_payments -> safety net for abandoned checkouts. Any payment
+-- still 'created'/'authorized' past the window is flipped to 'failed', and the
+-- stock its still-pending orders reserved is released (orders become 'expired').
+-- A user who merely dismisses the Razorpay modal is handled by
+-- POST /payments/cancel; this catches closed tabs, crashes and lost networks.
+-- service_role only, like mark_payment_failed.
+-- =====================================================================
+create or replace function public.expire_stale_payments(
+  p_minutes int default 5
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_payment_ids uuid[];
+  v_order_ids   uuid[];
+  v_payments    int;
+  v_orders      int;
+begin
+  if p_minutes is null or p_minutes < 1 then
+    raise exception 'Invalid expiry window %', p_minutes;
+  end if;
+
+  -- Claim the stale payments by flipping them to failed in one statement, so
+  -- two sweepers (or a retry) can never release the same stock twice.
+  with expired as (
+    update public.payments
+      set status = 'failed', updated_at = now()
+      where status in ('created', 'authorized')
+        and created_at < now() - make_interval(mins => p_minutes)
+      returning id
+  )
+  select coalesce(array_agg(id), '{}'::uuid[]) into v_payment_ids from expired;
+
+  v_payments := coalesce(array_length(v_payment_ids, 1), 0);
+  if v_payments = 0 then
+    return jsonb_build_object('expired_payments', 0, 'expired_orders', 0);
+  end if;
+
+  select coalesce(array_agg(order_id), '{}'::uuid[]) into v_order_ids
+    from public.payment_orders
+    where payment_id = any(v_payment_ids);
+
+  -- Give back the stock of the orders that were still awaiting payment.
+  update public.products p
+    set stock = p.stock + released.qty
+    from (
+      select oi.product_id, sum(oi.quantity) as qty
+      from public.order_items oi
+      join public.orders o on o.id = oi.order_id
+      where oi.order_id = any(v_order_ids)
+        and o.status = 'pending'
+        and oi.product_id is not null
+      group by oi.product_id
+    ) released
+    where p.id = released.product_id;
+
+  with expired_orders as (
+    update public.orders
+      set status = 'expired'
+      where id = any(v_order_ids)
+        and status = 'pending'
+      returning id
+  )
+  select count(*) into v_orders from expired_orders;
+
+  return jsonb_build_object(
+    'expired_payments', v_payments,
+    'expired_orders',   v_orders
+  );
+end;
+$$;
+
+revoke all on function public.expire_stale_payments(int) from public, anon, authenticated;
+grant execute on function public.expire_stale_payments(int) to service_role;
 
 
 -- =====================================================================

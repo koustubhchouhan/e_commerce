@@ -151,6 +151,10 @@ export default function Checkout() {
       // Resolves on a verified capture, rejects on dismiss/failure so the catch
       // below can surface a message. Pending orders stay on hold for a retry.
       await new Promise((resolve, reject) => {
+        // Set as soon as the success handler runs: a capture is in flight, so a
+        // following ondismiss must NOT release the stock. Only a true dismissal
+        // (no attempt made) should cancel.
+        let settled = false;
         const rzp = new Razorpay({
           key: order.keyId,
           amount: order.amount,
@@ -166,6 +170,7 @@ export default function Checkout() {
           notes: { order_ids: (order.orderIds ?? []).join(',') },
           theme: { color: '#B7322A' },
           handler: async (response) => {
+            settled = true;
             try {
               await api.verifyPayment(response);
               clearCart();
@@ -189,8 +194,18 @@ export default function Checkout() {
             }
           },
           modal: {
-            ondismiss: () =>
-              reject(new Error('Payment cancelled. Your order is on hold — you can retry.')),
+            ondismiss: async () => {
+              // Release the reserved stock right away. Best-effort: if this
+              // fails, the server-side sweeper expires the payment shortly.
+              if (!settled) {
+                try {
+                  await api.cancelPayment(order.razorpayOrderId);
+                } catch {
+                  // ignore — nothing more the client can do here
+                }
+              }
+              reject(new Error('Payment cancelled. Your order was not placed.'));
+            },
           },
         });
         rzp.on('payment.failed', (response) => {

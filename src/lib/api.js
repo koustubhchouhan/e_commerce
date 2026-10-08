@@ -330,6 +330,14 @@ export const api = {
       body: { razorpay_order_id, razorpay_payment_id, razorpay_signature },
       auth: true,
     }),
+  // Called when the modal is dismissed before paying, so the server releases the
+  // stock the pending orders reserved instead of waiting for the sweeper.
+  cancelPayment: (razorpay_order_id) =>
+    request('/payments/cancel', {
+      method: 'POST',
+      body: { razorpay_order_id },
+      auth: true,
+    }),
 
   // ---- Contact ----
   submitContactMessage: (data) => request('/contact', { method: 'POST', body: data, auth: true }),

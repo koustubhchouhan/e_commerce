@@ -42,12 +42,18 @@ const trustProxy = trustProxyRaw === 'true' ? 1 : trustProxyRaw ? Number(trustPr
 // the single-instance deployment, insufficient once the API scales out.
 const redisUrl = process.env.REDIS_URL || '';
 
+// How long a checkout may hold reserved stock before the sweeper expires it.
+// Defaults to 5 minutes; the frontend also releases immediately when the
+// Razorpay modal is dismissed.
+const paymentExpiryMinutes = Number(process.env.PAYMENT_EXPIRY_MINUTES) || 5;
+
 export const env = {
   port: Number(process.env.PORT) || 4000,
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   nodeEnv: process.env.NODE_ENV || 'development',
   trustProxy,
   redisUrl,
+  paymentExpiryMinutes,
   // Session cookie policy. `lax` is safe for same-site frontends (the common
   // case); set COOKIE_SAMESITE=none when the API is served from a different
   // site than the SPA (which also requires Secure, i.e. production + HTTPS).

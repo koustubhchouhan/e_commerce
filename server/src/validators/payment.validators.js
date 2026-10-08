@@ -9,3 +9,8 @@ export const verifyPaymentSchema = z.object({
   razorpay_payment_id: z.string().min(1, 'Missing gateway payment id'),
   razorpay_signature: z.string().min(1, 'Missing gateway signature'),
 });
+
+// POST /payments/cancel — the modal was dismissed before paying.
+export const cancelPaymentSchema = z.object({
+  razorpay_order_id: z.string().min(1, 'Missing gateway order id'),
+});

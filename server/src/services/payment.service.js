@@ -151,6 +151,22 @@ export async function createPaymentOrder(userId, { items, shipping_address }) {
 // POST /payments/verify - the browser callback. Verifies the checkout signature
 // and captures atomically through mark_payment_captured (idempotent, so it races
 // the webhook safely).
+// A capture that had to re-reserve stock means the order was expired/cancelled
+// moments before the payment landed (a race with the sweeper or an early
+// cancel). Reinstated orders are fine; unfulfillable ones need a refund.
+function logCaptureAnomalies(data) {
+  const reinstated = data?.reinstated_order_ids ?? [];
+  const failed = data?.unfulfillable_order_ids ?? [];
+  if (reinstated.length) {
+    console.warn(`[payments] late capture reinstated order(s): ${reinstated.join(', ')}`);
+  }
+  if (failed.length) {
+    console.error(
+      `[payments] late capture could not be fulfilled (refund needed): ${failed.join(', ')}`
+    );
+  }
+}
+
 export async function verifyPayment(userId, { razorpay_order_id, razorpay_payment_id, razorpay_signature }) {
   assertConfigured();
 
@@ -173,7 +189,40 @@ export async function verifyPayment(userId, { razorpay_order_id, razorpay_paymen
   });
   if (rpcErr) throw new AppError(500, 'Could not capture payment', { cause: rpcErr });
 
+  logCaptureAnomalies(data);
   return { paymentId: data.payment_id, status: data.status, orderIds: data.order_ids };
+}
+
+// POST /payments/cancel - the browser tells us the modal was dismissed before
+// paying, so we release the stock the pending orders reserved right away
+// instead of waiting for the sweeper. Ownership is checked so one user cannot
+// cancel another's checkout; mark_payment_failed is idempotent and only frees
+// stock for orders still awaiting payment, so a late success is unaffected.
+export async function cancelPayment(userId, gatewayOrderId) {
+  const { data: payment, error } = await db
+    .from('payments')
+    .select('id')
+    .eq('gateway_order_id', gatewayOrderId)
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw new AppError(500, 'Could not load payment', { cause: error });
+  if (!payment) throw new AppError(404, 'Payment order not found');
+
+  const { error: rpcErr } = await db.rpc('mark_payment_failed', {
+    p_gateway_order_id: gatewayOrderId,
+    p_raw_payload: null,
+  });
+  if (rpcErr) throw new AppError(500, 'Could not cancel payment', { cause: rpcErr });
+
+  return { cancelled: true };
+}
+
+// Runs on a timer (see index.js): fails payments still open past the window and
+// frees the stock their pending orders reserved. Returns counts for logging.
+export async function expireStalePayments(minutes = env.paymentExpiryMinutes) {
+  const { data, error } = await db.rpc('expire_stale_payments', { p_minutes: minutes });
+  if (error) throw new AppError(500, 'Could not expire stale payments', { cause: error });
+  return data;
 }
 
 // POST /payments/webhook - called by Razorpay, not the browser. Signature is
@@ -200,11 +249,12 @@ export async function handleWebhook(rawBody, signature) {
 
   try {
     if (event === 'payment.captured') {
-      await db.rpc('mark_payment_captured', {
+      const { data } = await db.rpc('mark_payment_captured', {
         p_gateway_order_id: entity.order_id,
         p_gateway_payment_id: entity.id,
         p_raw_payload: rpcPayload,
       });
+      logCaptureAnomalies(data);
     } else if (event === 'payment.failed') {
       await db.rpc('mark_payment_failed', {
         p_gateway_order_id: entity.order_id,

@@ -12,6 +12,7 @@ import {
   changeEmailSchema,
 } from '../src/validators/auth.validators.js';
 import { createApplicationSchema } from '../src/validators/seller.validators.js';
+import { cancelPaymentSchema } from '../src/validators/payment.validators.js';
 
 test('register accepts a normal sign-up', () => {
   const result = registerSchema.safeParse({
@@ -100,4 +101,10 @@ test('seller application requires a valid storefront image URL', () => {
     createApplicationSchema.safeParse({ ...sellerApplication, storefront_image_url: undefined }).success,
     false
   );
+});
+
+test('cancel payment requires a gateway order id', () => {
+  assert.equal(cancelPaymentSchema.safeParse({ razorpay_order_id: 'order_ABC' }).success, true);
+  assert.equal(cancelPaymentSchema.safeParse({ razorpay_order_id: '' }).success, false);
+  assert.equal(cancelPaymentSchema.safeParse({}).success, false);
 });
