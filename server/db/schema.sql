@@ -355,6 +355,10 @@ create table if not exists public.contact_messages (
   user_id    uuid references public.profiles(id) on delete set null,
   store_id   uuid references public.stores(id)   on delete set null,
   product_id uuid references public.products(id) on delete set null,
+  -- 'support' = a customer-written thread; 'order' = a system notification
+  -- generated when an order is shipped/delivered/cancelled.
+  kind       text not null default 'support',
+  order_id   uuid references public.orders(id) on delete set null,
   created_at timestamptz not null default now()
 );
 
@@ -365,11 +369,14 @@ alter table public.contact_messages add column if not exists user_id uuid refere
 alter table public.contact_messages add column if not exists reply text;
 alter table public.contact_messages add column if not exists replied_at timestamptz;
 alter table public.contact_messages add column if not exists replied_by uuid references public.profiles(id) on delete set null;
+alter table public.contact_messages add column if not exists kind text not null default 'support';
+alter table public.contact_messages add column if not exists order_id uuid references public.orders(id) on delete set null;
 
 create index if not exists idx_contact_messages_created_at on public.contact_messages(created_at);
 create index if not exists idx_contact_messages_store_id on public.contact_messages(store_id);
 create index if not exists idx_contact_messages_product_id on public.contact_messages(product_id);
 create index if not exists idx_contact_messages_user_id on public.contact_messages(user_id);
+create index if not exists idx_contact_messages_order_id on public.contact_messages(order_id);
 
 -- ---- hero_slides (admin-managed homepage carousel) -------------------
 -- Admins can add any number of slides; `position` controls display order

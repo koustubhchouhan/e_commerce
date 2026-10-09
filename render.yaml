@@ -57,3 +57,9 @@ services:
       # expires it. Optional; defaults to 5.
       - key: PAYMENT_EXPIRY_MINUTES
         value: "5"
+      # Transactional email for order notifications. RESEND_API_KEY is a secret
+      # (set in the dashboard, sync: false); MAIL_FROM must be a verified sender.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        value: "Arghya <no-reply@arghya.store>"

@@ -47,6 +47,19 @@ const redisUrl = process.env.REDIS_URL || '';
 // Razorpay modal is dismissed.
 const paymentExpiryMinutes = Number(process.env.PAYMENT_EXPIRY_MINUTES) || 5;
 
+// Transactional email via Resend. Optional: without a key the app still boots
+// and order notifications are simply stored in the customer's inbox only.
+const resend = {
+  apiKey: process.env.RESEND_API_KEY || '',
+  // Must be a Resend-verified sender/domain, e.g. "Arghya <no-reply@arghya.store>".
+  from: process.env.MAIL_FROM || 'Arghya <no-reply@arghya.store>',
+};
+const mailConfigured = Boolean(resend.apiKey);
+
+if ((process.env.NODE_ENV || 'development') !== 'test' && !mailConfigured) {
+  console.warn('[env] RESEND_API_KEY not set - order notification emails will be skipped.');
+}
+
 export const env = {
   port: Number(process.env.PORT) || 4000,
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
@@ -64,4 +77,6 @@ export const env = {
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
   razorpay,
   paymentsConfigured,
+  resend,
+  mailConfigured,
 };

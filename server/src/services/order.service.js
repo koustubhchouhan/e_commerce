@@ -1,6 +1,7 @@
 import { db } from '../config/supabase.js';
 import { AppError, isBusinessRuleError } from '../middleware/error.js';
 import { loadCoversByProduct } from './product-data.js';
+import { notifyOrderStatus } from './notification.service.js';
 
 // POST /orders — server-authoritative checkout. Prices never come from the
 // client; the create_orders Postgres function reads them, checks stock under a
@@ -208,7 +209,11 @@ export async function updateOrderStatus(actorUserId, actorRole, orderId, nextSta
     await restoreStockForOrder(orderId);
   }
 
-  return setOrderStatus(orderId, nextStatus);
+  const result = await setOrderStatus(orderId, nextStatus);
+  // Notify the customer (inbox + email) without blocking the response. The
+  // helper swallows its own errors, so a mail hiccup never fails fulfilment.
+  notifyOrderStatus(orderId, nextStatus);
+  return result;
 }
 
 // PATCH /orders/:id/cancel — a customer cancels their own order before it ships
@@ -232,7 +237,9 @@ export async function cancelOrder(userId, userRole, orderId) {
   }
 
   await restoreStockForOrder(orderId);
-  return setOrderStatus(orderId, 'cancelled');
+  const result = await setOrderStatus(orderId, 'cancelled');
+  notifyOrderStatus(orderId, 'cancelled');
+  return result;
 }
 
 // Adds back each cancelled line item's quantity to product stock. Rows whose

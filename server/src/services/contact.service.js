@@ -2,7 +2,7 @@ import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
 
 const MESSAGE_SELECT =
-  'id, first_name, last_name, email, subject, message, is_read, reply, replied_at, replied_by, store_id, product_id, created_at, stores(name), products(name)';
+  'id, first_name, last_name, email, subject, message, is_read, reply, replied_at, replied_by, store_id, product_id, kind, order_id, created_at, stores(name), products(name)';
 
 const mapMessage = (m) => ({
   id: m.id,
@@ -18,6 +18,8 @@ const mapMessage = (m) => ({
   repliedBy: m.replied_by ?? null,
   storeId: m.store_id ?? null,
   productId: m.product_id ?? null,
+  kind: m.kind ?? 'support',
+  orderId: m.order_id ?? null,
   storeName: m.stores?.name ?? null,
   productName: m.products?.name ?? null,
   createdAt: m.created_at,
@@ -62,11 +64,14 @@ export async function createContactMessage({ first_name, last_name, email, subje
   return mapMessage(data);
 }
 
-// GET /admin/contact-messages — every support message, newest first.
+// GET /admin/contact-messages — every support message, newest first. Order
+// notifications (kind='order') are auto-generated for customers and excluded so
+// the support inbox stays about messages that need a reply.
 export async function listContactMessages() {
   const { data, error } = await db
     .from('contact_messages')
     .select(MESSAGE_SELECT)
+    .eq('kind', 'support')
     .order('created_at', { ascending: false });
 
   if (error) throw new AppError(500, 'Could not load messages', { cause: error });
@@ -105,6 +110,7 @@ export async function listSellerContactMessages(sellerId) {
   const { data, error } = await db
     .from('contact_messages')
     .select(MESSAGE_SELECT)
+    .eq('kind', 'support')
     .in('store_id', storeIds)
     .order('created_at', { ascending: false });
 
