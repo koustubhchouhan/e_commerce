@@ -219,13 +219,16 @@ create table if not exists public.orders (
   status           order_status not null default 'pending',
   subtotal         numeric(12,2) not null default 0,
   total            numeric(12,2) not null default 0,
+  delivery_fee     numeric(12,2) not null default 0,
   shipping_address jsonb,
   created_at       timestamptz not null default now()
 );
 
 -- Keep existing installs in sync: orders belong to a single store (mixed carts
--- are split into one order per seller at checkout).
+-- are split into one order per seller at checkout). delivery_fee is the flat
+-- delivery charge added to the checkout when the items total is under ₹200.
 alter table public.orders add column if not exists store_id uuid references public.stores(id) on delete set null;
+alter table public.orders add column if not exists delivery_fee numeric(12,2) not null default 0;
 
 create index if not exists idx_orders_user_id on public.orders(user_id);
 create index if not exists idx_orders_store_id on public.orders(store_id);
@@ -840,7 +843,11 @@ end;
 $$;
 
 -- Splits the cart into one order per store, atomically (all orders succeed or
--- none do), and returns a JSON array of { order_id, store_id, total }.
+-- none do), and returns a JSON array of
+-- { order_id, store_id, total, delivery_fee }. One flat delivery charge is
+-- added to the whole checkout when the items total is under the free-delivery
+-- threshold; it is recorded on the first order so the sum of order totals
+-- always equals the amount collected.
 create or replace function public.create_orders(
   p_user_id  uuid,
   p_items    jsonb,
@@ -852,11 +859,15 @@ security definer
 set search_path = public
 as $$
 declare
-  v_result   jsonb := '[]'::jsonb;
-  v_store_id uuid;
-  v_group    jsonb;
-  v_order_id uuid;
-  v_total    numeric(12,2);
+  v_free_delivery_threshold constant numeric(12,2) := 200;
+  v_delivery_charge         constant numeric(12,2) := 15;
+  v_result      jsonb := '[]'::jsonb;
+  v_store_id    uuid;
+  v_group       jsonb;
+  v_order_id    uuid;
+  v_order_ids   uuid[] := '{}';
+  v_first_id    uuid := null;
+  v_items_total numeric(12,2) := 0;
 begin
   if p_items is null or jsonb_array_length(p_items) = 0 then
     raise exception 'Order must contain at least one item';
@@ -882,14 +893,37 @@ begin
     order by min(t.ord)
   loop
     v_order_id := public.create_order(p_user_id, v_group, p_shipping);
-    select total into v_total from public.orders where id = v_order_id;
-
-    v_result := v_result || jsonb_build_object(
-      'order_id', v_order_id,
-      'store_id', v_store_id,
-      'total',    v_total
-    );
+    v_order_ids := v_order_ids || v_order_id;
+    if v_first_id is null then
+      v_first_id := v_order_id;
+    end if;
   end loop;
+
+  -- One flat delivery charge for the whole checkout when the items total is
+  -- under the threshold. It rides on the first order so the payment amount
+  -- (the sum of order totals) collects it exactly once.
+  select coalesce(sum(subtotal), 0) into v_items_total
+    from public.orders
+    where id = any(v_order_ids);
+
+  if v_items_total > 0 and v_items_total < v_free_delivery_threshold then
+    update public.orders
+      set delivery_fee = v_delivery_charge,
+          total        = subtotal + v_delivery_charge
+      where id = v_first_id;
+  end if;
+
+  select coalesce(jsonb_agg(
+           jsonb_build_object(
+             'order_id',     o.id,
+             'store_id',     o.store_id,
+             'total',        o.total,
+             'delivery_fee', o.delivery_fee
+           ) order by array_position(v_order_ids, o.id)
+         ), '[]'::jsonb)
+    into v_result
+    from public.orders o
+    where o.id = any(v_order_ids);
 
   return v_result;
 end;
@@ -1192,7 +1226,9 @@ begin
   -- Lock the candidate orders so a concurrent settlement cannot double-count.
   perform 1 from public.orders where id = any(p_order_ids) for update;
 
-  select coalesce(sum(o.total), 0), count(*)
+  -- Seller payout is based on the items subtotal; the flat delivery charge is
+  -- platform revenue and is deliberately excluded (orders.total - delivery_fee).
+  select coalesce(sum(o.subtotal), 0), count(*)
     into v_gross, v_eligible
     from public.orders o
     where o.id = any(p_order_ids)
@@ -1216,7 +1252,7 @@ begin
   returning id into v_id;
 
   insert into public.settlement_orders (settlement_id, order_id, amount)
-  select v_id, o.id, round(o.total * (1 - p_fee_rate), 2)
+  select v_id, o.id, round(o.subtotal * (1 - p_fee_rate), 2)
     from public.orders o
     where o.id = any(p_order_ids);
 

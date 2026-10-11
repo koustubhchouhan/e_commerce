@@ -432,7 +432,7 @@ const round2 = (n) => Math.round(n * 100) / 100;
 export async function getPlatformLedger() {
   const { data: orders, error } = await db
     .from('orders')
-    .select('id, status, total, created_at, store_id, profiles(full_name)')
+    .select('id, status, total, subtotal, delivery_fee, created_at, store_id, profiles(full_name)')
     .order('created_at', { ascending: false });
   if (error) throw new AppError(500, 'Could not load orders', { cause: error });
 
@@ -564,17 +564,25 @@ export async function getPlatformLedger() {
       .sort((a, b) => b.gross - a.gross);
   }
 
-  const grossSales = round2(revenueOrders.reduce((sum, o) => sum + Number(o.total), 0));
+  // Seller-facing figures exclude the delivery charge: it is platform revenue,
+  // not the seller's goods value. grossSales/platformFees/sellerPayouts are
+  // therefore based on the items subtotal, and the delivery collected is
+  // reported separately.
+  const grossSales = round2(revenueOrders.reduce((sum, o) => sum + Number(o.subtotal), 0));
+  const deliveryCollected = round2(
+    revenueOrders.reduce((sum, o) => sum + Number(o.delivery_fee ?? 0), 0)
+  );
   const platformFees = round2(grossSales * PLATFORM_FEE_RATE);
   const sellerPayouts = round2(grossSales - platformFees);
 
   const transactions = revenueOrders.slice(0, 50).map((o) => {
-    const total = Number(o.total);
+    const total = Number(o.subtotal);
     const fee = round2(total * PLATFORM_FEE_RATE);
     return {
       id: o.id,
       status: o.status,
       total,
+      delivery: Number(o.delivery_fee ?? 0),
       fee,
       payout: round2(total - fee),
       createdAt: o.created_at,
@@ -611,6 +619,7 @@ export async function getPlatformLedger() {
     asOf: new Date().toISOString(),
     summary: {
       grossSales,
+      deliveryCollected,
       platformFees,
       sellerPayouts,
       unsettledPayouts,

@@ -145,6 +145,9 @@ export default function OrderDetails() {
                 </h2>
                 <div className="flex flex-col gap-2 text-sm">
                   <div className="flex justify-between text-[#7A6A5B]"><span>Subtotal</span><span>{inr(order.subtotal)}</span></div>
+                  {Number(order.delivery_fee) > 0 && (
+                    <div className="flex justify-between text-[#7A6A5B]"><span>Delivery</span><span>{inr(order.delivery_fee)}</span></div>
+                  )}
                   <div className="flex justify-between text-[#231A16] font-bold text-lg pt-2 mt-1 border-t border-[#231a16]/10">
                     <span>Total</span><span>{inr(order.total)}</span>
                   </div>

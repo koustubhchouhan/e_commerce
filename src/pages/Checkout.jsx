@@ -10,6 +10,11 @@ import { inr } from '../lib/money';
 
 const STEPS = ['Shipping', 'Payment'];
 
+// Orders under ₹200 pay a flat ₹15 delivery charge. Kept in sync with
+// create_orders() in server/db/create_order.sql.
+const FREE_DELIVERY_THRESHOLD = 200;
+const DELIVERY_CHARGE = 15;
+
 // Client-side guard so the payment step is only reachable with a complete
 // shipping address. The server re-validates on order creation, so this is UX.
 function validateShipping(form) {
@@ -60,7 +65,10 @@ export default function Checkout() {
   const navigate = useNavigate();
 
   const subtotal = getSubtotal();
-  const total = subtotal;
+  // Flat ₹15 delivery on orders under ₹200, applied to the whole checkout. The
+  // server adds the same fee (per create_orders), so the amount charged matches.
+  const delivery = subtotal > 0 && subtotal < FREE_DELIVERY_THRESHOLD ? DELIVERY_CHARGE : 0;
+  const total = subtotal + delivery;
   const sellers = [...new Set(items.map(({ product }) => product?.storeName).filter(Boolean))];
 
   const [placing, setPlacing] = useState(false);
@@ -324,6 +332,12 @@ export default function Checkout() {
             </div>
             <div className="flex flex-col gap-2 text-sm border-t border-[#231a16]/10 pt-4">
               <div className="flex justify-between text-[#7A6A5B]"><span>Subtotal</span><span>{inr(subtotal)}</span></div>
+              {delivery > 0 && (
+                <>
+                  <div className="flex justify-between text-[#7A6A5B]"><span>Delivery</span><span>{inr(delivery)}</span></div>
+                  <p className="text-[11px] text-[#8A7B6B]">Free delivery on orders over {inr(FREE_DELIVERY_THRESHOLD)}.</p>
+                </>
+              )}
               <div className="flex justify-between text-[#231A16] font-bold text-lg pt-2 mt-1 border-t border-[#231a16]/10"><span>Total</span><span>{inr(total)}</span></div>
             </div>
             <div className="flex flex-col gap-2 mt-4">

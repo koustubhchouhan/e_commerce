@@ -207,13 +207,16 @@ create table if not exists public.orders (
   status           order_status not null default 'pending',
   subtotal         numeric(12,2) not null default 0,
   total            numeric(12,2) not null default 0,
+  delivery_fee     numeric(12,2) not null default 0,
   shipping_address jsonb,
   created_at       timestamptz not null default now()
 );
 
 -- Keep existing installs in sync: orders belong to a single store (mixed carts
--- are split into one order per seller at checkout).
+-- are split into one order per seller at checkout). delivery_fee is the flat
+-- delivery charge added to the checkout when the items total is under ₹200.
 alter table public.orders add column if not exists store_id uuid references public.stores(id) on delete set null;
+alter table public.orders add column if not exists delivery_fee numeric(12,2) not null default 0;
 
 create index if not exists idx_orders_user_id on public.orders(user_id);
 create index if not exists idx_orders_store_id on public.orders(store_id);

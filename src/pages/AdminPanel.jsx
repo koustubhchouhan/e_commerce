@@ -1333,6 +1333,7 @@ export default function AdminPanel() {
                       <StatCard icon={<IndianRupee size={24} />} title="Gross Sales" value={inr(ledger.summary.grossSales)} trend={`${ledger.summary.orders} order${ledger.summary.orders === 1 ? '' : 's'}`} />
                       <StatCard icon={<Percent size={24} />} title="Platform Fees" value={inr(ledger.summary.platformFees)} trend={`${Math.round(ledger.feeRate * 100)}% commission`} />
                       <StatCard icon={<Wallet size={24} />} title="Seller Payouts" value={inr(ledger.summary.sellerPayouts)} trend={`${inr(ledger.summary.unsettledPayouts)} unsettled`} />
+                      <StatCard icon={<Truck size={24} />} title="Delivery Kept" value={inr(ledger.summary.deliveryCollected ?? 0)} trend="Platform revenue" />
                       <StatCard icon={<ShoppingBag size={24} />} title="Units Sold" value={String(ledger.summary.unitsSold)} trend={`${ledger.summary.cancelledOrders} cancelled`} />
                     </div>
 
@@ -1745,6 +1746,12 @@ export default function AdminPanel() {
                       <span className="text-[#7A6A5B]">Subtotal</span>
                       <span className="text-[#2A211B]">{inr(orderDetail.subtotal)}</span>
                     </div>
+                    {Number(orderDetail.deliveryFee) > 0 && (
+                      <div className="flex items-center justify-between w-full sm:w-64 text-sm">
+                        <span className="text-[#7A6A5B]">Delivery</span>
+                        <span className="text-[#2A211B]">{inr(orderDetail.deliveryFee)}</span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between w-full sm:w-64 text-base">
                       <span className="text-[#7A6A5B] font-semibold">Total</span>
                       <span className="text-[#B7322A] font-bold">{inr(orderDetail.total)}</span>

@@ -25,6 +25,7 @@ export async function createOrder(userId, { items, shipping_address }) {
     orderId: o.order_id,
     storeId: o.store_id,
     total: Number(o.total),
+    deliveryFee: Number(o.delivery_fee ?? 0),
   }));
   if (orders.length === 0) throw new AppError(400, 'No order was created');
 
@@ -36,7 +37,7 @@ export async function createOrder(userId, { items, shipping_address }) {
   };
 }
 
-const ORDER_SELECT = 'id, status, subtotal, total, shipping_address, created_at';
+const ORDER_SELECT = 'id, status, subtotal, total, delivery_fee, shipping_address, created_at';
 
 // GET /orders — the caller's orders, newest first, each with its line items.
 export async function listOrders(userId) {
@@ -54,7 +55,7 @@ export async function listOrders(userId) {
 export async function listAllOrders() {
   const { data: orders, error } = await db
     .from('orders')
-    .select('id, status, subtotal, total, created_at, profiles(full_name)')
+    .select('id, status, subtotal, total, delivery_fee, created_at, profiles(full_name)')
     .order('created_at', { ascending: false });
 
   if (error) throw new AppError(500, 'Could not load orders', { cause: error });
@@ -66,6 +67,7 @@ export async function listAllOrders() {
       status: o.status,
       subtotal: o.subtotal,
       total: o.total,
+      deliveryFee: o.delivery_fee,
       createdAt: o.created_at,
       customerName: o.profiles?.full_name ?? null,
       items: o.items,
@@ -88,7 +90,7 @@ export async function listSellerOrders(sellerId) {
 
   const { data: orders, error } = await db
     .from('orders')
-    .select('id, status, total, created_at, profiles(full_name)')
+    .select('id, status, total, delivery_fee, created_at, profiles(full_name)')
     .eq('store_id', store.id)
     .order('created_at', { ascending: false });
   if (error) throw new AppError(500, 'Could not load orders', { cause: error });
@@ -100,6 +102,7 @@ export async function listSellerOrders(sellerId) {
       id: o.id,
       status: o.status,
       total: Number(o.total),
+      deliveryFee: o.delivery_fee,
       createdAt: o.created_at,
       customerName: o.profiles?.full_name ?? null,
       // Orders are single-store by construction, so this is always the
@@ -135,7 +138,7 @@ export async function getOrderForAdmin(orderId) {
   const { data: order, error } = await db
     .from('orders')
     .select(
-      'id, user_id, store_id, status, subtotal, total, shipping_address, created_at, profiles(full_name, email, phone), stores(name)'
+      'id, user_id, store_id, status, subtotal, total, delivery_fee, shipping_address, created_at, profiles(full_name, email, phone), stores(name)'
     )
     .eq('id', orderId)
     .maybeSingle();
@@ -150,6 +153,7 @@ export async function getOrderForAdmin(orderId) {
     status: withItems.status,
     subtotal: withItems.subtotal,
     total: withItems.total,
+    deliveryFee: withItems.delivery_fee,
     shippingAddress: withItems.shipping_address,
     createdAt: withItems.created_at,
     customer: {
@@ -306,6 +310,7 @@ async function attachItems(orders) {
     shipping_address: order.shipping_address ?? null,
     subtotal: Number(order.subtotal),
     total: Number(order.total),
+    delivery_fee: Number(order.delivery_fee ?? 0),
     items: (byOrder.get(order.id) ?? []).map((item) => ({
       id: item.id,
       productId: item.product_id,
