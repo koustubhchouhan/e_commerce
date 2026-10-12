@@ -123,7 +123,7 @@ set search_path = public
 as $$
 declare
   v_free_delivery_threshold constant numeric(12,2) := 200;
-  v_delivery_charge         constant numeric(12,2) := 15;
+  v_delivery_charge         constant numeric(12,2) := 29;
   v_result      jsonb := '[]'::jsonb;
   v_store_id    uuid;
   v_group       jsonb;

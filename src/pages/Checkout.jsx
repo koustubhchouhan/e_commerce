@@ -10,10 +10,10 @@ import { inr } from '../lib/money';
 
 const STEPS = ['Shipping', 'Payment'];
 
-// Orders under ₹200 pay a flat ₹15 delivery charge. Kept in sync with
+// Orders under ₹200 pay a flat ₹29 delivery charge. Kept in sync with
 // create_orders() in server/db/create_order.sql.
 const FREE_DELIVERY_THRESHOLD = 200;
-const DELIVERY_CHARGE = 15;
+const DELIVERY_CHARGE = 29;
 
 // Client-side guard so the payment step is only reachable with a complete
 // shipping address. The server re-validates on order creation, so this is UX.
@@ -65,7 +65,7 @@ export default function Checkout() {
   const navigate = useNavigate();
 
   const subtotal = getSubtotal();
-  // Flat ₹15 delivery on orders under ₹200, applied to the whole checkout. The
+  // Flat ₹29 delivery on orders under ₹200, applied to the whole checkout. The
   // server adds the same fee (per create_orders), so the amount charged matches.
   const delivery = subtotal > 0 && subtotal < FREE_DELIVERY_THRESHOLD ? DELIVERY_CHARGE : 0;
   const total = subtotal + delivery;
