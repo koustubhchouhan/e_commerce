@@ -31,6 +31,7 @@ export default function SellerInventory() {
         name: p.name,
         category: p.category?.name ?? 'Uncategorized',
         price: Number(p.price ?? 0),
+        basePrice: Number(p.basePrice ?? p.price ?? 0),
         discount: Number(p.discount_percent ?? 0),
         stock: Number(p.stock ?? 0),
         status: API_TO_STATUS[p.status] ?? 'Active',
@@ -221,7 +222,7 @@ export default function SellerInventory() {
               <tr className="border-b border-[#231a16]/10 text-[#7A6A5B] text-xs uppercase tracking-wider bg-[#FDF8F0]/30">
                 <th className="py-4 px-4 font-semibold rounded-tl-lg">Product Name</th>
                 <th className="py-4 px-4 font-semibold">Category</th>
-                <th className="py-4 px-4 font-semibold text-right">Price</th>
+                <th className="py-4 px-4 font-semibold text-right">Price / Payout</th>
                 <th className="py-4 px-4 font-semibold text-center">Stock Level</th>
                 <th className="py-4 px-4 font-semibold">Status</th>
                 <th className="py-4 px-4 font-semibold text-right rounded-tr-lg">Actions</th>
@@ -230,6 +231,7 @@ export default function SellerInventory() {
             <tbody>
               {filtered.map((item) => {
                 const finalPrice = item.discount > 0 ? item.price * (1 - item.discount / 100) : item.price;
+                const sellerNet = item.discount > 0 ? item.basePrice * (1 - item.discount / 100) : item.basePrice;
                 return (
                   <tr key={item.id} className="border-b border-[#231a16]/5 hover:bg-[#231a16]/5 transition-colors group">
                     <td className="py-4 px-4">
@@ -252,6 +254,7 @@ export default function SellerInventory() {
                             <span className="text-[#E0A11C] font-bold">-{item.discount}%</span>
                           </span>
                         )}
+                        <span className="text-[10px] text-[#2E7D32] mt-0.5">You receive {inr(sellerNet)}</span>
                       </div>
                     </td>
                     <td className="py-4 px-4 text-center">
@@ -329,7 +332,7 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
     if (catName && categories.some((c) => c.name === catName)) return catName;
     return categories[0]?.name ?? '';
   });
-  const [price, setPrice] = useState(product ? String(product.price ?? '') : '');
+  const [price, setPrice] = useState(product ? String(product.basePrice ?? product.price ?? '') : '');
   const [discount, setDiscount] = useState(product ? String(product.discount ?? '') : '');
   const [stock, setStock] = useState(product ? String(product.stock ?? '') : '');
   const [status, setStatus] = useState(product?.status ?? 'Active');
@@ -370,7 +373,11 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
 
   const priceNum = parseFloat(price) || 0;
   const discountNum = Math.min(Math.max(parseFloat(discount) || 0, 0), 100);
-  const salePrice = priceNum * (1 - discountNum / 100);
+  // Sellers enter the amount they want to receive; the platform adds a 10%
+  // markup to form the customer-facing price.
+  const listPrice = priceNum * 1.1;
+  const customerPays = listPrice * (1 - discountNum / 100);
+  const sellerNet = priceNum * (1 - discountNum / 100);
   const nameValid = name.trim().length > 0;
   const priceValid = priceNum > 0;
   const canSubmit = nameValid && priceValid;
@@ -506,7 +513,7 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
             {/* Price + Discount */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className={labelClass}>Price (INR) <span className="text-[#B3261E]">*</span></label>
+                <label className={labelClass}>Your Price (INR) <span className="text-[#B3261E]">*</span></label>
                 <input
                   type="number" min="0" step="0.01"
                   className={`${inputClass} ${touched && !priceValid ? 'border-[#B3261E]/60' : ''}`}
@@ -514,7 +521,9 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
                   onChange={(e) => setPrice(e.target.value)}
                   placeholder="0.00"
                 />
-                {touched && !priceValid && <p className="text-[11px] text-[#B3261E] mt-1.5">Enter a price greater than 0.</p>}
+                {touched && !priceValid
+                  ? <p className="text-[11px] text-[#B3261E] mt-1.5">Enter a price greater than 0.</p>
+                  : <p className="text-[11px] text-[#8A7B6B] mt-1.5">Amount you receive per unit.</p>}
               </div>
               <div>
                 <label className={labelClass}>Discount (%)</label>
@@ -522,18 +531,19 @@ function ProductFormModal({ categories = [], busy = false, product = null, onClo
               </div>
             </div>
 
-            {/* Live sale-price preview */}
+            {/* Live price preview: customer price vs seller payout */}
             {priceValid && (
-              <div className="flex flex-wrap items-center gap-2 -mt-1 text-sm bg-[#FDF8F0]/40 border border-[#231a16]/5 rounded-xl px-4 py-3">
-                <span className="text-[#7A6A5B]">Customers pay</span>
-                <span className="text-[#B7322A] font-display font-bold text-lg">{inr(salePrice)}</span>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-1 -mt-1 text-sm bg-[#FDF8F0]/40 border border-[#231a16]/5 rounded-xl px-4 py-3">
+                <span className="flex items-center gap-2">
+                  <span className="text-[#7A6A5B]">Customers pay</span>
+                  <span className="text-[#B7322A] font-display font-bold text-lg">{inr(customerPays)}</span>
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-[#7A6A5B]">You receive</span>
+                  <span className="text-[#2E7D32] font-display font-bold text-lg">{inr(sellerNet)}</span>
+                </span>
                 {discountNum > 0 && (
-                  <>
-                    <span className="text-[#8A7B6B] line-through text-xs">{inr(priceNum)}</span>
-                    <span className="text-[#E0A11C] text-xs bg-[#B7322A]/10 border border-[#B7322A]/20 px-2 py-0.5 rounded-full font-semibold">
-                      save {inr(priceNum - salePrice)} ({discountNum}% off)
-                    </span>
-                  </>
+                  <span className="text-[#8A7B6B] line-through text-xs">{inr(listPrice)}</span>
                 )}
               </div>
             )}

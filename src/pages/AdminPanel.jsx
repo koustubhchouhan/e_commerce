@@ -754,7 +754,12 @@ export default function AdminPanel() {
                           </div>
                         </td>
                         <td className="py-4 px-4 text-sm text-[#7A6A5B]">{product.storeName || '—'}</td>
-                        <td className="py-4 px-4 text-right text-[#B7322A] font-semibold">{inr(product.price)}</td>
+                        <td className="py-4 px-4 text-right">
+                          <div className="flex flex-col items-end">
+                            <span className="text-[#B7322A] font-semibold">{inr(product.price)}</span>
+                            <span className="text-[10px] text-[#2E7D32] mt-0.5">Seller gets {inr(product.basePrice)}</span>
+                          </div>
+                        </td>
                         <td className="py-4 px-4 text-sm text-[#8A7B6B]">{timeAgo(product.createdAt)}</td>
                         <td className="py-4 px-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-2">
@@ -1331,7 +1336,7 @@ export default function AdminPanel() {
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                       <StatCard icon={<IndianRupee size={24} />} title="Gross Sales" value={inr(ledger.summary.grossSales)} trend={`${ledger.summary.orders} order${ledger.summary.orders === 1 ? '' : 's'}`} />
-                      <StatCard icon={<Percent size={24} />} title="Platform Fees" value={inr(ledger.summary.platformFees)} trend={`${Math.round(ledger.feeRate * 100)}% commission`} />
+                      <StatCard icon={<Percent size={24} />} title="Platform Fees" value={inr(ledger.summary.platformFees)} trend={`${Math.round((ledger.markupRate ?? ledger.feeRate) * 100)}% markup`} />
                       <StatCard icon={<Wallet size={24} />} title="Seller Payouts" value={inr(ledger.summary.sellerPayouts)} trend={`${inr(ledger.summary.unsettledPayouts)} unsettled`} />
                       <StatCard icon={<Truck size={24} />} title="Delivery Kept" value={inr(ledger.summary.deliveryCollected ?? 0)} trend="Platform revenue" />
                       <StatCard icon={<ShoppingBag size={24} />} title="Units Sold" value={String(ledger.summary.unitsSold)} trend={`${ledger.summary.cancelledOrders} cancelled`} />
@@ -1418,7 +1423,7 @@ export default function AdminPanel() {
                         <Wallet size={20} className="text-[#E0A11C]" /> Revenue by Seller
                       </h2>
                       <p className="text-[#8A7B6B] text-xs mb-6">
-                        Each line item is attributed back to the store that sold it. {Math.round(ledger.feeRate * 100)}% commission is deducted from each store's gross before payout.
+                        Each line item is attributed back to the store that sold it. A {Math.round((ledger.markupRate ?? ledger.feeRate) * 100)}% platform markup is added on top of each seller's price, so sellers are always paid their full listed amount.
                       </p>
                       <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">

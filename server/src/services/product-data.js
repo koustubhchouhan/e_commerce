@@ -1,5 +1,6 @@
 import { db } from '../config/supabase.js';
 import { AppError } from '../middleware/error.js';
+import { basePriceFor } from '../lib/pricing.js';
 
 const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 
@@ -66,13 +67,17 @@ export function pickCover(images = []) {
 }
 
 // Shapes a products row (with embedded categories/stores) into the API shape
-// the catalog list consumes: price + computed sale price + cover image.
+// the catalog list consumes: the seller's base price, the marked-up customer
+// price + computed sale price, and the cover image.
 export function serializeProduct(row, coverUrl) {
+  const price = Number(row.price);
   return {
     id: row.id,
     name: row.name,
     description: row.description,
-    price: Number(row.price),
+    price,
+    // The amount the seller receives per unit (what they entered when listing).
+    basePrice: row.base_price == null ? basePriceFor(price) : Number(row.base_price),
     discount_percent: row.discount_percent,
     stock: row.stock,
     status: row.status,

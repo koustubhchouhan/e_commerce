@@ -3,6 +3,10 @@ import { AppError, isBusinessRuleError } from '../middleware/error.js';
 import { removeImage, uploadImage } from './storage.service.js';
 import { serializeReview } from './review.service.js';
 import { loadCoversByProduct, serializeProduct } from './product-data.js';
+import { PLATFORM_FEE_RATE, PRODUCT_MARKUP_RATE } from '../lib/pricing.js';
+
+// Re-exported so callers keep their single import surface for the commission.
+export { PLATFORM_FEE_RATE };
 
 // Applications are loaded without an embedded profile relation, because the
 // table has two FKs to profiles (user_id and reviewed_by) and embed hints tied
@@ -248,7 +252,7 @@ export async function deleteAnyProduct(productId) {
 // =====================================================================
 
 const ADMIN_PRODUCT_SELECT =
-  'id, name, description, price, discount_percent, stock, status, approval_status, rejection_reason, created_at, store_id, categories(id, name, slug), stores(id, name)';
+  'id, name, description, price, base_price, discount_percent, stock, status, approval_status, rejection_reason, created_at, store_id, categories(id, name, slug), stores(id, name)';
 
 function shapeAdminProduct(row, coverUrl) {
   return {
@@ -419,8 +423,9 @@ export async function deleteReview(reviewId) {
 // Payments & Ledger
 // =====================================================================
 
-// Flat commission the platform keeps on every settled order.
-export const PLATFORM_FEE_RATE = 0.1;
+// PLATFORM_FEE_RATE (imported from lib/pricing.js) is the commission the
+// platform keeps on every settled order: the 10% markup expressed as a share of
+// the marked-up price.
 // Only orders that were actually paid for count as revenue. "pending" is a
 // cart that was never paid, and "cancelled" money never settles.
 const REVENUE_STATUSES = ['paid', 'shipped', 'delivered'];
@@ -616,6 +621,7 @@ export async function getPlatformLedger() {
 
   return {
     feeRate: PLATFORM_FEE_RATE,
+    markupRate: PRODUCT_MARKUP_RATE,
     asOf: new Date().toISOString(),
     summary: {
       grossSales,
