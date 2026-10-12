@@ -178,7 +178,7 @@ All responses are JSON. Errors use `{ "error": "message", "details": ... }`.
 | Method | Path | Auth | Notes |
 | --- | --- | --- | --- |
 | GET | `/seller/products` | seller/admin | The caller's own products. |
-| POST | `/products` | seller/admin | `{ name, description, price, discount_percent, stock, status, category_id }` → `201`. |
+| POST | `/products` | seller/admin | `{ name, description, price, discount_percent, stock, status, category_id }` → `201`. `price` is the seller's base price; the platform's 10% markup is added on top for the customer-facing `price`. |
 | PATCH | `/products/:id` | seller/admin (owner) | Partial update. `403` if not the owner. |
 | DELETE | `/products/:id` | seller/admin (owner) | `204`. Also removes stored images. |
 | POST | `/products/:id/images` | seller/admin (owner) | `multipart/form-data`, field `images` (up to 8, 5 MB each). Inserts `product_images`. |
@@ -281,6 +281,12 @@ only.
   product or store endpoint, an official store (`stores.is_official = true`) is
   created for them lazily. Official-store sales are excluded from seller payouts
   in the admin ledger.
+- Pricing: a seller lists the amount they want to receive per unit
+  (`products.base_price`). The platform adds a 10% markup to form the
+  customer-facing `products.price`, and keeps that markup as commission. Because
+  it is taken as a share of the marked-up price (`0.1 / 1.1 = 1/11`), the seller
+  is paid their full base price — see `src/lib/pricing.js`. Listings created
+  before `base_price` existed are grandfathered (`base_price = price / 1.1`).
 - `create_order` (in `db/create_order.sql`) is the atomic checkout: it locks
   product rows `FOR UPDATE`, computes prices from `products`, enforces stock and
   single-store carts, and writes the order and items in one transaction.

@@ -164,6 +164,7 @@ create table if not exists public.products (
   name             text not null,
   description      text,
   price            numeric(10,2) not null check (price >= 0),
+  base_price       numeric(10,2),
   discount_percent int not null default 0 check (discount_percent between 0 and 100),
   stock            int not null default 0 check (stock >= 0),
   status           product_status not null default 'active',
@@ -177,6 +178,10 @@ create table if not exists public.products (
 -- admin approves them. Existing rows default to approved (grandfathered in).
 alter table public.products add column if not exists approval_status product_approval_status not null default 'approved';
 alter table public.products add column if not exists rejection_reason text;
+-- base_price is the amount the seller receives per unit; price is that amount
+-- plus the platform markup (the customer-facing price). Null on grandfathered
+-- listings, where it is derived as price / 1.1.
+alter table public.products add column if not exists base_price numeric(10,2);
 
 create index if not exists idx_products_store_id    on public.products(store_id);
 create index if not exists idx_products_category_id  on public.products(category_id);

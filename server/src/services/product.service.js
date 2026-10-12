@@ -3,6 +3,7 @@ import { AppError } from '../middleware/error.js';
 import { loadCoversByProduct, loadImagesByProduct, pickCover, serializeProduct } from './product-data.js';
 import { uploadImage, removeImage } from './storage.service.js';
 import { ensureStore } from './store.service.js';
+import { customerPrice, round2 } from '../lib/pricing.js';
 
 const PRODUCT_SELECT = '*, categories(id, name, slug), stores(id, name)';
 
@@ -63,16 +64,23 @@ export async function listSellerProducts(userId, role) {
 // POST /products — creates a product attached to the caller's store. Sellers
 // always start pending admin approval (ignoring any client-supplied value);
 // an admin creating a product is the approver, so theirs is approved.
+//
+// The price the caller enters is the amount they want to receive per unit. The
+// platform's markup is added on top to form the customer-facing price, so the
+// seller's payout is never reduced by the commission.
 export async function createProduct(userId, role, input) {
   const store = await ensureStore(userId, role);
   await validateCategory(input.category_id);
 
   const approvalStatus = role === 'admin' ? 'approved' : 'pending';
+  const basePrice = round2(input.price);
 
   const { data, error } = await db
     .from('products')
     .insert({
       ...input,
+      price: customerPrice(basePrice),
+      base_price: basePrice,
       store_id: store.id,
       approval_status: approvalStatus,
       rejection_reason: null,
@@ -105,13 +113,22 @@ export async function resubmitProduct(userId, productId) {
 }
 
 // PATCH /products/:id — partial update. Fields are whitelisted by zod already.
+// A supplied price is treated as the seller's base price; the customer-facing
+// price is recomputed from it so the markup always stays in sync.
 export async function updateProduct(userId, productId, patch) {
   await loadOwnedProduct(userId, productId);
   await validateCategory(patch.category_id);
 
+  const update = { ...patch };
+  if (update.price !== undefined) {
+    const basePrice = round2(update.price);
+    update.base_price = basePrice;
+    update.price = customerPrice(basePrice);
+  }
+
   const { data, error } = await db
     .from('products')
-    .update(patch)
+    .update(update)
     .eq('id', productId)
     .select(PRODUCT_SELECT)
     .single();
