@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { lazy, Suspense, useLayoutEffect } from "react";
+import { Routes, Route, Navigate, useLocation, useNavigationType } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { chunk } from "./lib/routeModules";
 import WebGLBackground from "./components/WebGLBackground";
@@ -41,13 +41,17 @@ const ContactUs = lazy(chunk.contactUs);
 
 function ScrollToTop() {
   const { pathname } = useLocation();
+  const navigationType = useNavigationType();
 
-  // React Router keeps the previous document scroll position across
-  // navigations, so a page opened after scrolling down would appear part-way
-  // (often at the footer). Reset to the top whenever the route changes.
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+  // Fresh navigations (link taps, redirects) should open at the top, but
+  // back/forward (POP) should land where the user left off — e.g. returning to
+  // a long product list after opening an item. So only reset on PUSH/REPLACE
+  // and leave POP to the browser's own scroll restoration.
+  useLayoutEffect(() => {
+    if (navigationType !== "POP") {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, navigationType]);
 
   return null;
 }
