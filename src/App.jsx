@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { chunk } from "./lib/routeModules";
@@ -38,6 +38,19 @@ const PrivacyPolicy = lazy(chunk.privacy);
 const RefundPolicy = lazy(chunk.refundPolicy);
 const ShippingPolicy = lazy(chunk.shippingPolicy);
 const ContactUs = lazy(chunk.contactUs);
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  // React Router keeps the previous document scroll position across
+  // navigations, so a page opened after scrolling down would appear part-way
+  // (often at the footer). Reset to the top whenever the route changes.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 function RouteFallback() {
   return (
@@ -85,6 +98,7 @@ function App() {
 
   return (
     <>
+      <ScrollToTop />
       <WebGLBackground />
       <div
         className={`relative z-10 flex flex-col min-h-[100dvh] ${
