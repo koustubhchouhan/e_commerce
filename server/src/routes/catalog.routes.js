@@ -35,7 +35,9 @@ const reviewLimiter = rateLimit({
 // Public catalog reads are identical for every visitor, so they may be cached
 // by the browser and shared caches; catalog edits appear within maxAge.
 router.get('/categories', publicCache(300, 900), listCategories);
-router.get('/hero-slides', publicCache(300, 900), listSlides);
+// Hero slides are edited rarely but should reflect quickly after an admin
+// change, so keep the client cache short instead of the catalog's 5 minutes.
+router.get('/hero-slides', publicCache(60, 300), listSlides);
 router.get(
   '/products',
   publicCache(60, 300),
