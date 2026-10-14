@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToastStore } from '../store/toastStore';
 import { finishGoogleOAuth } from '../lib/googleAuth';
-import { ShoppingCart } from 'lucide-react';
+import Logo from '../components/Logo';
 
 const ROLE_LABELS = { admin: 'Admin', seller: 'Seller', customer: 'Customer' };
 
@@ -82,8 +82,11 @@ export default function AuthCallback() {
     <div className="flex items-center justify-center min-h-[100dvh] px-4">
       <div className="text-center">
         <div className="flex items-center justify-center gap-3 mb-4">
-          <ShoppingCart size={32} className="text-[#B7322A]" />
-          <span className="text-glow font-display text-3xl font-bold text-[#231A16]">Arghya</span>
+          <Logo
+            badgeClassName="w-11 h-11 bg-[#B7322A] text-[#FDF8F0]"
+            markSize={24}
+            textClassName="text-glow font-display text-3xl font-bold text-[#231A16]"
+          />
         </div>
         <p className="text-[#7A6A5B] animate-pulse">Completing Google sign-in…</p>
       </div>

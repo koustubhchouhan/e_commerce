@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToastStore } from '../store/toastStore';
 import { isGoogleOAuthConfigured } from '../lib/googleAuthConfig';
+import Logo from '../components/Logo';
 
 // Account types offered at sign-up. Admin is never self-selectable — it is
 // granted by the platform, not applied for.
@@ -94,10 +95,7 @@ export default function SignUp() {
               aria-hidden="true"
             />
             <div className="relative flex items-center gap-2">
-              <span className="w-9 h-9 rounded-full bg-[#E0A11C] text-[#231A16] flex items-center justify-center font-display font-bold">
-                N
-              </span>
-              <span className="font-display text-xl font-semibold">Arghya</span>
+              <Logo textClassName="font-display text-xl font-semibold" />
             </div>
 
             <div className="relative mt-5 sm:mt-8">

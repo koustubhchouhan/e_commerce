@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  ShoppingBag, ShoppingCart, User, Search, LogOut, Menu, X,
-  Home, LayoutGrid, MessageCircle, Package,
-  LayoutDashboard, ClipboardList, Settings, MoreHorizontal,
+  ShoppingCart, User, Search, LogOut, Menu, X, Package,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCartStore } from '../store/cartStore';
 import PrefetchLink from './PrefetchLink';
+import Logo from './Logo';
 
 export default function NavBar() {
   const location = useLocation();
@@ -162,10 +161,7 @@ export default function NavBar() {
             to={userRole === 'admin' ? '/admin' : userRole === 'seller' ? '/seller' : '/home'}
             className="flex items-center gap-2 shrink-0"
           >
-            <span className="w-9 h-9 rounded-full bg-[#E0A11C] text-[#231A16] flex items-center justify-center shrink-0">
-              <ShoppingBag size={18} />
-            </span>
-            <span className="font-display text-xl font-semibold tracking-tight text-[#FDF8F0]">Arghya</span>
+            <Logo textClassName="font-display text-xl font-semibold tracking-tight text-[#FDF8F0]" />
           </PrefetchLink>
 
           {/* Desktop nav links */}

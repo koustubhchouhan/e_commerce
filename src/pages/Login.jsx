@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { isGoogleOAuthConfigured } from '../lib/googleAuthConfig';
 import { POLICY_LINKS } from '../lib/business';
+import Logo from '../components/Logo';
 
 // Role the person intends to sign in as. This is only a UX guard — the real
 // role still comes from the server. If the selection mismatches the account,
@@ -100,10 +101,7 @@ export default function Login() {
               aria-hidden="true"
             />
             <div className="relative flex items-center gap-2">
-              <span className="w-9 h-9 rounded-full bg-[#E0A11C] text-[#231A16] flex items-center justify-center font-display font-bold">
-                N
-              </span>
-              <span className="font-display text-xl font-semibold">Arghya</span>
+              <Logo textClassName="font-display text-xl font-semibold" />
             </div>
 
             <div className="relative mt-5 sm:mt-8">

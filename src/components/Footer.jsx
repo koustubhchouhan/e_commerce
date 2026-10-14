@@ -1,6 +1,6 @@
-import { ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BUSINESS, POLICY_LINKS } from '../lib/business';
+import Logo from './Logo';
 
 const labelClass = 'text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.08em] text-[#E0A11C] mb-2';
 const linkClass = 'text-xs sm:text-sm text-[#F6D9CE] hover:text-[#FDF8F0] transition-colors';
@@ -22,10 +22,12 @@ export default function Footer() {
       <div className="max-w-[1440px] mx-auto grid grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-6 md:gap-10">
         <div className="col-span-3 md:col-span-1">
           <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-full bg-[#E0A11C] text-[#2A130F] flex items-center justify-center shrink-0">
-              <ShoppingBag size={16} />
-            </span>
-            <span className="font-display text-lg md:text-2xl font-bold text-[#FDF8F0]">{BUSINESS.brandName}</span>
+            <Logo
+              badgeClassName="w-8 h-8 bg-[#E0A11C] text-[#2A130F]"
+              markSize={16}
+              text={BUSINESS.brandName}
+              textClassName="font-display text-lg md:text-2xl font-bold text-[#FDF8F0]"
+            />
           </div>
           <p className="hidden md:block text-[#F6D9CE] text-sm max-w-xs mt-3">
             Pandit-verified puja kits and samagri, delivered before your muhurat.
