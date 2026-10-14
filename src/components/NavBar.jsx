@@ -196,13 +196,15 @@ export default function NavBar() {
                 aria-label={`Cart, ${totalItems} item${totalItems === 1 ? '' : 's'}`}
                 className="relative h-11 px-3 flex items-center gap-2 rounded-full hover:bg-[#FDF8F0]/10 transition-colors"
               >
-                <ShoppingCart size={20} />
+                <span className="relative flex">
+                  <ShoppingCart size={20} />
+                  {totalItems > 0 && (
+                    <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 rounded-full bg-[#E0A11C] text-[#231A16] text-[10px] font-bold leading-none flex items-center justify-center">
+                      {totalItems > 9 ? '9+' : totalItems}
+                    </span>
+                  )}
+                </span>
                 <span className="hidden sm:inline text-sm font-medium">Cart</span>
-                {totalItems > 0 && (
-                  <span className="min-w-5 h-5 px-1 rounded-full bg-[#E0A11C] text-[#231A16] text-[11px] font-bold flex items-center justify-center">
-                    {totalItems > 9 ? '9+' : totalItems}
-                  </span>
-                )}
               </PrefetchLink>
             )}
 
@@ -324,13 +326,15 @@ export default function NavBar() {
 
               return (
                 <PrefetchLink key={to} to={to} className={tabClass}>
-                  <Icon size={20} />
+                  <span className="relative flex">
+                    <Icon size={20} />
+                    {to === '/cart' && totalItems > 0 && (
+                      <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 rounded-full bg-[#B7322A] text-[#FDF8F0] text-[9px] font-bold leading-none flex items-center justify-center">
+                        {totalItems > 9 ? '9+' : totalItems}
+                      </span>
+                    )}
+                  </span>
                   {label}
-                  {to === '/cart' && totalItems > 0 && (
-                    <span className="absolute top-1 right-1/2 translate-x-4 min-w-4 h-4 px-1 rounded-full bg-[#B7322A] text-[#FDF8F0] text-[9px] font-bold flex items-center justify-center">
-                      {totalItems > 9 ? '9+' : totalItems}
-                    </span>
-                  )}
                 </PrefetchLink>
               );
             })}
