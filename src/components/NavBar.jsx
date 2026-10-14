@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   ShoppingCart, User, Search, LogOut, Menu, X, Package,
+  Home, LayoutGrid, MessageCircle,
+  LayoutDashboard, ClipboardList, Settings, MoreHorizontal,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCartStore } from '../store/cartStore';
