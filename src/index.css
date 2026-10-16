@@ -242,16 +242,22 @@
     display: none;
   }
 
+  /* `backwards` (not `both`): a forwards fill keeps the finished keyframe's
+     `transform` applied as an identity matrix, which still counts as a
+     transform — so the wrapper stays a containing block for `position: fixed`
+     and clips modals between the navbar and footer. Backwards fill releases the
+     transform once the animation ends while still hiding the pre-animation
+     flash. */
   .animate-fade-in-up {
-    animation: fade-in-up 0.5s ease-out both;
+    animation: fade-in-up 0.5s ease-out backwards;
   }
 
   .animate-fade-in {
-    animation: fade-in 0.25s ease-out both;
+    animation: fade-in 0.25s ease-out backwards;
   }
 
   .animate-scale-in {
-    animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
   /* Shimmering placeholder block for loading skeletons. The cream base matches
