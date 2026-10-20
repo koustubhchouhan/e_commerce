@@ -76,9 +76,9 @@ export default function Categories() {
             <Link key={cat.id} to={`/home?category=${encodeURIComponent(cat.title)}`} className="block">
               <GlassCard hover={false} className={`relative overflow-hidden group cursor-pointer transition-all duration-500 border ${getThemeClasses(cat.theme)}`}>
                 <div className="absolute inset-0 z-0">
-                  <img src={cat.img} alt={cat.title} loading="lazy" decoding="async" className="w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700" />
+                  <img src={cat.img} alt={cat.title} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                 </div>
-                <div className={`absolute inset-0 bg-gradient-to-t ${cat.theme === 'festive' ? 'from-[#7A1F1A]/90 to-transparent' : 'from-[#FDF8F0]/90 to-transparent'} z-10`} />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#231A16]/80 via-[#231A16]/10 to-transparent z-10" />
 
                 <div className="relative z-20 p-8 h-[300px] flex flex-col justify-end">
                   {cat.theme === 'festive' && (
@@ -86,10 +86,10 @@ export default function Categories() {
                       SPECIAL EVENT
                     </span>
                   )}
-                  <h2 className={`font-display text-3xl font-bold mb-2 ${cat.theme === 'festive' ? 'text-[#E0A11C] drop-shadow-[0_0_4px_rgba(224,161,28,0.44)]' : 'text-[#231A16]'}`}>
+                  <h2 className={`font-display text-3xl font-bold mb-2 ${cat.theme === 'festive' ? 'text-[#E0A11C] drop-shadow-[0_0_4px_rgba(224,161,28,0.44)]' : 'text-[#FDF8F0] drop-shadow-[0_1px_10px_rgba(0,0,0,0.5)]'}`}>
                     {cat.title}
                   </h2>
-                  <p className="text-[#2A211B] text-sm opacity-90">{cat.desc}</p>
+                  <p className="text-[#FDF8F0]/85 text-sm drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">{cat.desc}</p>
                 </div>
               </GlassCard>
             </Link>
