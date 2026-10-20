@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Shield, Users, UserCheck, Store, Check, X, Clock, CheckCircle, Trash2, Lock, AlertTriangle } from 'lucide-react';
+import { Shield, Users, UserCheck, Store, Check, X, Clock, CheckCircle, Trash2, Lock, AlertTriangle, Truck } from 'lucide-react';
 import { useToastStore } from '../store/toastStore';
 import { api } from '../lib/api';
 import AccountSettingsModal from '../components/AccountSettingsModal';
@@ -29,6 +29,8 @@ export default function AdminProfile() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [delivery, setDelivery] = useState({ deliveryCharge: 29, freeDeliveryThreshold: 200 });
+  const [deliveryBusy, setDeliveryBusy] = useState(false);
   const addToast = useToastStore((s) => s.addToast);
 
   const loadAll = async () => {
@@ -66,10 +68,51 @@ export default function AdminProfile() {
     }
   };
 
+  // Delivery pricing is stored in platform_settings and read by create_orders()
+  // at checkout, so saving here changes what every future order is charged.
+  const loadDelivery = async () => {
+    try {
+      const s = await api.adminSettings();
+      setDelivery({
+        deliveryCharge: Number(s.deliveryCharge ?? 29),
+        freeDeliveryThreshold: Number(s.freeDeliveryThreshold ?? 200),
+      });
+    } catch {
+      // Keep the defaults; the form is still usable.
+    }
+  };
+
   useEffect(() => {
     loadAll();
+    loadDelivery();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const saveDelivery = async () => {
+    const charge = Number(delivery.deliveryCharge);
+    const threshold = Number(delivery.freeDeliveryThreshold);
+    if (!Number.isFinite(charge) || charge < 0 || !Number.isFinite(threshold) || threshold < 0) {
+      addToast('Enter valid non-negative delivery amounts.', 'error');
+      return;
+    }
+
+    setDeliveryBusy(true);
+    try {
+      const saved = await api.updateSettings({
+        deliveryCharge: charge,
+        freeDeliveryThreshold: threshold,
+      });
+      setDelivery({
+        deliveryCharge: Number(saved.deliveryCharge),
+        freeDeliveryThreshold: Number(saved.freeDeliveryThreshold),
+      });
+      addToast('Delivery settings saved.', 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to save delivery settings.', 'error');
+    } finally {
+      setDeliveryBusy(false);
+    }
+  };
 
   const approveSeller = async (id) => {
     const req = requests.find((r) => r.id === id);
@@ -258,6 +301,54 @@ export default function AdminProfile() {
           </div>
         </div>
 
+      </section>
+
+      {/* ═══ Delivery Charges ═══ */}
+      <section className="glass-panel p-6 rounded-xl">
+        <div className="flex items-center gap-3 text-[#B7322A] mb-2">
+          <Truck size={28} />
+          <h2 className="font-display text-2xl font-semibold text-[#231A16]">Delivery Charges</h2>
+        </div>
+        <p className="text-[#7A6A5B] text-sm max-w-2xl mb-6">
+          Applied to every checkout. Delivery is free once the items total reaches the threshold;
+          set the threshold to 0 to always charge delivery.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
+          <label className="flex flex-col gap-1.5">
+            <span className="micro-label">Delivery charge (₹)</span>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={delivery.deliveryCharge}
+              onChange={(e) => setDelivery((d) => ({ ...d, deliveryCharge: e.target.value }))}
+              className="w-full rounded-xl border border-[#E7DAC8] bg-[#FFFCF7] px-4 py-2.5 text-sm text-[#231A16] outline-none focus:ring-2 focus:ring-[#B7322A]/30"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="micro-label">Free delivery over (₹)</span>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={delivery.freeDeliveryThreshold}
+              onChange={(e) => setDelivery((d) => ({ ...d, freeDeliveryThreshold: e.target.value }))}
+              className="w-full rounded-xl border border-[#E7DAC8] bg-[#FFFCF7] px-4 py-2.5 text-sm text-[#231A16] outline-none focus:ring-2 focus:ring-[#B7322A]/30"
+            />
+          </label>
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <button
+            onClick={saveDelivery}
+            disabled={deliveryBusy}
+            className="px-6 py-2.5 bg-[#B7322A] text-[#FDF8F0] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-xl hover:shadow-[0_0_9px_rgba(183,50,42,0.17)] transition-all duration-300 disabled:opacity-60"
+          >
+            {deliveryBusy ? 'Saving…' : 'Save delivery settings'}
+          </button>
+          <p className="text-xs text-[#8A7B6B]">Threshold 0 = always charge delivery.</p>
+        </div>
       </section>
 
       <AccountSettingsModal open={accountOpen} onClose={() => setAccountOpen(false)} initialTab="profile" />

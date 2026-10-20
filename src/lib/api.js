@@ -166,6 +166,7 @@ export const api = {
 
   // ---- Catalog ----
   categories: () => request('/categories'),
+  settings: () => request('/settings'),
   heroSlides: () => request('/hero-slides'),
   products: ({ search, category, page = 1, limit = 100 } = {}) => {
     const qs = new URLSearchParams({ page, limit });
@@ -291,6 +292,11 @@ export const api = {
       formData: true,
     });
   },
+
+  // ---- Admin: platform settings (delivery pricing) ----
+  adminSettings: () => request('/admin/settings', { auth: true }),
+  updateSettings: (data) =>
+    request('/admin/settings', { method: 'PATCH', body: data, auth: true }),
 
   // ---- Seller orders ----
   sellerOrders: () => request('/seller/orders', { auth: true }),

@@ -12,6 +12,7 @@ import adminRoutes from '../src/routes/admin.routes.js';
 import orderRoutes from '../src/routes/order.routes.js';
 import paymentRoutes from '../src/routes/payment.routes.js';
 import contactRoutes from '../src/routes/contact.routes.js';
+import settingsRoutes from '../src/routes/settings.routes.js';
 
 // Must mirror the app.use(...) mounts in src/app.js. If a router is mounted at
 // a new prefix there, add it here so this audit keeps covering it.
@@ -25,6 +26,7 @@ const MOUNTS = [
   ['', orderRoutes],
   ['/payments', paymentRoutes],
   ['', contactRoutes],
+  ['', settingsRoutes],
 ];
 
 // The only endpoints allowed to run without requireAuth. Anything else that
@@ -39,6 +41,7 @@ const PUBLIC_ROUTES = new Set([
   'POST /auth/oauth/session',
   'GET /categories',
   'GET /hero-slides',
+  'GET /settings',
   'GET /products',
   'GET /products/:id',
   'GET /products/:id/reviews',

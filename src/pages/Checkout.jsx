@@ -10,10 +10,10 @@ import { inr } from '../lib/money';
 
 const STEPS = ['Shipping', 'Payment'];
 
-// Orders under ₹200 pay a flat ₹29 delivery charge. Kept in sync with
-// create_orders() in server/db/create_order.sql.
-const FREE_DELIVERY_THRESHOLD = 200;
-const DELIVERY_CHARGE = 29;
+// Fallbacks used until the admin-configured values load (or if the request
+// fails). The server re-applies the real values in create_orders(), so the
+// displayed total always matches what is actually charged.
+const DEFAULT_DELIVERY = { charge: 29, threshold: 200 };
 
 // Client-side guard so the payment step is only reachable with a complete
 // shipping address. The server re-validates on order creation, so this is UX.
@@ -60,14 +60,18 @@ function loadRazorpay() {
 
 export default function Checkout() {
   const [step, setStep] = useState(0);
+  const [deliveryConfig, setDeliveryConfig] = useState(DEFAULT_DELIVERY);
   const { items, getSubtotal, clearCart } = useCartStore();
   const addToast = useToastStore(s => s.addToast);
   const navigate = useNavigate();
 
   const subtotal = getSubtotal();
-  // Flat ₹29 delivery on orders under ₹200, applied to the whole checkout. The
-  // server adds the same fee (per create_orders), so the amount charged matches.
-  const delivery = subtotal > 0 && subtotal < FREE_DELIVERY_THRESHOLD ? DELIVERY_CHARGE : 0;
+  // Delivery pricing is admin-configurable (Platform Settings). A positive
+  // threshold makes delivery free once the items subtotal reaches it; a
+  // threshold of 0 means delivery is always charged.
+  const { charge: deliveryCharge, threshold: freeThreshold } = deliveryConfig;
+  const isFreeDelivery = freeThreshold > 0 && subtotal >= freeThreshold;
+  const delivery = subtotal > 0 && !isFreeDelivery ? deliveryCharge : 0;
   const total = subtotal + delivery;
   const sellers = [...new Set(items.map(({ product }) => product?.storeName).filter(Boolean))];
 
@@ -104,6 +108,25 @@ export default function Checkout() {
   const { user } = useAuth();
   const saved = user?.shippingAddress;
   const appliedDefault = useRef(false);
+
+  // Load the admin-configured delivery pricing once. On failure keep the
+  // defaults; the server still charges the configured values.
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .settings()
+      .then((s) => {
+        if (cancelled || !s) return;
+        setDeliveryConfig({
+          charge: Number(s.deliveryCharge ?? DEFAULT_DELIVERY.charge),
+          threshold: Number(s.freeDeliveryThreshold ?? DEFAULT_DELIVERY.threshold),
+        });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Once the session is available, pre-fill the shipping form with the saved
   // default address. Runs a single time so edits made by the user win.
@@ -335,7 +358,9 @@ export default function Checkout() {
               {delivery > 0 && (
                 <>
                   <div className="flex justify-between text-[#7A6A5B]"><span>Delivery</span><span>{inr(delivery)}</span></div>
-                  <p className="text-[11px] text-[#8A7B6B]">Free delivery on orders over {inr(FREE_DELIVERY_THRESHOLD)}.</p>
+                  {freeThreshold > 0 && (
+                    <p className="text-[11px] text-[#8A7B6B]">Free delivery on orders over {inr(freeThreshold)}.</p>
+                  )}
                 </>
               )}
               <div className="flex justify-between text-[#231A16] font-bold text-lg pt-2 mt-1 border-t border-[#231a16]/10"><span>Total</span><span>{inr(total)}</span></div>

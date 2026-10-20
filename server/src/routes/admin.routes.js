@@ -55,6 +55,11 @@ import {
   adminProductsQuerySchema,
   reviewProductApprovalSchema,
 } from '../validators/product.validators.js';
+import {
+  getSettings,
+  updateSettings,
+} from '../controllers/settings.controller.js';
+import { updateSettingsSchema } from '../validators/settings.validators.js';
 
 const router = Router();
 
@@ -204,6 +209,16 @@ router.delete(
   requireRole('admin'),
   validateParams(uuidParamSchema),
   deleteSlide
+);
+
+// ---- Platform settings ----------------------------------------------
+router.get('/admin/settings', requireAuth, requireRole('admin'), getSettings);
+router.patch(
+  '/admin/settings',
+  requireAuth,
+  requireRole('admin'),
+  validate(updateSettingsSchema),
+  updateSettings
 );
 
 export default router;

@@ -415,6 +415,22 @@ alter table public.hero_slides add column if not exists is_active boolean not nu
 
 create index if not exists idx_hero_slides_order on public.hero_slides(is_active, position, created_at);
 
+-- ---- platform_settings (admin-managed checkout configuration) --------
+-- A single row (id is always true) holding the values the admin can edit
+-- from Platform Settings. create_orders() reads these when it applies the
+-- delivery charge, so a change here takes effect on the next checkout.
+-- free_delivery_threshold = 0 means delivery is never free.
+create table if not exists public.platform_settings (
+  id                      boolean primary key default true check (id),
+  delivery_charge         numeric(12,2) not null default 29 check (delivery_charge >= 0),
+  free_delivery_threshold numeric(12,2) not null default 200 check (free_delivery_threshold >= 0),
+  updated_at              timestamptz not null default now(),
+  updated_by              uuid references public.profiles(id) on delete set null
+);
+
+insert into public.platform_settings (id) values (true) on conflict (id) do nothing;
+
+
 -- =====================================================================
 -- Row Level Security
 --
@@ -455,6 +471,7 @@ alter table public.settlement_orders   enable row level security;
 alter table public.reviews             enable row level security;
 alter table public.contact_messages    enable row level security;
 alter table public.hero_slides         enable row level security;
+alter table public.platform_settings   enable row level security;
 
 -- ---- RLS helper functions -------------------------------------------
 -- SECURITY DEFINER so they can read the base tables without re-triggering
@@ -702,6 +719,14 @@ drop policy if exists hero_slides_select_active_or_admin on public.hero_slides;
 create policy hero_slides_select_active_or_admin on public.hero_slides
   for select to anon, authenticated
   using (is_active = true or public.is_admin());
+
+-- ---- platform_settings ----------------------------------------------
+-- Publicly readable (checkout needs the delivery numbers); writes stay on
+-- service_role via the admin API.
+drop policy if exists platform_settings_select_public on public.platform_settings;
+create policy platform_settings_select_public on public.platform_settings
+  for select to anon, authenticated
+  using (true);
 
 -- ---- public read views ----------------------------------------------
 -- The public review list needs the author's display name. This view adds it

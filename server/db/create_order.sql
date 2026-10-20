@@ -122,8 +122,8 @@ security definer
 set search_path = public
 as $$
 declare
-  v_free_delivery_threshold constant numeric(12,2) := 200;
-  v_delivery_charge         constant numeric(12,2) := 29;
+  v_free_delivery_threshold numeric(12,2) := 200;
+  v_delivery_charge         numeric(12,2) := 29;
   v_result      jsonb := '[]'::jsonb;
   v_store_id    uuid;
   v_group       jsonb;
@@ -132,6 +132,17 @@ declare
   v_first_id    uuid := null;
   v_items_total numeric(12,2) := 0;
 begin
+  -- Delivery pricing is admin-editable from Platform Settings. Read it here so
+  -- a change applies to the next checkout; fall back to the defaults if the
+  -- single settings row is somehow missing.
+  select delivery_charge, free_delivery_threshold
+    into v_delivery_charge, v_free_delivery_threshold
+    from public.platform_settings
+    where id = true;
+
+  v_delivery_charge         := coalesce(v_delivery_charge, 29);
+  v_free_delivery_threshold := coalesce(v_free_delivery_threshold, 200);
+
   if p_items is null or jsonb_array_length(p_items) = 0 then
     raise exception 'Order must contain at least one item';
   end if;
@@ -169,7 +180,8 @@ begin
     from public.orders
     where id = any(v_order_ids);
 
-  if v_items_total > 0 and v_items_total < v_free_delivery_threshold then
+  if v_items_total > 0
+     and (v_free_delivery_threshold <= 0 or v_items_total < v_free_delivery_threshold) then
     update public.orders
       set delivery_fee = v_delivery_charge,
           total        = subtotal + v_delivery_charge
