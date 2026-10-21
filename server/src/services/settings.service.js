@@ -6,9 +6,11 @@ import { round2 } from '../lib/pricing.js';
 // the API and checkout still behave sensibly if the row is ever missing.
 export const DEFAULT_DELIVERY_CHARGE = 29;
 export const DEFAULT_FREE_DELIVERY_THRESHOLD = 200;
+// One-time fee an approved applicant pays before their store goes live.
+export const DEFAULT_SELLER_MEMBERSHIP_FEE = 500;
 
 const SETTINGS_SELECT =
-  'delivery_charge, free_delivery_threshold, updated_at, updated_by';
+  'delivery_charge, free_delivery_threshold, seller_membership_fee, updated_at, updated_by';
 
 function serialize(row) {
   return {
@@ -16,6 +18,9 @@ function serialize(row) {
     freeDeliveryThreshold: row
       ? Number(row.free_delivery_threshold)
       : DEFAULT_FREE_DELIVERY_THRESHOLD,
+    sellerMembershipFee: row
+      ? Number(row.seller_membership_fee)
+      : DEFAULT_SELLER_MEMBERSHIP_FEE,
     updatedAt: row?.updated_at ?? null,
   };
 }
@@ -41,6 +46,9 @@ export async function updateSettings(patch, updatedBy) {
   }
   if (patch.freeDeliveryThreshold !== undefined) {
     update.free_delivery_threshold = round2(patch.freeDeliveryThreshold);
+  }
+  if (patch.sellerMembershipFee !== undefined) {
+    update.seller_membership_fee = round2(patch.sellerMembershipFee);
   }
   if (updatedBy) update.updated_by = updatedBy;
 

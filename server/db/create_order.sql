@@ -545,3 +545,152 @@ $$;
 
 revoke all on function public.create_settlement(uuid, uuid[], numeric, uuid, text) from public, anon, authenticated;
 grant execute on function public.create_settlement(uuid, uuid[], numeric, uuid, text) to service_role;
+
+-- =====================================================================
+-- Seller membership.
+--   mark_seller_membership_paid -> capture a seller_membership payment and, when
+--     the application is still awaiting payment, grant the seller role, create
+--     the store once, and mark the application approved. Idempotent: a webhook
+--     racing /membership-verify returns activated=false the second time.
+--     service_role only.
+--   expire_stale_seller_approvals -> reject applications whose 24h payment
+--     window lapsed without a captured fee.
+-- A capture that lands after the window already rejected the application is not
+-- activated; the caller logs it so the charge can be refunded manually.
+-- =====================================================================
+create or replace function public.mark_seller_membership_paid(
+  p_gateway_order_id   text,
+  p_gateway_payment_id text,
+  p_raw_payload        jsonb default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_payment     public.payments%rowtype;
+  v_application public.seller_applications%rowtype;
+  v_status      payment_status;
+  v_app_status  application_status;
+  v_store_id    uuid;
+  v_activated   boolean := false;
+begin
+  select * into v_payment
+    from public.payments
+    where gateway_order_id = p_gateway_order_id
+    for update;
+
+  if not found then
+    raise exception 'Unknown payment order %', p_gateway_order_id;
+  end if;
+  if v_payment.purpose <> 'seller_membership' then
+    raise exception 'Payment % is not a seller membership charge', p_gateway_order_id;
+  end if;
+
+  update public.payments
+    set status             = 'captured',
+        gateway_payment_id = coalesce(gateway_payment_id, p_gateway_payment_id),
+        signature_verified = true,
+        raw_payload        = coalesce(p_raw_payload, raw_payload),
+        updated_at         = now()
+    where id = v_payment.id
+      and status in ('created', 'authorized', 'failed');
+
+  select status into v_status from public.payments where id = v_payment.id;
+
+  select * into v_application
+    from public.seller_applications
+    where id = v_payment.seller_application_id
+    for update;
+
+  if found and v_application.status in ('approved_pending_payment', 'approved') then
+    if v_application.status = 'approved_pending_payment'
+       and v_application.payment_deadline is not null
+       and v_application.payment_deadline >= now() then
+      update public.profiles set role = 'seller' where id = v_application.user_id;
+
+      select id into v_store_id
+        from public.stores
+        where owner_id = v_application.user_id
+        limit 1;
+
+      if v_store_id is null then
+        insert into public.stores (owner_id, name)
+          values (v_application.user_id, v_application.store_name)
+          returning id into v_store_id;
+      end if;
+
+      update public.seller_applications
+        set status = 'approved',
+            activated_at = now(),
+            payment_deadline = null,
+            membership_payment_id = v_payment.id
+        where id = v_application.id;
+
+      v_activated := true;
+    elsif v_application.status = 'approved_pending_payment' then
+      -- The fee was captured, but the 24h window had already lapsed. Do not
+      -- grant access; the caller logs this so the charge can be refunded.
+      update public.seller_applications
+        set status = 'rejected',
+            reviewed_at = now(),
+            payment_deadline = null
+        where id = v_application.id;
+    else
+      -- Already active (e.g. a webhook retry): just record the payment link.
+      update public.seller_applications
+        set membership_payment_id = coalesce(membership_payment_id, v_payment.id)
+        where id = v_application.id;
+    end if;
+
+    select id into v_store_id
+      from public.stores
+      where owner_id = v_application.user_id
+      limit 1;
+  end if;
+
+  select status into v_app_status
+    from public.seller_applications
+    where id = v_payment.seller_application_id;
+
+  return jsonb_build_object(
+    'payment_id',         v_payment.id,
+    'status',             v_status,
+    'application_id',     v_payment.seller_application_id,
+    'application_status', v_app_status,
+    'store_id',           v_store_id,
+    'activated',          v_activated
+  );
+end;
+$$;
+
+create or replace function public.expire_stale_seller_approvals()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_expired int;
+begin
+  with expired as (
+    update public.seller_applications
+      set status = 'rejected',
+          reviewed_at = now(),
+          payment_deadline = null
+      where status = 'approved_pending_payment'
+        and payment_deadline is not null
+        and payment_deadline < now()
+      returning id
+  )
+  select count(*) into v_expired from expired;
+
+  return jsonb_build_object('expired_applications', v_expired);
+end;
+$$;
+
+revoke all on function public.mark_seller_membership_paid(text, text, jsonb) from public, anon, authenticated;
+revoke all on function public.expire_stale_seller_approvals() from public, anon, authenticated;
+grant execute on function public.mark_seller_membership_paid(text, text, jsonb) to service_role;
+grant execute on function public.expire_stale_seller_approvals() to service_role;

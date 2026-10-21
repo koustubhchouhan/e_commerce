@@ -420,7 +420,7 @@ export default function AdminPanel() {
       await api.reviewApplication(id, action);
       addToast(
         action === 'approve'
-          ? `"${req?.storeName ?? 'Store'}" approved as a verified seller!`
+          ? `"${req?.storeName ?? 'Store'}" approved. The applicant can now pay the membership fee to activate.`
           : `"${req?.storeName ?? 'Request'}" application rejected.`,
         action === 'approve' ? 'success' : 'error',
       );

@@ -9,8 +9,13 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
-  create type application_status as enum ('pending', 'approved', 'rejected');
+  create type application_status as enum ('pending', 'approved_pending_payment', 'approved', 'rejected');
 exception when duplicate_object then null; end $$;
+
+-- Upgrade path for databases created before the seller membership fee existed:
+-- an admin approval now parks the application in 'approved_pending_payment'
+-- until the applicant pays. ADD VALUE IF NOT EXISTS is a no-op on fresh installs.
+alter type application_status add value if not exists 'approved_pending_payment';
 
 do $$ begin
   create type product_status as enum ('active', 'draft', 'out_of_stock');
@@ -146,6 +151,13 @@ create table if not exists public.seller_applications (
 alter table public.seller_applications add column if not exists contact_phone text;
 alter table public.seller_applications add column if not exists storefront_image_url text;
 
+-- Seller membership. After an admin approves, the applicant must pay a one-time
+-- membership fee before the seller role is granted. approved_pending_payment is
+-- bounded by payment_deadline (24h); when it lapses the application is rejected.
+-- activated_at records when the paid approval actually went live.
+alter table public.seller_applications add column if not exists payment_deadline timestamptz;
+alter table public.seller_applications add column if not exists activated_at timestamptz;
+
 -- ---- categories -----------------------------------------------------
 create table if not exists public.categories (
   id   uuid primary key default gen_random_uuid(),
@@ -254,6 +266,10 @@ create table if not exists public.payments (
   id                 uuid primary key default gen_random_uuid(),
   user_id            uuid not null references public.profiles(id) on delete restrict,
   gateway            text not null default 'razorpay',
+  -- 'order' for a checkout; 'seller_membership' for the one-time activation fee.
+  purpose            text not null default 'order',
+  -- Set only for seller_membership payments; ties the charge to its application.
+  seller_application_id uuid references public.seller_applications(id) on delete set null,
   gateway_order_id   text,
   gateway_payment_id text,
   amount             numeric(12,2) not null default 0,
@@ -264,6 +280,11 @@ create table if not exists public.payments (
   created_at         timestamptz not null default now(),
   updated_at         timestamptz not null default now()
 );
+
+-- Upgrade path for databases predating seller memberships.
+alter table public.payments add column if not exists purpose text not null default 'order';
+alter table public.payments
+  add column if not exists seller_application_id uuid references public.seller_applications(id) on delete set null;
 
 create index if not exists idx_payments_user_id on public.payments(user_id);
 
@@ -286,6 +307,11 @@ create table if not exists public.payment_orders (
 );
 
 create index if not exists idx_payment_orders_order_id on public.payment_orders(order_id);
+
+-- Paid membership links the application back to the captured payment, so the
+-- admin ledger and the seller's record can trace the activation fee.
+alter table public.seller_applications
+  add column if not exists membership_payment_id uuid references public.payments(id) on delete set null;
 
 -- ---- settlements ----------------------------------------------------
 -- The platform takes every payment into one account and pays each seller out
@@ -424,9 +450,15 @@ create table if not exists public.platform_settings (
   id                      boolean primary key default true check (id),
   delivery_charge         numeric(12,2) not null default 29 check (delivery_charge >= 0),
   free_delivery_threshold numeric(12,2) not null default 200 check (free_delivery_threshold >= 0),
+  -- One-time fee a newly approved seller pays before their store goes live.
+  seller_membership_fee   numeric(12,2) not null default 500 check (seller_membership_fee >= 0),
   updated_at              timestamptz not null default now(),
   updated_by              uuid references public.profiles(id) on delete set null
 );
+
+-- Upgrade path for the admin-managed seller membership fee setting.
+alter table public.platform_settings
+  add column if not exists seller_membership_fee numeric(12,2) not null default 500 check (seller_membership_fee >= 0);
 
 insert into public.platform_settings (id) values (true) on conflict (id) do nothing;
 

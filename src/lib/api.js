@@ -211,6 +211,16 @@ export const api = {
     });
   },
   mySellerApplications: () => request('/seller-applications/me', { auth: true }),
+  createMembershipOrder: (id) =>
+    request(`/seller-applications/${id}/membership-order`, { method: 'POST', auth: true }),
+  verifyMembershipPayment: (id, data) =>
+    request(`/seller-applications/${id}/membership-verify`, {
+      method: 'POST',
+      body: data,
+      auth: true,
+    }),
+  declineMembership: (id) =>
+    request(`/seller-applications/${id}/membership-decline`, { method: 'POST', auth: true }),
 
   // ---- Seller store profile ----
   getSellerStore: () => request('/seller/store', { auth: true }),

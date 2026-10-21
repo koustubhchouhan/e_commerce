@@ -21,8 +21,13 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
-  create type application_status as enum ('pending', 'approved', 'rejected');
+  create type application_status as enum ('pending', 'approved_pending_payment', 'approved', 'rejected');
 exception when duplicate_object then null; end $$;
+
+-- Upgrade path for databases created before the seller membership fee existed:
+-- an admin approval now parks the application in 'approved_pending_payment'
+-- until the applicant pays. ADD VALUE IF NOT EXISTS is a no-op on fresh installs.
+alter type application_status add value if not exists 'approved_pending_payment';
 
 do $$ begin
   create type product_status as enum ('active', 'draft', 'out_of_stock');
@@ -158,6 +163,13 @@ create table if not exists public.seller_applications (
 alter table public.seller_applications add column if not exists contact_phone text;
 alter table public.seller_applications add column if not exists storefront_image_url text;
 
+-- Seller membership. After an admin approves, the applicant must pay a one-time
+-- membership fee before the seller role is granted. approved_pending_payment is
+-- bounded by payment_deadline (24h); when it lapses the application is rejected.
+-- activated_at records when the paid approval actually went live.
+alter table public.seller_applications add column if not exists payment_deadline timestamptz;
+alter table public.seller_applications add column if not exists activated_at timestamptz;
+
 -- ---- categories -----------------------------------------------------
 create table if not exists public.categories (
   id   uuid primary key default gen_random_uuid(),
@@ -266,6 +278,10 @@ create table if not exists public.payments (
   id                 uuid primary key default gen_random_uuid(),
   user_id            uuid not null references public.profiles(id) on delete restrict,
   gateway            text not null default 'razorpay',
+  -- 'order' for a checkout; 'seller_membership' for the one-time activation fee.
+  purpose            text not null default 'order',
+  -- Set only for seller_membership payments; ties the charge to its application.
+  seller_application_id uuid references public.seller_applications(id) on delete set null,
   gateway_order_id   text,
   gateway_payment_id text,
   amount             numeric(12,2) not null default 0,
@@ -276,6 +292,11 @@ create table if not exists public.payments (
   created_at         timestamptz not null default now(),
   updated_at         timestamptz not null default now()
 );
+
+-- Upgrade path for databases predating seller memberships.
+alter table public.payments add column if not exists purpose text not null default 'order';
+alter table public.payments
+  add column if not exists seller_application_id uuid references public.seller_applications(id) on delete set null;
 
 create index if not exists idx_payments_user_id on public.payments(user_id);
 
@@ -298,6 +319,11 @@ create table if not exists public.payment_orders (
 );
 
 create index if not exists idx_payment_orders_order_id on public.payment_orders(order_id);
+
+-- Paid membership links the application back to the captured payment, so the
+-- admin ledger and the seller's record can trace the activation fee.
+alter table public.seller_applications
+  add column if not exists membership_payment_id uuid references public.payments(id) on delete set null;
 
 -- ---- settlements ----------------------------------------------------
 -- The platform takes every payment into one account and pays each seller out
@@ -436,9 +462,15 @@ create table if not exists public.platform_settings (
   id                      boolean primary key default true check (id),
   delivery_charge         numeric(12,2) not null default 29 check (delivery_charge >= 0),
   free_delivery_threshold numeric(12,2) not null default 200 check (free_delivery_threshold >= 0),
+  -- One-time fee a newly approved seller pays before their store goes live.
+  seller_membership_fee   numeric(12,2) not null default 500 check (seller_membership_fee >= 0),
   updated_at              timestamptz not null default now(),
   updated_by              uuid references public.profiles(id) on delete set null
 );
+
+-- Upgrade path for the admin-managed seller membership fee setting.
+alter table public.platform_settings
+  add column if not exists seller_membership_fee numeric(12,2) not null default 500 check (seller_membership_fee >= 0);
 
 insert into public.platform_settings (id) values (true) on conflict (id) do nothing;
 
@@ -1311,6 +1343,155 @@ $$;
 
 revoke all on function public.create_settlement(uuid, uuid[], numeric, uuid, text) from public, anon, authenticated;
 grant execute on function public.create_settlement(uuid, uuid[], numeric, uuid, text) to service_role;
+
+-- =====================================================================
+-- Seller membership.
+--   mark_seller_membership_paid -> capture a seller_membership payment and, when
+--     the application is still awaiting payment, grant the seller role, create
+--     the store once, and mark the application approved. Idempotent: a webhook
+--     racing /membership-verify returns activated=false the second time.
+--     service_role only.
+--   expire_stale_seller_approvals -> reject applications whose 24h payment
+--     window lapsed without a captured fee.
+-- A capture that lands after the window already rejected the application is not
+-- activated; the caller logs it so the charge can be refunded manually.
+-- =====================================================================
+create or replace function public.mark_seller_membership_paid(
+  p_gateway_order_id   text,
+  p_gateway_payment_id text,
+  p_raw_payload        jsonb default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_payment     public.payments%rowtype;
+  v_application public.seller_applications%rowtype;
+  v_status      payment_status;
+  v_app_status  application_status;
+  v_store_id    uuid;
+  v_activated   boolean := false;
+begin
+  select * into v_payment
+    from public.payments
+    where gateway_order_id = p_gateway_order_id
+    for update;
+
+  if not found then
+    raise exception 'Unknown payment order %', p_gateway_order_id;
+  end if;
+  if v_payment.purpose <> 'seller_membership' then
+    raise exception 'Payment % is not a seller membership charge', p_gateway_order_id;
+  end if;
+
+  update public.payments
+    set status             = 'captured',
+        gateway_payment_id = coalesce(gateway_payment_id, p_gateway_payment_id),
+        signature_verified = true,
+        raw_payload        = coalesce(p_raw_payload, raw_payload),
+        updated_at         = now()
+    where id = v_payment.id
+      and status in ('created', 'authorized', 'failed');
+
+  select status into v_status from public.payments where id = v_payment.id;
+
+  select * into v_application
+    from public.seller_applications
+    where id = v_payment.seller_application_id
+    for update;
+
+  if found and v_application.status in ('approved_pending_payment', 'approved') then
+    if v_application.status = 'approved_pending_payment'
+       and v_application.payment_deadline is not null
+       and v_application.payment_deadline >= now() then
+      update public.profiles set role = 'seller' where id = v_application.user_id;
+
+      select id into v_store_id
+        from public.stores
+        where owner_id = v_application.user_id
+        limit 1;
+
+      if v_store_id is null then
+        insert into public.stores (owner_id, name)
+          values (v_application.user_id, v_application.store_name)
+          returning id into v_store_id;
+      end if;
+
+      update public.seller_applications
+        set status = 'approved',
+            activated_at = now(),
+            payment_deadline = null,
+            membership_payment_id = v_payment.id
+        where id = v_application.id;
+
+      v_activated := true;
+    elsif v_application.status = 'approved_pending_payment' then
+      -- The fee was captured, but the 24h window had already lapsed. Do not
+      -- grant access; the caller logs this so the charge can be refunded.
+      update public.seller_applications
+        set status = 'rejected',
+            reviewed_at = now(),
+            payment_deadline = null
+        where id = v_application.id;
+    else
+      -- Already active (e.g. a webhook retry): just record the payment link.
+      update public.seller_applications
+        set membership_payment_id = coalesce(membership_payment_id, v_payment.id)
+        where id = v_application.id;
+    end if;
+
+    select id into v_store_id
+      from public.stores
+      where owner_id = v_application.user_id
+      limit 1;
+  end if;
+
+  select status into v_app_status
+    from public.seller_applications
+    where id = v_payment.seller_application_id;
+
+  return jsonb_build_object(
+    'payment_id',         v_payment.id,
+    'status',             v_status,
+    'application_id',     v_payment.seller_application_id,
+    'application_status', v_app_status,
+    'store_id',           v_store_id,
+    'activated',          v_activated
+  );
+end;
+$$;
+
+create or replace function public.expire_stale_seller_approvals()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_expired int;
+begin
+  with expired as (
+    update public.seller_applications
+      set status = 'rejected',
+          reviewed_at = now(),
+          payment_deadline = null
+      where status = 'approved_pending_payment'
+        and payment_deadline is not null
+        and payment_deadline < now()
+      returning id
+  )
+  select count(*) into v_expired from expired;
+
+  return jsonb_build_object('expired_applications', v_expired);
+end;
+$$;
+
+revoke all on function public.mark_seller_membership_paid(text, text, jsonb) from public, anon, authenticated;
+revoke all on function public.expire_stale_seller_approvals() from public, anon, authenticated;
+grant execute on function public.mark_seller_membership_paid(text, text, jsonb) to service_role;
+grant execute on function public.expire_stale_seller_approvals() to service_role;
 
 
 -- ###################### seed.sql ######################

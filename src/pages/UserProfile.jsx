@@ -19,6 +19,10 @@ const STATUS_BADGES = {
   cancelled: 'bg-[#B3261E]/15 text-[#B3261E] border-[#B3261E]/30',
 };
 
+// An application is "current" until it is rejected: pending review, awaiting the
+// one-time membership fee, or fully approved.
+const ACTIVE_APPLICATION_STATUSES = ['approved', 'approved_pending_payment', 'pending'];
+
 const formatDate = (iso) => {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -42,7 +46,9 @@ export default function UserProfile() {
     try {
       const res = await api.mySellerApplications();
       const apps = res.items ?? [];
-      setSellerApp(apps.find((a) => a.status === 'pending' || a.status === 'approved') ?? null);
+      setSellerApp(
+        apps.find((a) => ACTIVE_APPLICATION_STATUSES.includes(a.status)) ?? null
+      );
     } catch {
       // Non-fatal: the customer can still open the application modal.
     }
@@ -55,7 +61,7 @@ export default function UserProfile() {
         const res = await api.mySellerApplications();
         const apps = res.items ?? [];
         const current =
-          apps.find((a) => a.status === 'pending' || a.status === 'approved') ?? null;
+          apps.find((a) => ACTIVE_APPLICATION_STATUSES.includes(a.status)) ?? null;
         if (mounted) setSellerApp(current);
       } catch {
         // Non-fatal: the customer can still open the application modal.
@@ -293,7 +299,7 @@ export default function UserProfile() {
           <section id="seller" className="glass-panel p-6 scroll-mt-24 flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-[#B7322A]/10 rounded-full border border-[#B7322A]/20 text-[#B7322A] shrink-0">
-                {sellerApp?.status === 'pending' ? <Clock size={24} /> : sellerApp?.status === 'approved' ? <CheckCircle size={24} /> : <Store size={24} />}
+                {sellerApp?.status === 'pending' ? <Clock size={24} /> : sellerApp?.status === 'approved' ? <CheckCircle size={24} /> : sellerApp?.status === 'approved_pending_payment' ? <CreditCard size={24} /> : <Store size={24} />}
               </div>
               <div>
                 <h2 className="font-display text-lg font-semibold text-[#231A16]">Become a seller</h2>
@@ -302,7 +308,9 @@ export default function UserProfile() {
                     ? `Your application for "${sellerApp.storeName}" is under review by an admin.`
                     : sellerApp?.status === 'approved'
                       ? `Your storefront "${sellerApp.storeName}" is approved.`
-                      : 'Open your own storefront and start listing products on Arghya.'}
+                      : sellerApp?.status === 'approved_pending_payment'
+                        ? `"${sellerApp.storeName}" was approved. Pay the one-time membership fee to activate it.`
+                        : 'Open your own storefront and start listing products on Arghya.'}
                 </p>
               </div>
             </div>
@@ -311,7 +319,11 @@ export default function UserProfile() {
               onClick={() => setSellerOpen(true)}
               className="btn btn-primary px-6 py-3 text-sm self-start md:self-auto"
             >
-              {sellerApp ? 'View application' : 'Apply to sell'}
+              {sellerApp?.status === 'approved_pending_payment'
+                ? 'Complete payment'
+                : sellerApp
+                  ? 'View application'
+                  : 'Apply to sell'}
             </button>
           </section>
         </div>

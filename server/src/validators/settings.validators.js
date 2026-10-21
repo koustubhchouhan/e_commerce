@@ -14,7 +14,14 @@ export const updateSettingsSchema = z
   .object({
     deliveryCharge: money.optional(),
     freeDeliveryThreshold: money.optional(),
+    sellerMembershipFee: money.min(1, 'Membership fee must be greater than zero').optional(),
   })
-  .refine((value) => value.deliveryCharge !== undefined || value.freeDeliveryThreshold !== undefined, {
-    message: 'Provide at least one setting to update',
-  });
+  .refine(
+    (value) =>
+      value.deliveryCharge !== undefined ||
+      value.freeDeliveryThreshold !== undefined ||
+      value.sellerMembershipFee !== undefined,
+    {
+      message: 'Provide at least one setting to update',
+    }
+  );

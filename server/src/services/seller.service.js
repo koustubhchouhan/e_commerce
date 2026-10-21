@@ -3,6 +3,7 @@ import { AppError } from '../middleware/error.js';
 import { serializeReview } from './review.service.js';
 import { ensureStore } from './store.service.js';
 import { uploadImage } from './storage.service.js';
+import { expireStaleApprovals } from './membership.service.js';
 
 // POST /seller-applications — a customer asks to become a seller.
 // Rule: at most one active application per user (a rejected one may re-apply).
@@ -14,7 +15,7 @@ export async function createApplication(
     .from('seller_applications')
     .select('id, status')
     .eq('user_id', userId)
-    .in('status', ['pending', 'approved'])
+    .in('status', ['pending', 'approved_pending_payment', 'approved'])
     .maybeSingle();
 
   if (error) throw new AppError(500, 'Could not check existing applications', { cause: error });
@@ -50,10 +51,14 @@ export async function uploadStorefrontImage(file) {
 
 // GET /seller-applications/me — the caller's own application(s), newest first.
 export async function getMyApplications(userId) {
+  // Reject approvals whose 24h payment window lapsed before answering, so the
+  // applicant sees the true state even between worker ticks.
+  await expireStaleApprovals();
+
   const { data, error } = await db
     .from('seller_applications')
     .select(
-      'id, store_name, contact_email, contact_phone, storefront_image_url, status, created_at, reviewed_at'
+      'id, store_name, contact_email, contact_phone, storefront_image_url, status, created_at, reviewed_at, payment_deadline, activated_at'
     )
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
@@ -69,6 +74,8 @@ export async function getMyApplications(userId) {
     status: a.status,
     createdAt: a.created_at,
     reviewedAt: a.reviewed_at,
+    paymentDeadline: a.payment_deadline ?? null,
+    activatedAt: a.activated_at ?? null,
   }));
 }
 

@@ -1,6 +1,7 @@
 import { createApp } from './app.js';
 import { env } from './config/env.js';
 import { expireStalePayments } from './services/payment.service.js';
+import { expireStaleApprovals } from './services/membership.service.js';
 
 const app = createApp();
 
@@ -19,6 +20,16 @@ async function sweepStalePayments() {
     }
   } catch (err) {
     console.error('[payments] stale-payment sweep failed:', err.message);
+  }
+
+  // Approved sellers have 24h to pay their membership fee; reject lapsed ones.
+  try {
+    const lapsed = await expireStaleApprovals();
+    if (lapsed?.expired_applications) {
+      console.log(`[membership] expired ${lapsed.expired_applications} unpaid approval(s)`);
+    }
+  } catch (err) {
+    console.error('[membership] stale-approval sweep failed:', err.message);
   }
 }
 
