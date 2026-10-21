@@ -294,6 +294,15 @@ only.
   the idempotent payment RPCs: capture flips a payment and its linked orders to
   `paid`, failure marks the payment `failed` and returns the stock of orders
   still `pending`.
+- Seller membership is a one-time fee from `platform_settings.seller_membership_fee`
+  (admin-editable, default ₹500). Approving an application sets it to
+  `approved_pending_payment` with a 24-hour `payment_deadline`; the applicant
+  pays from their profile. `mark_seller_membership_paid` (in
+  `db/create_order.sql`) captures the charge and, only then, grants the seller
+  role and creates the store. Declining or letting the deadline lapse rejects
+  the application (`expire_stale_seller_approvals`, also swept by a server
+  worker). A capture after expiry is logged as needing a refund and does not
+  activate the store.
 - Row Level Security is enabled on every table with explicit policies. The
   API's `service_role` key bypasses RLS, so the policies are a second layer for
   the `anon`/`authenticated` keys: public catalog reads plus a caller's own

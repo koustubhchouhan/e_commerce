@@ -223,8 +223,8 @@ Supabase SQL Editor.
 - `server/db/setup_all.sql` — the whole schema in one paste. **Use this for a
   fresh project.**
 - `server/db/schema.sql` — tables, enums, triggers, indexes, RLS.
-- `server/db/create_order.sql` — the checkout function, the payment RPCs and the
-  settlement RPC.
+- `server/db/create_order.sql` — the checkout function, the payment RPCs
+  (including the seller-membership capture/expiry RPCs) and the settlement RPC.
 - `server/db/seed.sql` — seed categories and default hero slides.
 
 Guidelines when changing the schema:

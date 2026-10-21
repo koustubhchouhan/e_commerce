@@ -45,7 +45,7 @@ export function verifyWebhookSignature(rawBody, signature, secret = env.razorpay
   return safeEqualHex(expectedWebhookSignature(rawBody, secret), signature);
 }
 
-async function razorpayRequest(method, path, body) {
+export async function razorpayRequest(method, path, body) {
   assertConfigured();
 
   const auth = Buffer.from(`${env.razorpay.keyId}:${env.razorpay.keySecret}`).toString('base64');
@@ -249,12 +249,36 @@ export async function handleWebhook(rawBody, signature) {
 
   try {
     if (event === 'payment.captured') {
-      const { data } = await db.rpc('mark_payment_captured', {
-        p_gateway_order_id: entity.order_id,
-        p_gateway_payment_id: entity.id,
-        p_raw_payload: rpcPayload,
-      });
-      logCaptureAnomalies(data);
+      // A seller membership charge is captured through its own RPC (it grants
+      // the seller role and creates the store); everything else is a checkout
+      // that flips its orders to paid.
+      const { data: record, error: lookupErr } = await db
+        .from('payments')
+        .select('purpose')
+        .eq('gateway_order_id', entity.order_id)
+        .maybeSingle();
+      if (lookupErr) throw lookupErr;
+
+      if (record?.purpose === 'seller_membership') {
+        const { data } = await db.rpc('mark_seller_membership_paid', {
+          p_gateway_order_id: entity.order_id,
+          p_gateway_payment_id: entity.id,
+          p_raw_payload: rpcPayload,
+        });
+        if (data && !data.activated && data.application_status !== 'approved') {
+          // Captured after the 24h window already rejected it — refund manually.
+          console.error(
+            `[payments] membership capture for application ${data.application_id} did not activate (status ${data.application_status}); refund needed`
+          );
+        }
+      } else {
+        const { data } = await db.rpc('mark_payment_captured', {
+          p_gateway_order_id: entity.order_id,
+          p_gateway_payment_id: entity.id,
+          p_raw_payload: rpcPayload,
+        });
+        logCaptureAnomalies(data);
+      }
     } else if (event === 'payment.failed') {
       await db.rpc('mark_payment_failed', {
         p_gateway_order_id: entity.order_id,

@@ -29,7 +29,11 @@ export default function AdminProfile() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
-  const [delivery, setDelivery] = useState({ deliveryCharge: 29, freeDeliveryThreshold: 200 });
+  const [delivery, setDelivery] = useState({
+    deliveryCharge: 29,
+    freeDeliveryThreshold: 200,
+    sellerMembershipFee: 500,
+  });
   const [deliveryBusy, setDeliveryBusy] = useState(false);
   const addToast = useToastStore((s) => s.addToast);
 
@@ -76,6 +80,7 @@ export default function AdminProfile() {
       setDelivery({
         deliveryCharge: Number(s.deliveryCharge ?? 29),
         freeDeliveryThreshold: Number(s.freeDeliveryThreshold ?? 200),
+        sellerMembershipFee: Number(s.sellerMembershipFee ?? 500),
       });
     } catch {
       // Keep the defaults; the form is still usable.
@@ -102,13 +107,34 @@ export default function AdminProfile() {
         deliveryCharge: charge,
         freeDeliveryThreshold: threshold,
       });
-      setDelivery({
+      setDelivery((d) => ({
+        ...d,
         deliveryCharge: Number(saved.deliveryCharge),
         freeDeliveryThreshold: Number(saved.freeDeliveryThreshold),
-      });
+      }));
       addToast('Delivery settings saved.', 'success');
     } catch (err) {
       addToast(err.message || 'Failed to save delivery settings.', 'error');
+    } finally {
+      setDeliveryBusy(false);
+    }
+  };
+
+  // One-time fee charged to an approved seller before the role is granted.
+  const saveMembershipFee = async () => {
+    const fee = Number(delivery.sellerMembershipFee);
+    if (!Number.isFinite(fee) || fee <= 0) {
+      addToast('Enter a membership fee greater than zero.', 'error');
+      return;
+    }
+
+    setDeliveryBusy(true);
+    try {
+      const saved = await api.updateSettings({ sellerMembershipFee: fee });
+      setDelivery((d) => ({ ...d, sellerMembershipFee: Number(saved.sellerMembershipFee) }));
+      addToast('Seller membership fee saved.', 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to save the membership fee.', 'error');
     } finally {
       setDeliveryBusy(false);
     }
@@ -348,6 +374,44 @@ export default function AdminProfile() {
             {deliveryBusy ? 'Saving…' : 'Save delivery settings'}
           </button>
           <p className="text-xs text-[#8A7B6B]">Threshold 0 = always charge delivery.</p>
+        </div>
+      </section>
+
+      {/* ═══ Seller Membership Fee ═══ */}
+      <section className="glass-panel p-6 rounded-xl">
+        <div className="flex items-center gap-3 text-[#B7322A] mb-2">
+          <UserCheck size={28} />
+          <h2 className="font-display text-2xl font-semibold text-[#231A16]">Seller Membership</h2>
+        </div>
+        <p className="text-[#7A6A5B] text-sm max-w-2xl mb-6">
+          A one-time fee an approved applicant pays before their seller role and storefront are
+          activated. If it is not paid within 24 hours, the approval lapses.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
+          <label className="flex flex-col gap-1.5">
+            <span className="micro-label">Membership fee (₹)</span>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              value={delivery.sellerMembershipFee}
+              onChange={(e) =>
+                setDelivery((d) => ({ ...d, sellerMembershipFee: e.target.value }))
+              }
+              className="w-full rounded-xl border border-[#E7DAC8] bg-[#FFFCF7] px-4 py-2.5 text-sm text-[#231A16] outline-none focus:ring-2 focus:ring-[#B7322A]/30"
+            />
+          </label>
+        </div>
+
+        <div className="mt-6">
+          <button
+            onClick={saveMembershipFee}
+            disabled={deliveryBusy}
+            className="px-6 py-2.5 bg-[#B7322A] text-[#FDF8F0] font-[Inter] text-xs font-semibold tracking-[0.05em] uppercase rounded-xl hover:shadow-[0_0_9px_rgba(183,50,42,0.17)] transition-all duration-300 disabled:opacity-60"
+          >
+            {deliveryBusy ? 'Saving…' : 'Save membership fee'}
+          </button>
         </div>
       </section>
 

@@ -23,7 +23,9 @@ export const reviewApplicationSchema = z.object({
 });
 
 export const listApplicationsQuerySchema = z.object({
-  status: z.enum(['pending', 'approved', 'rejected']).optional(),
+  status: z
+    .enum(['pending', 'approved_pending_payment', 'approved', 'rejected'])
+    .optional(),
 });
 
 // PATCH /seller/store body — both fields optional so a single field can be

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { CheckCircle, Clock, XCircle, Store, PackageX, FileText, Send, Phone, ImagePlus } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, Store, PackageX, FileText, Send, Phone, ImagePlus, CreditCard } from 'lucide-react';
 import GlassCard from '../components/GlassCard';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -9,6 +9,7 @@ import { PanelRowsSkeleton } from '../components/Skeleton';
 const STATUS_META = {
   pending: { label: 'Pending Review', icon: <Clock size={16} />, badge: 'bg-[#B8860B]/20 text-[#C8901A] border-[#C8901A]/30' },
   approved: { label: 'Approved', icon: <CheckCircle size={16} />, badge: 'bg-[#B7322A]/10 text-[#B7322A] border-[#B7322A]/30' },
+  approved_pending_payment: { label: 'Awaiting Payment', icon: <CreditCard size={16} />, badge: 'bg-[#E0A11C]/15 text-[#8A5A00] border-[#E0A11C]/40' },
   rejected: { label: 'Rejected', icon: <XCircle size={16} />, badge: 'bg-[#FBE3E1]/20 text-[#B3261E] border-[#B3261E]/30' },
 };
 
@@ -70,7 +71,7 @@ export default function SellerRequests() {
 
   // A user may apply when they have no pending or approved application.
   const hasActiveApplication = applications.some(
-    (a) => a.status === 'pending' || a.status === 'approved',
+    (a) => a.status === 'pending' || a.status === 'approved' || a.status === 'approved_pending_payment',
   );
   const canApply = !loading && !hasActiveApplication;
 
@@ -275,6 +276,12 @@ export default function SellerRequests() {
                   <div className="bg-[#F5ECDE]/80 p-4 rounded-xl border border-[#C8901A]/20 text-[#C8901A] text-sm flex items-start gap-2">
                     <Clock size={16} className="shrink-0 mt-0.5" />
                     <p>Your application is under review. You will be notified once an administrator makes a decision.</p>
+                  </div>
+                )}
+                {app.status === 'approved_pending_payment' && (
+                  <div className="bg-[#F5ECDE]/80 p-4 rounded-xl border border-[#E0A11C]/30 text-[#2A211B] text-sm flex items-start gap-2">
+                    <CreditCard size={16} className="text-[#8A5A00] shrink-0 mt-0.5" />
+                    <p>Approved! Pay the one-time membership fee from your profile to activate your storefront.</p>
                   </div>
                 )}
                 {app.status === 'approved' && (

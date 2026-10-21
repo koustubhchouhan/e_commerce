@@ -4,6 +4,7 @@ import { removeImage, uploadImage } from './storage.service.js';
 import { serializeReview } from './review.service.js';
 import { loadCoversByProduct, serializeProduct } from './product-data.js';
 import { PLATFORM_FEE_RATE, PRODUCT_MARKUP_RATE } from '../lib/pricing.js';
+import { SELLER_MEMBERSHIP_WINDOW_MS, expireStaleApprovals } from './membership.service.js';
 
 // Re-exported so callers keep their single import surface for the commission.
 export { PLATFORM_FEE_RATE };
@@ -13,10 +14,13 @@ export { PLATFORM_FEE_RATE };
 // to the exact constraint name are fragile across DBs. We fetch the applicant
 // names in a second query instead.
 const APPLICATION_SELECT =
-  'id, user_id, store_name, contact_email, contact_phone, storefront_image_url, status, created_at, reviewed_at';
+  'id, user_id, store_name, contact_email, contact_phone, storefront_image_url, status, created_at, reviewed_at, payment_deadline, activated_at';
 
 // GET /admin/seller-applications — optionally filtered by status (default all).
 export async function listApplications({ status } = {}) {
+  // Reflect lapsed 24h payment windows before listing.
+  await expireStaleApprovals();
+
   let query = db.from('seller_applications').select(APPLICATION_SELECT);
   if (status) query = query.eq('status', status);
 
@@ -45,6 +49,8 @@ export async function listApplications({ status } = {}) {
     status: a.status,
     createdAt: a.created_at,
     reviewedAt: a.reviewed_at,
+    paymentDeadline: a.payment_deadline ?? null,
+    activatedAt: a.activated_at ?? null,
     applicant: nameById.get(a.user_id) ?? null,
   }));
 }
@@ -54,7 +60,7 @@ export async function listApplications({ status } = {}) {
 export async function reviewApplication(adminId, applicationId, action) {
   const { data: application, error } = await db
     .from('seller_applications')
-    .select('id, user_id, store_name, status')
+    .select('id, status')
     .eq('id', applicationId)
     .maybeSingle();
 
@@ -75,34 +81,24 @@ export async function reviewApplication(adminId, applicationId, action) {
     return { status: 'rejected' };
   }
 
-  // Approve. The role flip and store creation are best-effort sequential; a
-  // richer transactional guarantee would need a Postgres function (see plan §3).
-  const { error: roleErr } = await db
-    .from('profiles')
-    .update({ role: 'seller' })
-    .eq('id', application.user_id);
-  if (roleErr) throw new AppError(500, 'Could not upgrade user to seller', { cause: roleErr });
-
-  const { data: store } = await db
-    .from('stores')
-    .select('id')
-    .eq('owner_id', application.user_id)
-    .maybeSingle();
-
-  if (!store) {
-    const { error: storeErr } = await db
-      .from('stores')
-      .insert({ owner_id: application.user_id, name: application.store_name });
-    if (storeErr) throw new AppError(500, 'Could not create store', { cause: storeErr });
-  }
-
+  // Approve. The applicant is NOT granted the seller role yet: they first get a
+  // one-time membership fee to pay (POST .../membership-order). The role flip and
+  // store creation happen atomically in mark_seller_membership_paid once the
+  // charge is captured, so an approval that is never paid cannot grant access.
+  const payment_deadline = new Date(Date.now() + SELLER_MEMBERSHIP_WINDOW_MS).toISOString();
   const { error: appErr } = await db
     .from('seller_applications')
-    .update({ status: 'approved', reviewed_at, reviewed_by: adminId })
-    .eq('id', applicationId);
+    .update({
+      status: 'approved_pending_payment',
+      reviewed_at,
+      reviewed_by: adminId,
+      payment_deadline,
+    })
+    .eq('id', applicationId)
+    .eq('status', 'pending');
   if (appErr) throw new AppError(400, 'Could not approve application', { cause: appErr });
 
-  return { status: 'approved' };
+  return { status: 'approved_pending_payment', paymentDeadline: payment_deadline };
 }
 
 // GET /admin/sellers — approved sellers with their store.

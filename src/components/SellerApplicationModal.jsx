@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { Store, X, Send, Clock, CheckCircle, Loader2, Phone, ImagePlus } from 'lucide-react';
+import { Store, X, Send, Clock, CheckCircle, Loader2, Phone, ImagePlus, CreditCard } from 'lucide-react';
 import { api } from '../lib/api';
+import { inr } from '../lib/money';
+import { loadRazorpay } from '../lib/razorpay';
 import { useAuth } from '../context/AuthContext';
 import { useToastStore } from '../store/toastStore';
+
+// Matches the server's DEFAULT_SELLER_MEMBERSHIP_FEE; replaced by the admin
+// setting as soon as it loads. The order endpoint always re-prices server-side.
+const DEFAULT_MEMBERSHIP_FEE = 500;
 
 const inputClass =
   'w-full bg-[#F5ECDE]/70 border border-[#231a16]/10 rounded-xl py-2.5 px-4 text-sm text-[#2A211B] outline-none focus:border-[#B7322A] transition-all placeholder:text-[#8A7B6B]';
@@ -12,7 +18,7 @@ const labelClass = 'block text-[#7A6A5B] text-xs font-semibold uppercase trackin
 // submits a seller_application which an admin reviews in Seller Approvals.
 // Mounted only while open, so initial state comes straight from the user.
 export default function SellerApplicationModal({ onClose, onChange }) {
-  const { user } = useAuth();
+  const { user, applyUserPatch } = useAuth();
   const addToast = useToastStore((s) => s.addToast);
 
   const [storeName, setStoreName] = useState('');
@@ -25,6 +31,9 @@ export default function SellerApplicationModal({ onClose, onChange }) {
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [existing, setExisting] = useState(null);
+  const [fee, setFee] = useState(DEFAULT_MEMBERSHIP_FEE);
+  const [paying, setPaying] = useState(false);
+  const [declining, setDeclining] = useState(false);
   const previewRef = useRef('');
 
   const setPreview = (url) => {
@@ -47,17 +56,24 @@ export default function SellerApplicationModal({ onClose, onChange }) {
   useEffect(() => {
     let active = true;
     (async () => {
-      try {
-        const res = await api.mySellerApplications();
-        const apps = res.items ?? [];
+      const [appsResult, settingsResult] = await Promise.allSettled([
+        api.mySellerApplications(),
+        api.settings(),
+      ]);
+      if (appsResult.status === 'fulfilled') {
+        const apps = appsResult.value.items ?? [];
         const activeApp =
-          apps.find((a) => a.status === 'pending' || a.status === 'approved') ?? null;
+          apps.find((a) => a.status === 'approved') ??
+          apps.find((a) => a.status === 'approved_pending_payment') ??
+          apps.find((a) => a.status === 'pending') ??
+          null;
         if (active) setExisting(activeApp);
-      } catch {
-        // Non-fatal: the form can still be shown.
-      } finally {
-        if (active) setLoading(false);
       }
+      if (settingsResult.status === 'fulfilled') {
+        const configured = Number(settingsResult.value?.sellerMembershipFee);
+        if (active && configured > 0) setFee(configured);
+      }
+      if (active) setLoading(false);
     })();
     return () => {
       active = false;
@@ -102,6 +118,89 @@ export default function SellerApplicationModal({ onClose, onChange }) {
     }
   };
 
+  // One-time membership fee. The server owns the price; `fee` here is display
+  // only and is corrected from the order response before the modal opens.
+  const handlePay = async () => {
+    if (!existing || paying) return;
+    setPaying(true);
+    try {
+      const [Razorpay, order] = await Promise.all([
+        loadRazorpay(),
+        api.createMembershipOrder(existing.id),
+      ]);
+      const amount = order.amount ?? Math.round(Number(order.fee ?? fee) * 100);
+
+      const rzp = new Razorpay({
+        key: order.keyId,
+        amount,
+        currency: order.currency ?? 'INR',
+        name: 'Arghya',
+        description: 'Seller membership fee',
+        order_id: order.razorpayOrderId,
+        prefill: {
+          name: user?.name,
+          contact: existing.contactPhone ?? user?.phone,
+          email: user?.email,
+        },
+        notes: { seller_application_id: existing.id },
+        theme: { color: '#B7322A' },
+        handler: async (response) => {
+          try {
+            await api.verifyMembershipPayment(existing.id, response);
+            applyUserPatch({ role: 'seller' });
+            addToast('Membership confirmed — your storefront is live!', 'success');
+            onChange?.();
+            onClose();
+          } catch (err) {
+            // Captures after the 24h window are refunded, not activated.
+            addToast(err.message || 'We could not confirm your payment.', 'error');
+            onChange?.();
+          } finally {
+            setPaying(false);
+          }
+        },
+        modal: {
+          ondismiss: () => setPaying(false),
+        },
+      });
+      rzp.on('payment.failed', (response) => {
+        addToast(response?.error?.description || 'Payment failed. Please try again.', 'error');
+        setPaying(false);
+      });
+      rzp.open();
+    } catch (err) {
+      addToast(err.message || 'Could not start payment.', 'error');
+      setPaying(false);
+    }
+  };
+
+  const handleDecline = async () => {
+    if (!existing || declining || paying) return;
+    if (!window.confirm('Decline the seller membership? Your application will be closed.')) return;
+    setDeclining(true);
+    try {
+      await api.declineMembership(existing.id);
+      addToast('Membership declined. You can apply again any time.', 'success');
+      onChange?.();
+      onClose();
+    } catch (err) {
+      addToast(err.message || 'Could not update your application.', 'error');
+    } finally {
+      setDeclining(false);
+    }
+  };
+
+  const deadline = existing?.paymentDeadline ? new Date(existing.paymentDeadline) : null;
+  const deadlineText =
+    deadline && !Number.isNaN(deadline.getTime())
+      ? deadline.toLocaleString('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          hour: 'numeric',
+          minute: '2-digit',
+        })
+      : null;
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 animate-fade-in"
@@ -137,6 +236,49 @@ export default function SellerApplicationModal({ onClose, onChange }) {
           {loading ? (
             <div className="flex items-center justify-center gap-2 py-10 text-[#7A6A5B] text-sm">
               <Loader2 size={18} className="animate-spin" /> Checking your applications...
+            </div>
+          ) : existing && existing.status === 'approved_pending_payment' ? (
+            <div className="flex flex-col gap-4">
+              <div className="flex items-start gap-3 rounded-xl border border-[#E0A11C]/40 bg-[#E0A11C]/10 p-4 text-sm text-[#2A211B]">
+                <CheckCircle size={18} className="text-[#B7322A] shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">{existing.storeName} — approved</p>
+                  <p className="text-[#7A6A5B] text-xs mt-1">
+                    One last step: pay the one-time seller membership fee of {inr(fee)} to activate
+                    your storefront and start listing products.
+                  </p>
+                  {deadlineText && (
+                    <p className="text-[#8A5A00] text-xs mt-1 flex items-center gap-1">
+                      <Clock size={12} /> Pay before {deadlineText}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handlePay}
+                disabled={paying || declining}
+                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#B7322A] text-[#FDF8F0] text-sm font-semibold hover:shadow-[0_0_12px_rgba(183,50,42,0.25)] transition-all disabled:opacity-60"
+              >
+                {paying ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <CreditCard size={18} />
+                )}
+                {paying ? 'Opening payment...' : `Pay ${inr(fee)} & activate store`}
+              </button>
+              <button
+                type="button"
+                onClick={handleDecline}
+                disabled={paying || declining}
+                className="px-6 py-2.5 rounded-xl border border-[#B3261E]/30 text-[#B3261E] text-sm font-semibold hover:bg-[#B3261E]/5 transition-colors disabled:opacity-60"
+              >
+                {declining ? 'Declining...' : 'Decline membership'}
+              </button>
+              <p className="text-[11px] text-[#8A7B6B] text-center">
+                If the fee is not paid in time, the application is closed and you can apply again
+                later.
+              </p>
             </div>
           ) : existing ? (
             <div className="flex flex-col gap-4">
